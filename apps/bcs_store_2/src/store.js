@@ -185,6 +185,9 @@ function readFile(file) {
     }
 }
 
+/* Shown where a request needs the updater's key and the updater has not given the Store one (updater.local.conf: store_app = bcs_store_2, then restart). */
+const NO_SECRET = 'Setup needed: store_app';
+
 function readSecret() {
     return readFile(SECRET_FILE).trim() || null;
 }
@@ -247,6 +250,7 @@ class Store extends OnlineApp {
         this._pick = null;
         this._spelling = false;         // the HMI's speller is up
         this._typing = null;            // the drawn keyboard's page up: { page, resolve, under (the page it took the place of) }
+        this._setupNote = null;         // set when a request needs the updater's key and the Store has none
         this._uplinkNote = null;        // the refusal of the last Wi-Fi or preferred-connection request
         this._proxyNote = null;         // why the last proxy change was refused
         this._removeNote = null;        // the updater's refusal of the last Remove: { id, error, by }
@@ -702,7 +706,7 @@ class Store extends OnlineApp {
             version: this._version(), note: this._sourcesNote, login: this._login,
             webText: web && web.enabled ? readFile(WEB_URL_FILE) : '', accountsNote: this._accountsNote,
             pick: this._pick && { repo: this._pick.repo, probe: this._pick.probe, tokenNote: !!this._pick.tokenNote },
-            uplinkNote: this._uplinkNote, proxyNote: this._proxyNote, removeNote: this._removeNote, language: i18n.language() };
+            setupNote: this._setupNote || null, uplinkNote: this._uplinkNote, proxyNote: this._proxyNote, removeNote: this._removeNote, language: i18n.language() };
     }
 
     /* A press on the drawn screens (src/store_ui.js acts). */
@@ -813,7 +817,7 @@ class Store extends OnlineApp {
     _uplink(req) {
         this._uplinkNote = null;
         if (!this._privileged(req)) {
-            this._uplinkNote = readSecret() ? 'updater not running' : 'Setup needed: store_app = bcs_store_2 in updater.local.conf, then restart';
+            this._uplinkNote = readSecret() ? 'updater not running' : NO_SECRET;
         }
     }
 
@@ -866,7 +870,7 @@ class Store extends OnlineApp {
         // the address can hold a password: only whether one is set goes to the log
         logger.info(`proxy ${url ? 'set' : 'off'}`);
         if (!this._privileged({ op: 'proxy-set', url })) {
-            this._proxyNote = readSecret() ? 'updater not running' : 'Setup needed: store_app = bcs_store_2 in updater.local.conf, then restart';
+            this._proxyNote = readSecret() ? 'updater not running' : NO_SECRET;
         }
         this._render();
     }
@@ -899,8 +903,12 @@ class Store extends OnlineApp {
         const secret = readSecret();
         if (!secret) {
             logger.warn(`${req.op}: no updater secret in ${SECRET_FILE}`);
+            // say so on the screens (a restart or an install pressed with no key did nothing, silently)
+            this._setupNote = NO_SECRET;
+            this._render();
             return false;
         }
+        this._setupNote = null;
         return this._send(Object.assign({}, req, { secret }));
     }
 
@@ -1089,7 +1097,7 @@ class Store extends OnlineApp {
             this._removalRefused = false;
             if (!this._privileged({ op: 'source-remove', id: src.id })) {
                 this._removalRefused = true;
-                const error = readSecret() ? 'updater not running' : 'Setup needed: store_app = bcs_store_2 in updater.local.conf, then restart';
+                const error = readSecret() ? 'updater not running' : NO_SECRET;
                 this._note({ kind: 'refused', op: 'source-remove', error });
             }
         }
@@ -1237,7 +1245,7 @@ class Store extends OnlineApp {
             logger.info('add token');
             // the tokens it had are what a new one is told from: only with the updater's state at hand
             if (!this._connected || !this._st || !this._privileged({ op: 'token-add', token })) {
-                this._accountNote({ kind: 'refused', error: readSecret() ? 'updater not running' : 'Setup needed: store_app = bcs_store_2 in updater.local.conf, then restart' });
+                this._accountNote({ kind: 'refused', error: readSecret() ? 'updater not running' : NO_SECRET });
                 return;
             }
             const before = new Set((this._st.tokens || []).map((t) => t.id));
@@ -1313,7 +1321,7 @@ class Store extends OnlineApp {
         logger.info(`add source ${source.type === 'github' ? source.repo : '(https)'}` +
             `${source.channel ? ` on ${source.channel}` : ''}`);
         if (!this._privileged(Object.assign({ op: 'source-add' }, source))) {
-            const error = readSecret() ? 'updater not running' : 'Setup needed: store_app = bcs_store_2 in updater.local.conf, then restart';
+            const error = readSecret() ? 'updater not running' : NO_SECRET;
             this._note({ kind: 'refused', op: 'source-add', error });
         }
     }
@@ -1358,7 +1366,7 @@ class Store extends OnlineApp {
         clearTimeout(pick.answerTimer);
         logger.info(`probe ${pick.repo}`);
         if (!this._privileged({ op: 'source-probe', repo: pick.repo })) {
-            pick.probe = { status: 'refused', error: readSecret() ? 'updater not running' : 'Setup needed: store_app = bcs_store_2 in updater.local.conf, then restart' };
+            pick.probe = { status: 'refused', error: readSecret() ? 'updater not running' : NO_SECRET };
         } else {
             pick.answerTimer = setTimeout(() => this._probeFailed('the updater did not answer'), PROBE_MS);
         }

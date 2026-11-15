@@ -291,7 +291,7 @@ function run() {
         return tick();
     }).then(() => {
         eq(sent, [], 'nothing sent without the secret');
-        eq(last(/storeSourcesStatus\.0\.Text/), 'storeSourcesStatus.0.Text=Add source failed: Setup needed: store_app = bcs_store_2 in updater.local.conf, then restart');
+        eq(last(/storeSourcesStatus\.0\.Text/), 'storeSourcesStatus.0.Text=Add source failed: Setup needed: store_app');
         fs.writeFileSync(path.join(DATA, 'updater-secret'), 'deadbeef\n');
         // the updater has run and is unreachable now
         app._client.emit('down');
@@ -790,7 +790,7 @@ function run() {
         return tick();
     }).then(() => {
         eq(sent, [], 'nothing sent');
-        eq(last(/storeSourcesStatus\.0\.Text/), 'storeSourcesStatus.0.Text=Remove failed: Setup needed: store_app = bcs_store_2 in updater.local.conf, then restart');
+        eq(last(/storeSourcesStatus\.0\.Text/), 'storeSourcesStatus.0.Text=Remove failed: Setup needed: store_app');
         eq(states, ['close ST_OnlineApps_StoreSourceRemove', 'close ST_OnlineApps_StoreSource'], 'unsent: back to Sources');
         // opening a source's page again forgets an earlier removal
         reset();

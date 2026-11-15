@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.2.3
+
+- Restart head unit, installs and every other request that needs the updater's key now say "Setup needed: store_app" on the screen when the Store has no key, instead of doing nothing (updater.local.conf: store_app = bcs_store_2, then restart the head unit; SETUP.md).
+- The message is short enough for the Preferred connection page.
+
 ## 2.2.2
 
 Fixes from the first head-unit test.
