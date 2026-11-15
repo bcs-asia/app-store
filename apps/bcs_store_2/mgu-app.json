@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "bcs_store_2",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "tree": "package",
   "modules": [
     "src/store.js",

@@ -1107,6 +1107,22 @@ module.exports = {
       "align": "left",
       "color": "#ffb020"
      }
+    },
+    {
+     "name": "refresh",
+     "rtype": "gpu",
+     "gpu": "vbutton",
+     "x": 1500,
+     "y": 744,
+     "w": 880,
+     "h": 96,
+     "opts": {
+      "text": "",
+      "vicon": "plus",
+      "style": "tinted",
+      "color": "#00bfff"
+     },
+     "onTap": "event:addRepo"
     }
    ]
   },
@@ -2301,7 +2317,7 @@ module.exports = {
      "w": 660,
      "h": 96,
      "opts": {
-      "text": "Scan",
+      "text": "",
       "vicon": "refresh",
       "style": "outline"
      },

@@ -84,6 +84,9 @@ function comps(m) {
 }
 /* Its title, with its source's name where another listed row has the same title (two sources' DOOM). */
 function named(m, c) {
+    if (c.id === 'bcs_store_2') {
+        return 'BCS Store';     // never with its source's name behind it
+    }
     const name = sourceNames(comps(m), sources(m))(c);
     return name && comps(m).some((o) => o !== c && o.title === c.title) ? `${c.title} (${name})` : c.title;
 }
@@ -212,6 +215,8 @@ function tile(m, c, busy, name) {
         t.btn = c.error ? tr("Try again") : c.status === 'update' ? "Update now" : "Install now";
         t.btnAct = { do: 'install', id: c.id };
     }
+    // the head units it supports (the component's mguHmi; none stated = both), as the ID7 / ID8 tags on the card
+    t.tags = c.mguHmi && c.mguHmi.length ? c.mguHmi.filter((h) => h === 'ID7' || h === 'ID8') : ['ID7', 'ID8'];
     return t;
 }
 
@@ -269,15 +274,17 @@ function installedView(m) {
     const all = installed.filter((c) => pending(c, busy)).concat(installed.filter((c) => !pending(c, busy)));
     const keep = (list, ids) => (!ids ? list : list.filter((c) => ids.indexOf(c.id) >= 0).sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id))
         .concat(list.filter((c) => ids.indexOf(c.id) < 0)));
-    const apps = keep(all.filter((c) => !isTool(c)), m.held && m.held.apps);
-    const tools = keep(all.filter(isTool), m.held && m.held.services);
+    // only what has an update (or something running on it), not everything installed
+    const due = (c) => (c.status === 'update' && !notForUnit(c) && !c.blocked) || (c.installed && c.repair) || pending(c, busy);
+    const apps = keep(all.filter((c) => !isTool(c) && due(c)), m.held && m.held.apps);
+    const tools = keep(all.filter((c) => isTool(c) && due(c)), m.held && m.held.services);
     const updates = all.filter((c) => c.status === 'update' && rowAction(c, busy) === 'install');
     const name = sourceNames(all, sources(m));
     const item = (c) => {
         const s = tileState(c, busy);
         const up = c.status === 'update' && s.badge === 'update';
         const open = { do: 'open', page: pageOf(c) };
-        return Object.assign(iconOf(c), { id: c.id, title: c.title, act: open,
+        return Object.assign(iconOf(c), { id: c.id, title: named(m, c), act: open,
             sub: [up ? `${c.installed} → ${target(c)}` : `${c.installed}${isTool(c) ? tr(' · tool') : ''}`, name(c)].filter(Boolean).join(' · '), subColor: up ? BLUE : DIM,
             right: up ? 'chip:' + tr('Update') : s.sub !== tr("Installed") ? `chip:${s.sub}` : 'chevron', chipColor: up ? BLUE : s.subColor,
             chipAct: up ? { do: 'install', id: c.id } : null });
@@ -287,9 +294,9 @@ function installedView(m) {
         subtitle: { text: [updates.length ? `${updates.length} ${updates.length === 1 ? 'update' : 'updates'}` : '', plural(apps.length, 'app'),
             plural(tools.length, 'tool')].filter(Boolean).join(' · ') },
         updateAll: updates.length ? button(tr("Update all ({0})", updates.length), { do: 'update-all' }, { vicon: 'arrowDown', style: 'primary', color: BLUE }) : hidden,
-        apps: { items: apps.map(item), empty: tr("None") },
+        apps: { items: apps.map(item), empty: "All up to date" },
         restartNow: restartNow(m, m.held ? m.held.restart : undefined),
-        services: { items: tools.map(item), empty: tr("None"), rowH: 120 }
+        services: { items: tools.map(item), empty: "All up to date", rowH: 120 }
     };
 }
 
@@ -324,7 +331,8 @@ function sourcesView(m) {
         note: { text: m.note || (restartFailed(m) || '') },
         subtitle: { text: srcs ? plural(srcs.length, 'source') : '' },
         repos: srcs ? { items: srcs.map(sourceRow), empty: tr("None") } : { items: [], empty: '' },
-        addRepo: srcs ? button(tr("Add source"), { do: 'add-source' }, { vicon: 'plus', style: 'tinted', color: BLUE }) : hidden
+        addRepo: srcs ? button(tr("Add source"), { do: 'add-source' }, { vicon: 'plus', style: 'tinted', color: BLUE }) : hidden,
+        refresh: m.connected ? button(m.st && m.st.catalog && m.st.catalog.checking ? "Refreshing" : "Refresh", { do: 'check' }, { vicon: 'refresh', style: 'tinted', color: BLUE }) : hidden
     };
 }
 
@@ -403,7 +411,7 @@ function appView(m, page) {
     const avail = (c.status === 'update' || c.status === 'available') && !(c.blocked && c.installed);
     const v = {
         icon: Object.assign(iconOf(c), { badge: mine ? '' : s.badge, progress: s.progress }),
-        name: { text: c.title },
+        name: { text: named(m, c) },
         author: { text: [c.author && tr("by {0}", c.author), c.source && tr("from {0}", src ? sourceLabel(src) : c.source)].filter(Boolean).join(' · ') },
         facts: { items: [{ text: tr("Version {0}", c.version) }, c.revision && { text: tr("Commit {0}", c.revision) }, c.size && { text: size(c.size) },
             // installed under another id than its source's
@@ -761,7 +769,7 @@ function wifiView(m) {
             vicon: 'wifi', iconColor: 'text', right: `toggle:${w.allow5ghz ? 'on' : 'off'}`, act: { do: 'wifi-5ghz' } }] : [] },
         power: w.enabled ? button(tr("Don't use Wi-Fi"), { do: 'wifi-power' }, { vicon: 'wifi', style: 'outline' })
             : button(tr("Use Wi-Fi"), { do: 'wifi-power' }, { vicon: 'wifi', style: 'primary', color: GREEN, disabled: waiting }),
-        scan: button(scanning ? tr("Scanning") : tr("Scan"), { do: 'wifi-scan' }, { vicon: 'refresh', style: 'outline',
+        scan: button(scanning ? "Refreshing" : "Refresh network", { do: 'wifi-scan' }, { vicon: 'refresh', style: 'outline',
             disabled: !w.enabled || scanning || w.link === 'unavailable' || w.link === 'failed' })
     };
 }

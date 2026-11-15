@@ -291,7 +291,7 @@ function run() {
         return tick();
     }).then(() => {
         eq(sent, [], 'nothing sent without the secret');
-        eq(last(/storeSourcesStatus\.0\.Text/), 'storeSourcesStatus.0.Text=Add source failed: no updater secret');
+        eq(last(/storeSourcesStatus\.0\.Text/), 'storeSourcesStatus.0.Text=Add source failed: Setup needed: store_app = bcs_store_2 in updater.local.conf, then restart');
         fs.writeFileSync(path.join(DATA, 'updater-secret'), 'deadbeef\n');
         // the updater has run and is unreachable now
         app._client.emit('down');
@@ -790,7 +790,7 @@ function run() {
         return tick();
     }).then(() => {
         eq(sent, [], 'nothing sent');
-        eq(last(/storeSourcesStatus\.0\.Text/), 'storeSourcesStatus.0.Text=Remove failed: no updater secret');
+        eq(last(/storeSourcesStatus\.0\.Text/), 'storeSourcesStatus.0.Text=Remove failed: Setup needed: store_app = bcs_store_2 in updater.local.conf, then restart');
         eq(states, ['close ST_OnlineApps_StoreSourceRemove', 'close ST_OnlineApps_StoreSource'], 'unsent: back to Sources');
         // opening a source's page again forgets an earlier removal
         reset();
@@ -1475,7 +1475,7 @@ function runDrawn() {
         app._states[host(3)].emit('visible', { visible: false });
         app._states[host(2)].emit('focus', { focus: true });
         reset();
-        ["Don't use Wi-Fi", 'Scan', 'Allow 5 GHz'].forEach(tap);
+        ["Don't use Wi-Fi", 'Refresh network', 'Allow 5 GHz'].forEach(tap);
         eq(sent.map(secretless), [{ op: 'wifi-enable', on: false }, { op: 'wifi-scan' }, { op: 'wifi-5ghz', on: true }]);
         // the uplink's refusal shows on the page
         app._client.emit('reply-error', 'Wi-Fi needs uplink = auto', 'wifi-scan');
@@ -1762,8 +1762,8 @@ function runDrawn() {
         eq(drawn.items.some((i) => i.label === 'Leave safe mode'), false, 'out of safe mode: no Leave safe mode');
         // Installed puts what runs or waits first; while the focus is on a row the rows stay where they are, so it stays on its row
         const inst = (doom) => Object.assign({}, st, { components: [
-            comp({ id: 'alpha', title: 'Alpha', version: '1.0.0', installed: '1.0.0', status: 'installed' }),
-            comp({ id: 'beta', title: 'Beta', version: '1.0.0', installed: '1.0.0', status: 'installed' }),
+            comp({ id: 'alpha', title: 'Alpha', version: '1.1.0', installed: '1.0.0', status: 'update' }),
+            comp({ id: 'beta', title: 'Beta', version: '1.1.0', installed: '1.0.0', status: 'update' }),
             comp(Object.assign({ id: 'doom', title: 'DOOM', version: '1.0.1', installed: '1.0.1', status: 'installed', pendingReboot: true }, doom))] });
         const done = { pendingReboot: false };
         const rows = () => drawn.items.map((i) => i.label).filter((l) => ['Alpha', 'Beta', 'DOOM'].indexOf(l) >= 0);
@@ -1771,43 +1771,17 @@ function runDrawn() {
         drawn.setTab('installed');
         drawn.focus = 0;
         app._client.emit('state', inst({}));
-        eq(rows(), ['DOOM', 'Alpha', 'Beta'], 'a restart pending first');
-        eq(drawn.items.map((i) => i.label).slice(6, 7), ['Restart now'], 'a restart pending: Restart now');
+        // Updates lists what has an update or waits on something: the two updates and DOOM (restart pending), in the catalog's order
+        eq(rows(), ['Alpha', 'Beta', 'DOOM'], 'updates and a restart pending listed');
+        eq(drawn.items.some((i) => i.label === 'Restart now'), true, 'a restart pending: Restart now');
         app._client.emit('state', inst(done));
-        eq([rows(), focused()], [['Alpha', 'Beta', 'DOOM'], 'Apps'], 'the focus on the side menu: restarted, DOOM last');
-        eq(drawn.items.some((i) => i.label === 'Restart now'), false, 'the focus on the side menu: restarted, no Restart now');
-        app._client.emit('state', inst({}));
-        // the HMI's focus on Beta's proxy
-        const beta = drawn.items.findIndex((i) => i.label === 'Beta');
-        app._components[proxy(1, beta)].emit('focus', { value: true });
-        app._client.emit('state', inst(done));
-        eq([rows(), focused()], [['DOOM', 'Alpha', 'Beta'], 'Beta'], 'the focus on a row: the rows stay, the focus on Beta');
-        eq(drawn.items.some((i) => i.label === 'Restart now'), true, 'the focus on a row: Restart now stays as drawn');
+        eq(rows(), ['Alpha', 'Beta'], 'restarted: DOOM is current, so it leaves the list');
+        eq(drawn.items.some((i) => i.label === 'Restart now'), false, 'restarted, no Restart now');
+        // what is installed and current is not listed
         app._client.emit('state', Object.assign(inst(done), { components: inst(done).components.concat([
             comp({ id: 'gamma', title: 'Gamma', version: '1.0.0', installed: '1.0.0', status: 'installed' })]) }));
-        eq(drawn.items.map((i) => i.label).filter((l) => ['Alpha', 'Beta', 'DOOM', 'Gamma'].indexOf(l) >= 0), ['DOOM', 'Alpha', 'Beta', 'Gamma'],
-            'a row installed meanwhile: after them');
-        // a page opened from a row comes back to it
-        const all4 = (o) => Object.assign(inst(o), { components: inst(o).components.concat([
-            comp({ id: 'gamma', title: 'Gamma', version: '1.0.0', installed: '1.0.0', status: 'installed' })]) });
-        app._client.emit('state', all4({}));
-        const doomAt = drawn.items.findIndex((i) => i.label === 'DOOM');
-        app._components[proxy(1, doomAt)].emit('focus', { value: true });
-        drawn.proxyPress(1, doomAt);
-        eq([drawn.top().name, drawn.top().id], ['app', 'doom'], 'DOOM\'s page');
-        app._client.emit('state', all4(done));
-        drawn.pop();
-        eq([rows(), focused()], [['DOOM', 'Alpha', 'Beta'], 'DOOM'], 'back: the rows as they were, the focus on DOOM');
-        // a drag from a row: the rows stay through it and after it, until the focus moves
-        const box = drawn.items[drawn.focus];
-        gpu.emit('touch', 'down', box.x + 40, box.y + 20);
-        gpu.emit('touch', 'move', box.x + 40, box.y + 60);
-        eq([drawn.focus, drawn._model().held && drawn._model().held.apps.slice(0, 3)], [-1, ['doom', 'alpha', 'beta']], 'a drag: the rows held');
-        gpu.emit('touch', 'up', box.x + 40, box.y + 60);
-        drawn.render();
-        eq(rows(), ['DOOM', 'Alpha', 'Beta'], 'after the drag: as they were');
-        app._components[proxy(1, 0)].emit('focus', { value: true });
-        eq([rows(), focused()], [['Alpha', 'Beta', 'DOOM'], 'Apps'], 'the focus off the rows: in order again');
+        eq(drawn.items.map((i) => i.label).filter((l) => ['Alpha', 'Beta', 'DOOM', 'Gamma'].indexOf(l) >= 0), ['Alpha', 'Beta'],
+            'an installed and current row is not listed');
         drawn.setTab('store');
         app._client.emit('state', st);
         // a popup over a layer page hides the layer

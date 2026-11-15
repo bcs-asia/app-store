@@ -87,7 +87,6 @@ const APP_ID = 'bcs_store_2';
 // [repo, channel]: BCS's own source first, then the community feeds BCS Store adds when they are missing
 const BCS_SOURCES = [
     ['bcs-asia/app-store', 'releases'],
-    ['bcs-develop/bcs-mgu-apps', 'releases'],
     ['bimmer-lab/apps', 'branch:main'],
     ['JustAnotherPU/ridetube', 'releases'],
     ['JustAnotherPU/mgu-apps', 'releases']
@@ -814,7 +813,7 @@ class Store extends OnlineApp {
     _uplink(req) {
         this._uplinkNote = null;
         if (!this._privileged(req)) {
-            this._uplinkNote = readSecret() ? 'updater not running' : 'no updater secret';
+            this._uplinkNote = readSecret() ? 'updater not running' : 'Setup needed: store_app = bcs_store_2 in updater.local.conf, then restart';
         }
     }
 
@@ -867,7 +866,7 @@ class Store extends OnlineApp {
         // the address can hold a password: only whether one is set goes to the log
         logger.info(`proxy ${url ? 'set' : 'off'}`);
         if (!this._privileged({ op: 'proxy-set', url })) {
-            this._proxyNote = readSecret() ? 'updater not running' : 'no updater secret';
+            this._proxyNote = readSecret() ? 'updater not running' : 'Setup needed: store_app = bcs_store_2 in updater.local.conf, then restart';
         }
         this._render();
     }
@@ -1090,7 +1089,7 @@ class Store extends OnlineApp {
             this._removalRefused = false;
             if (!this._privileged({ op: 'source-remove', id: src.id })) {
                 this._removalRefused = true;
-                const error = readSecret() ? 'updater not running' : 'no updater secret';
+                const error = readSecret() ? 'updater not running' : 'Setup needed: store_app = bcs_store_2 in updater.local.conf, then restart';
                 this._note({ kind: 'refused', op: 'source-remove', error });
             }
         }
@@ -1238,7 +1237,7 @@ class Store extends OnlineApp {
             logger.info('add token');
             // the tokens it had are what a new one is told from: only with the updater's state at hand
             if (!this._connected || !this._st || !this._privileged({ op: 'token-add', token })) {
-                this._accountNote({ kind: 'refused', error: readSecret() ? 'updater not running' : 'no updater secret' });
+                this._accountNote({ kind: 'refused', error: readSecret() ? 'updater not running' : 'Setup needed: store_app = bcs_store_2 in updater.local.conf, then restart' });
                 return;
             }
             const before = new Set((this._st.tokens || []).map((t) => t.id));
@@ -1277,8 +1276,24 @@ class Store extends OnlineApp {
      * replacing or removing a source the owner has; the updater keeps the
      * source records, so a tool update does not touch them. A refused one is
      * not tried again this run: Sources has Add source. */
+    /* The retired bcs-develop feeds: removed from the updater when found, once each per run. */
+    _dropRetiredSources(st) {
+        const old = st.sources.find((src) => /^bcs-develop\//i.test(String(src.repo || '')) && !this._bcsSourceAttempted[`drop:${src.id}`]);
+        if (!old) {
+            return false;
+        }
+        this._bcsSourceAttempted[`drop:${old.id}`] = true;
+        if (this._privileged({ op: 'source-remove', id: old.id })) {
+            logger.info(`retired BCS source removal requested: ${old.repo}`);
+        }
+        return true;
+    }
+
     _ensureBcsSources(st) {
         if (!st || !Array.isArray(st.sources) || !this._connected || st.busy || !readSecret()) {
+            return;
+        }
+        if (this._dropRetiredSources(st)) {
             return;
         }
         const have = (repo) => st.sources.some((src) => String(src.repo || '').toLowerCase() === repo.toLowerCase());
@@ -1298,7 +1313,7 @@ class Store extends OnlineApp {
         logger.info(`add source ${source.type === 'github' ? source.repo : '(https)'}` +
             `${source.channel ? ` on ${source.channel}` : ''}`);
         if (!this._privileged(Object.assign({ op: 'source-add' }, source))) {
-            const error = readSecret() ? 'updater not running' : 'no updater secret';
+            const error = readSecret() ? 'updater not running' : 'Setup needed: store_app = bcs_store_2 in updater.local.conf, then restart';
             this._note({ kind: 'refused', op: 'source-add', error });
         }
     }
@@ -1343,7 +1358,7 @@ class Store extends OnlineApp {
         clearTimeout(pick.answerTimer);
         logger.info(`probe ${pick.repo}`);
         if (!this._privileged({ op: 'source-probe', repo: pick.repo })) {
-            pick.probe = { status: 'refused', error: readSecret() ? 'updater not running' : 'no updater secret' };
+            pick.probe = { status: 'refused', error: readSecret() ? 'updater not running' : 'Setup needed: store_app = bcs_store_2 in updater.local.conf, then restart' };
         } else {
             pick.answerTimer = setTimeout(() => this._probeFailed('the updater did not answer'), PROBE_MS);
         }

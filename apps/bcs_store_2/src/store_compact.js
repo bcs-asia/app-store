@@ -94,7 +94,8 @@ function compact(W, H) {
         after('subtitle', X + 220, CW - 220 - 360),
         after('note', X + 220, CW - 220, AMBER),
         list('repos', X, LIST_Y - 6, CW, B - SET_H - 16 - LIST_Y + 6),
-        button('addRepo', X, B - SET_H, Math.min(CW, 620), SET_H, 'Add source', 'tinted', 25, { vicon: 'plus', color: BLUE })
+        button('addRepo', X, B - SET_H, Math.min(CW, 620), SET_H, 'Add source', 'tinted', 25, { vicon: 'plus', color: BLUE }),
+        button('refresh', X + Math.min(CW, 620) + 16, B - SET_H, Math.min(CW - 636, 460), SET_H, '', 'tinted', 25, { vicon: 'refresh', color: BLUE })
     ]);
     const settings = screen('settings', 5, [
         title('Settings'),
@@ -240,7 +241,7 @@ function compact(W, H) {
         text('info', px + 132, M + 72, PW - 152, 30, '', 23, 'label', DIM),
         text('note', px + 20, M + 132, PW - 40, wbY(0) - 12 - M - 132, '', 23, 'label', AMBER, { wrap: true }),
         button('power', px + 20, wbY(0), PW - 40, BTN_H, '', 'outline', 28, { vicon: 'wifi' }),
-        button('scan', px + 20, wbY(1), PW - 40, BTN_H, 'Scan', 'outline', 28, { vicon: 'refresh' })
+        button('scan', px + 20, wbY(1), PW - 40, BTN_H, '', 'outline', 28, { vicon: 'refresh' })
     ]);
     const prefer = screen('prefer', 3, [
         back(),

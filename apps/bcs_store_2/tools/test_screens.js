@@ -186,8 +186,10 @@ const same = Object.assign({}, two, { sources: [{ id: 'idrive7-apps', label: 'ro
         .concat([Object.assign({}, two.components[0], { id: 'quake', title: 'Quake', listedId: null, installAs: null, installed: '1.0.0', status: 'installed' })]) });
 eq(frame(fixture.model({}, same), { textScale: 1, focus: 0, scroll: {} }).values.grid.items.map((t) => t.title),
     ['DOOM (robertnisipeanu/mgu-store)', 'DOOM (robertnisipeanu/idrive-apps)', 'Quake']);
-eq(frame(fixture.model({ tab: 'installed' }, same), { textScale: 1, focus: 0, scroll: {} }).values.apps.items.map((t) => t.sub),
-    ['1.0.0 · robertnisipeanu/mgu-store', '1.0.0 · robertnisipeanu/idrive-apps', '1.0.0 · robertnisipeanu']);
+// Updates lists only what has an update: nothing when all are installed and current, the three when each has one
+eq(frame(fixture.model({ tab: 'installed' }, same), { textScale: 1, focus: 0, scroll: {} }).values.apps.items.map((t) => t.sub), []);
+eq(frame(fixture.model({ tab: 'installed' }, Object.assign({}, same, { components: same.components.map((c) => Object.assign({}, c, { status: 'update', version: '1.1.0' })) })),
+    { textScale: 1, focus: 0, scroll: {} }).values.apps.items.length, 3);
 eq(text(frame(fixture.model({ stack: [{ name: 'main' }, { name: 'app', id: 'quake' }] }, same), { textScale: 1, focus: 0, scroll: {} }), 'author'),
     'from robertnisipeanu/mgu-store');
 // the fixture's tiles, rows and USB tiles: the author, a stick's label
@@ -343,11 +345,10 @@ eq(f.labels[6], 'Update all (1)', 'DOOM downloads and Extended dashboard waits: 
 eq(f.items.find((i) => i.label === 'Update').act, { do: 'install', id: 'gauges' });
 ok(f.labels.indexOf('Display bridge') >= 0 && f.labels.indexOf('M Vitals') < 0, 'installed ones only');
 eq(f.values.apps.items.filter((i) => i.id === 'gauges' || i.id === 'bcs_store_2').map((i) => i.sub),
-    ['1.2.0 → a1b2c3d · cauliflower', '0.7.0 · robertnisipeanu'], 'a row names its source\'s author');
+    ['1.2.0 → a1b2c3d · cauliflower'], 'a row names its source\'s author');
 // Installed: what runs or waits first (downloading, an update, queued, failed, restart pending), each part in the catalog's order
 const ids = (g) => [g.values.apps.items.map((i) => i.id), g.values.services.items.map((i) => i.id)];
-eq(ids(f), [['doom', 'gauges', 'extended_dashboard', 'vehicle_control', 'bcs_store_2'],
-    ['display-bridge', 'mgu-updater', 'mgu-uplink', 'mgu-renderd']], 'what runs or waits first');
+eq(ids(f), [['doom', 'gauges', 'extended_dashboard', 'vehicle_control'], ['display-bridge']], 'what runs or waits first (only those)');
 const sorted = (fn, busy) => {
     const s = fixture.state();
     s.busy = busy === undefined ? s.busy : busy;
@@ -355,17 +356,17 @@ const sorted = (fn, busy) => {
     return ids(frame(fixture.model({ tab: 'installed' }, s), { textScale: 1, focus: -1, scroll: {} }));
 };
 eq(sorted((c) => (c.id === 'doom' ? { status: 'installed', installed: '1.0.1' } : c.id === 'display-bridge' ? { pendingReboot: false } : null), null),
-    [['gauges', 'extended_dashboard', 'vehicle_control', 'bcs_store_2', 'doom'], ['mgu-updater', 'mgu-uplink', 'mgu-renderd', 'display-bridge']],
-    'a finished update and a restart done: back in the catalog\'s order');
+    [['gauges', 'extended_dashboard', 'vehicle_control'], []],
+    'a finished update and a restart done: they leave the list');
 eq(sorted((c) => (c.id === 'mgu-renderd' ? { status: 'update', version: '1.2.0' } : c.id === 'mgu-uplink' ? { queued: true } : null)),
-    [['doom', 'gauges', 'extended_dashboard', 'vehicle_control', 'bcs_store_2'], ['mgu-uplink', 'mgu-renderd', 'display-bridge', 'mgu-updater']],
+    [['doom', 'gauges', 'extended_dashboard', 'vehicle_control'], ['mgu-uplink', 'mgu-renderd', 'display-bridge']],
     'tools: queued, an update and a restart pending first, in the catalog\'s order');
 eq(sorted((c) => (c.id === 'mgu-updater' ? { nextStart: 'remove', pendingReboot: true } : c.id === 'mgu-renderd' ? { applyFailed: 'remove', error: 'x' }
     : null), { id: 'mgu-uplink', op: 'uninstall', phase: 'uninstall' })[1],
     ['mgu-updater', 'mgu-uplink', 'mgu-renderd', 'display-bridge'], 'a removal queued, running or failed first');
 eq(sorted((c) => (c.id === 'mgu-renderd' ? { status: 'update', compat: 'no', pendingReboot: true } : c.id === 'mgu-uplink' ? { blocked: 'x', error: 'y' }
     : c.id === 'display-bridge' ? { pendingReboot: false } : null))[1],
-    ['mgu-updater', 'mgu-uplink', 'mgu-renderd', 'display-bridge'], 'one shown as not for this unit or blocked: nothing to wait on');
+    [], 'one shown as not for this unit or blocked: nothing to wait on');
 
 // a card's lines (title, state, Install now) stay inside it, in either unit's box
 const { DRAW } = require(path.join(__dirname, '..', 'src', 'am_store_widgets.js'));
@@ -381,8 +382,9 @@ Object.keys(UNITS).forEach((unit) => {
     DRAW.appGrid(cv, { text: '#fff', dim: '#888' }, { x: def.x, y: def.y, w: def.w, h: def.h }, Object.assign({}, def.opts, { items }));
     const th = def.opts.tileH;
     // the first row's texts but the letter tiles' letters
-    const row0 = texts.filter((t) => t.y < def.y + th && t.str.length > 1);
-    eq(row0.slice(0, 2).map((t) => t.str), ['Store', 'Installed'], `${unit}: title, state (no source line)`);
+    const row0 = texts.filter((t) => t.y < def.y + th && t.str.length > 1 && !/^ID[78]$/.test(t.str));
+    eq(row0.slice(0, 2).map((t) => t.str), ['BCS Store', 'Installed'], `${unit}: title, state (no source line)`);
+    ok(texts.some((t) => t.str === "ID7") && texts.some((t) => t.str === "ID8"), `${unit}: the ID7 and ID8 tags are on the cards`);
     ok(row0.some((t) => t.str === 'Update now' || t.str === 'Install now'), `${unit}: a card that can install has its button`);
     // the card's bottom 8 px hold the focus rings (store_frame.js): every line, descenders included, ends above them
     ok(row0.every((t) => t.y + 0.25 * t.size <= def.y + th - 8),
@@ -397,7 +399,7 @@ eq(text(f, 'subtitle'), 'USB STICK · 2 packages');
 
 // Sources: every source, Add source
 f = screen('sources');
-eq(f.labels.slice(6), ['robertnisipeanu/mgu-store', 'cauliflower/idrive7-apps', 'IterioDev/car-apps', 'USB STICK', 'Add source']);
+eq(f.labels.slice(6), ['robertnisipeanu/mgu-store', 'cauliflower/idrive7-apps', 'IterioDev/car-apps', 'USB STICK', 'Add source', 'Refresh']);
 eq(text(f, 'subtitle'), '4 sources');
 // Settings: a row per page (Wi-Fi, Accounts, Phone access, Preferred connection, Proxy, System), none without its feature
 f = screen('settings');
@@ -637,12 +639,12 @@ eq(screen('wifi-band').values.networks.items.map((n) => n.sub).slice(0, 2), ['On
     'the page: on the joined network\'s row');
 eq(screen('wifi').values.networks.items[0].sub, 'Online · Strong', 'the page without a frequency: as before');
 f = screen('wifi-paused');
-eq([text(f, 'subtitle'), text(f, 'state'), own(f).indexOf('Scan') >= 0], ['Paused for wireless Android Auto', 'Not connected', true],
+eq([text(f, 'subtitle'), text(f, 'state'), own(f).indexOf('Refresh network') >= 0], ['Paused for wireless Android Auto', 'Not connected', true],
     'paused: the page says so; Scan stays');
 // the page: the network joined first, then the scan's, then saved ones out of range; a tap joins a saved or open one and asks a
 // secured one's password; a saved one has Forget; Don't use Wi-Fi, Scan
 f = screen('wifi');
-eq(own(f), ['Allow 5 GHz', 'Forget', 'FRITZ!Box 7590 XY', 'Cafe Free WiFi', 'Telekom_FON', 'Forget', "Don't use Wi-Fi", 'Scan', 'Back']);
+eq(own(f), ['Allow 5 GHz', 'Forget', 'FRITZ!Box 7590 XY', 'Cafe Free WiFi', 'Telekom_FON', 'Forget', "Don't use Wi-Fi", 'Refresh network', 'Back']);
 eq(f.values.networks.items.map((n) => n.sub), ['Online · Strong', 'Secured · Strong', 'Open · Good', 'Open · Weak', 'Saved · not in range']);
 eq([text(f, 'subtitle'), text(f, 'state'), text(f, 'info')], ['5 networks', 'Online · Mario iPhone', 'IP 172.20.10.3 · -52 dBm']);
 eq([f.items[0].act, f.values.allow5.items[0].right], [{ do: 'wifi-5ghz' }, 'toggle:off'], 'Allow 5 GHz: a switch, off');
@@ -674,7 +676,7 @@ eq(f.items[1].act, { do: 'wifi-join', ssid: 'Mario iPhone' }, 'a saved network n
 eq(text(screen('wifi', { uplinkNote: 'needs mgu-uplink 0.7.0 or newer, running' }), 'note'), 'needs mgu-uplink 0.7.0 or newer, running',
     'the updater\'s or uplink\'s refusal');
 ok(own(screen('wifi', {}, { uplink: Object.assign({}, fixture.state().uplink, { wifi: Object.assign({}, fixture.state().uplink.wifi,
-    { scanning: true }) }) })).indexOf('Scan') < 0, 'no Scan while it scans');
+    { scanning: true }) }) })).indexOf('Refresh network') < 0, 'no Scan while it scans');
 // the password: word keys and symbols, Connect only from 8 characters
 f = screen('wifi-password');
 eq([text(f, 'title'), text(f, 'field'), f.values.field.label], ['FRITZ!Box 7590 XY', '···', 'Password · at least 8 characters']);
