@@ -1,6 +1,6 @@
 'use strict';
 /**
- * Assembles BCS Store's GitHub release folders from apps/bcs_store_2's build:
+ * Assembles BCS Store's GitHub release folders from apps/bcs_store's build:
  *
  *   node release/bcs_release.js <out dir>
  *
@@ -16,7 +16,7 @@ const path = require('path');
 const crypto = require('crypto');
 
 const REPO = 'bcs-asia/app-store';
-const APP = path.join(__dirname, '..', 'apps', 'bcs_store_2');
+const APP = path.join(__dirname, '..', 'apps', 'bcs_store');
 const out = path.resolve(process.argv[2] || 'release-out');
 const pkg = JSON.parse(fs.readFileSync(path.join(APP, 'package', 'package.json'), 'utf8'));
 const rel = JSON.parse(fs.readFileSync(path.join(APP, 'release.json'), 'utf8'));
