@@ -1,0 +1,3 @@
+fde27bf6c3ccc15aaa779fa3726ab981bd50b781a9cc0f0d00cf2f5fabca611a  bcs_store_2.png
+b444440a5d634d1c87b2eedbe3588d6d0e977485e70211b18790fccc7cbdb9a0  bcs_store_2@2.2.1.tgz
+4a5caf21266566741307aa3f819ad9b70ab56fcef658c9bcb7cbd644d8cdee14  catalog.json
