@@ -162,6 +162,13 @@ function appGrid(cv, t, b, o) {
             // a long state (a translation) takes a smaller size before it is cut
             const ss2 = a.sub ? W.shrink(cv, String(a.sub), L.maxW, L.subSize, 'label', 0.8) : 0;
             if (a.sub) cv.text(W.fit(cv, String(a.sub), L.maxW, ss2), L.tx, L.subY, ss2, C(t, a.subColor, '#5de0ff'));
+            // ID7 / ID8 tags (the head units it supports), top right of the card
+            if (ch >= 150 && Array.isArray(a.tags) && a.tags.length) {
+                const th = Math.round(Math.min(36, ch * 0.13)); let tx2 = x + cw - 18;
+                for (let i = a.tags.length - 1; i >= 0; i--) {
+                    tx2 -= chip(cv, a.tags[i], tx2, y + 14, th, a.tags[i] === 'ID8' ? '#27e1c1' : '#00bfff', false, true) + th * 0.25;
+                }
+            }
             if (L.btn) {
                 const q = L.btn, bs = Math.round(q.h * 0.44);
                 cv.card(q.x, q.y, q.w, q.h, q.h / 2, [[0, '#22b8ff'], [1, '#0b78d4']]);

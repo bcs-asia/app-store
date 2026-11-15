@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.2.2
+
+Fixes from the first head-unit test.
+
+- ID7 / ID8 tags on the app cards (the head units an app supports; none stated = both).
+- The Store is named "BCS Store" everywhere, never with its source's name behind it.
+- The upstream Store (robertn_store) is hidden completely, so nobody installs it from here.
+- The retired bcs-develop sources are removed from the updater when found, and are no longer added.
+- Updates lists only what has an update (or waits on something, or is not working); "All up to date" when nothing does.
+- Sources has a Refresh button (the same as Check now); Wi-Fi's Scan is now "Refresh network".
+- When the updater has not given the Store its key (updater.local.conf needs `store_app = bcs_store_2`), the buttons that need it say "Setup needed ..." instead of "no updater secret". See SETUP.md in the release.
+
 ## 2.2.1
 
 BCS Store, rebuilt on Robert Nisipeanu's MGU Store 0.9.40 (the upstream Store's behaviour, tests and updater protocol unchanged).

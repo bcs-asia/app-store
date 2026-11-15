@@ -49,6 +49,12 @@ sources.components.splice(2, 0, comp('subtitle', 'text', 480, 227, 1300, 43, { t
 drop(sources, 'reposLabel');
 place(find(sources, 'repos'), 460, 292, 2380, 440);
 place(find(sources, 'addRepo'), 480, 744, 1000, 96);
+{   // Refresh: rechecks every source (the same as Check now)
+    const add = find(sources, 'addRepo'), r = JSON.parse(JSON.stringify(add));
+    r.name = 'refresh'; r.opts.text = '';
+    sources.components.push(r);
+    place(r, 1500, 744, 880, 96);
+}
 find(sources, 'note').opts.text = '';
 
 // System: the head unit's state, versions, Check now, Restart head unit and who made the Store
@@ -84,7 +90,7 @@ screens.forEach((st) => {
     st.components.forEach((c) => { if (c.name === 'nav') { c.opts.items = NAV; } });
     st.components.unshift(comp('headerLogo', 'image', 126, 38, 300, 64, { src: LOGO_MARK, radius: 0 }));
 });
-const json = JSON.stringify({ design: up.design, screens }, null, 1).split('#3d9bff').join(BLUE).replace(JSON.stringify(LOGO_MARK), 'LOGO')
+const json = JSON.stringify({ design: up.design, screens }, null, 1).split('"text": "Scan"').join('"text": ""').split('#3d9bff').join(BLUE).replace(JSON.stringify(LOGO_MARK), 'LOGO')
     .split(JSON.stringify(LOGO_MARK)).join('LOGO');
 const head = fs.readFileSync(path.join(__dirname, 'upstream', 'am_screens.upstream.js'), 'utf8').split('module.exports')[0]
     .replace("'use strict';\n", "'use strict';\nconst { LOGO } = require('./bcs_brand.js');\n")
