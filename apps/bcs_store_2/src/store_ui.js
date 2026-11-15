@@ -145,6 +145,9 @@ function safeModeOff(m) {
 
 /* Why the last restart failed or was refused, beside Restart head unit. */
 function restartFailed(m) {
+    if (m.setupNote) {
+        return m.setupNote;
+    }
     const st = m.connected ? m.st : null;
     return st && st.rebootError && !st.busy ? tr("Restart failed: {0}", st.rebootError) : null;
 }
