@@ -30,9 +30,10 @@ const sha = (f) => crypto.createHash('sha256').update(fs.readFileSync(f)).digest
 const name = `${id}@${version}.tgz`;
 const url = (tag, n) => `https://github.com/${REPO}/releases/download/${tag}/${n}`;
 
+// title = the installed app's entry-point text (SID_STORE_TITLE): the updater matches it to hand an app over from a removed source
 function entry(tag) {
     return {
-        id, kind: 'app', title: 'BCS Store', description: 'BCS Automotive Solutions: apps and head-unit tools for the BMW MGU, from BCS and community sources',
+        id, kind: 'app', title: 'Store', description: 'BCS Automotive Solutions: apps and head-unit tools for the BMW MGU, from BCS and community sources',
         version,
         artifact: { name, size: fs.statSync(src).size, sha256: sha(src), url: url(tag, name) },
         build: 'unit', requires: rel.requires, uninstallable: false, mguHmi: pkg.mguHmi,
