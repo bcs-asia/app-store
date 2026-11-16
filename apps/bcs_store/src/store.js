@@ -1286,7 +1286,7 @@ class Store extends OnlineApp {
      * not tried again this run: Sources has Add source. */
     /* The retired bcs-develop feeds: removed from the updater when found, once each per run. */
     _dropRetiredSources(st) {
-        const old = st.sources.find((src) => /^bcs-develop\//i.test(String(src.repo || '')) && !this._bcsSourceAttempted[`drop:${src.id}`]);
+        const old = st.sources.find((src) => /^bcs-develop\//i.test(String(src.label || src.repo || '')) && !this._bcsSourceAttempted[`drop:${src.id}`]);
         if (!old) {
             return false;
         }
@@ -1304,7 +1304,7 @@ class Store extends OnlineApp {
         if (this._dropRetiredSources(st)) {
             return;
         }
-        const have = (repo) => st.sources.some((src) => String(src.repo || '').toLowerCase() === repo.toLowerCase());
+        const have = (repo) => st.sources.some((src) => String(src.label || src.repo || '').toLowerCase() === repo.toLowerCase());
         const next = BCS_SOURCES.find(([repo]) => !have(repo) && !this._bcsSourceAttempted[repo.toLowerCase()]);
         if (!next) {
             return;

@@ -25,6 +25,8 @@ function state() {
         sources: [
             { id: 'mgu-store', type: 'github', label: 'robertnisipeanu/mgu-store', builtin: true, usb: false, channel: 'releases',
                 status: 'ok', error: null, auth: { kind: 'github', token: '3f9a01c2', login: 'robertn' }, checkedAt: 1, components: 6 },
+            { id: 'bcs-asia', type: 'github', label: 'bcs-asia/app-store', builtin: false, usb: false, channel: 'releases',
+                status: 'ok', error: null, auth: null, checkedAt: 1, components: 1 },
             { id: 'idrive7-apps', type: 'github', label: 'cauliflower/idrive7-apps', builtin: false, usb: false, channel: 'branch:main',
                 status: 'ok', error: null, auth: null, checkedAt: 1, components: 4 },
             { id: 'car-apps', type: 'github', label: 'IterioDev/car-apps', builtin: false, usb: false, channel: 'releases',
@@ -52,7 +54,7 @@ function state() {
         rebooting: false,
         rebootError: null,
         components: [
-            comp({ id: 'bcs_store', title: 'Store', version: '0.7.0', installed: '0.7.0', status: 'installed', uninstallable: false }),
+            comp({ id: 'bcs_store', title: 'Store', version: '0.7.0', installed: '0.7.0', status: 'installed', uninstallable: false, source: 'bcs-asia' }),
             comp({ id: 'doom', title: 'DOOM', version: '1.0.1', installed: '1.0.0', status: 'update', size: 2080457, source: 'idrive7-apps' }),
             comp({ id: 'gauges', title: 'Gauges', version: '1.2.0', installed: '1.2.0', status: 'update', revision: 'a1b2c3d',
                 source: 'idrive7-apps', build: 'unit', author: 'robertn', description: 'Speed, revs, temperatures and boost as gauges, ' +

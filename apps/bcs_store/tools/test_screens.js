@@ -80,7 +80,15 @@ ok(cards.filter((c) => c.btn).every((c) => /^(Install now|Update now|Try again)$
     'a card\'s button installs or updates its component');
 ok(cards.every((c) => c.src === ''), 'the card does not name its source');
 ok(f.labels.indexOf('Car Data') < 0, 'Car Data (iDrive 8 only, not installed) is not listed');
-eq(f.items[7].act, { do: 'open', page: { name: 'app', id: 'bcs_store', source: 'mgu-store', listed: 'bcs_store' } }, 'the BCS Store card first');
+eq(f.items[7].act, { do: 'open', page: { name: 'app', id: 'bcs_store', source: 'bcs-asia', listed: 'bcs_store' } }, 'the BCS Store card first');
+// a copy of BCS Store listed by another source (the retired bcs-develop) is not offered
+{
+    const st = fixture.state();
+    st.sources.push({ id: 'dev', type: 'github', label: 'bcs-develop/bcs-store', builtin: false, usb: false, channel: 'releases', status: 'ok', error: null, auth: null, checkedAt: 1, components: 1 });
+    st.components.push(Object.assign({}, st.components.find((c) => c.id === 'bcs_store'), { source: 'dev', version: '2.1.8' }));
+    const g = frame(fixture.model({ tab: 'store' }, st), { textScale: 1, focus: 0, scroll: {} });
+    eq(g.items.filter((i) => i.act && i.act.page && i.act.page.id === 'bcs_store').map((i) => i.act.page.source), ['bcs-asia'], 'BCS Store only from bcs-asia/app-store');
+}
 const subs = f.values.grid.items.concat(screen('store', { tab: 'tools' }).values.grid.items).map((t) => t.sub);
 ['Downloading 42 %', 'Update a1b2c3d', 'Waiting', 'Restart pending', 'Failed', 'Installed', '2.1.0 · 402 KB']
     .forEach((s) => ok(subs.indexOf(s) >= 0, `a tile says ${s}`));
@@ -399,8 +407,8 @@ eq(text(f, 'subtitle'), 'USB STICK · 2 packages');
 
 // Sources: every source, Add source
 f = screen('sources');
-eq(f.labels.slice(6), ['robertnisipeanu/mgu-store', 'cauliflower/idrive7-apps', 'IterioDev/car-apps', 'USB STICK', 'Add source', 'Refresh']);
-eq(text(f, 'subtitle'), '4 sources');
+eq(f.labels.slice(6), ['robertnisipeanu/mgu-store', 'bcs-asia/app-store', 'cauliflower/idrive7-apps', 'IterioDev/car-apps', 'USB STICK', 'Add source', 'Refresh']);
+eq(text(f, 'subtitle'), '5 sources');
 // Settings: a row per page (Wi-Fi, Accounts, Phone access, Preferred connection, Proxy, System), none without its feature
 f = screen('settings');
 const rowIds = (g) => g.values.accessLeft.items.concat(g.values.accessRight.items).map((i) => i.id);
