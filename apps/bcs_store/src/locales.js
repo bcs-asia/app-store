@@ -12,6 +12,7 @@ module.exports = [
   "drawn": false,
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "المثبتة",
    "Settings": "الإعدادات",
    "Apps": "التطبيقات",
@@ -208,6 +209,7 @@ module.exports = [
   "font": "latin",
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "Nainstalováno",
    "Settings": "Nastavení",
    "Apps": "Aplikace",
@@ -404,6 +406,7 @@ module.exports = [
   "font": "latin",
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "Installeret",
    "Settings": "Indstillinger",
    "Apps": "Apps",
@@ -600,6 +603,7 @@ module.exports = [
   "font": "latin",
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "Installiert",
    "Settings": "Einstellungen",
    "Apps": "Apps",
@@ -796,6 +800,7 @@ module.exports = [
   "font": "greek",
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "Στη μονάδα",
    "Settings": "Ρυθμίσεις",
    "Apps": "Εφαρμογές",
@@ -992,6 +997,7 @@ module.exports = [
   "font": "latin",
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "Instalado",
    "Settings": "Configuración",
    "Apps": "Apps",
@@ -1188,6 +1194,7 @@ module.exports = [
   "font": "latin",
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "Instalado",
    "Settings": "Ajustes",
    "Apps": "Apps",
@@ -1384,6 +1391,7 @@ module.exports = [
   "font": "latin",
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "Asennettu",
    "Settings": "Asetukset",
    "Apps": "Sovellukset",
@@ -1580,6 +1588,7 @@ module.exports = [
   "font": "latin",
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "Installé",
    "Settings": "Paramètres",
    "Apps": "Applis",
@@ -1776,6 +1785,7 @@ module.exports = [
   "font": "latin",
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "Installé",
    "Settings": "Réglages",
    "Apps": "Apps",
@@ -1972,6 +1982,7 @@ module.exports = [
   "drawn": false,
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "מותקן",
    "Settings": "הגדרות",
    "Apps": "אפליקציות",
@@ -2168,6 +2179,7 @@ module.exports = [
   "font": "latin",
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "Telepítve",
    "Settings": "Beállítások",
    "Apps": "Alkalmazások",
@@ -2364,6 +2376,7 @@ module.exports = [
   "font": "latin",
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "Terpasang",
    "Settings": "Pengaturan",
    "Apps": "Aplikasi",
@@ -2560,6 +2573,7 @@ module.exports = [
   "font": "latin",
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "Installato",
    "Settings": "Impostazioni",
    "Apps": "App",
@@ -2756,6 +2770,7 @@ module.exports = [
   "font": "japanese",
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "インストール済み",
    "Settings": "設定",
    "Apps": "アプリ",
@@ -2952,6 +2967,7 @@ module.exports = [
   "font": "korean",
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "설치됨",
    "Settings": "설정",
    "Apps": "앱",
@@ -3148,6 +3164,7 @@ module.exports = [
   "font": "latin",
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "Installert",
    "Settings": "Innstillinger",
    "Apps": "Apper",
@@ -3346,6 +3363,7 @@ module.exports = [
   "font": "latin",
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "Geïnstalleerd",
    "Settings": "Instellingen",
    "Apps": "Apps",
@@ -3542,6 +3560,7 @@ module.exports = [
   "font": "latin",
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "Zainstalowane",
    "Settings": "Ustawienia",
    "Apps": "Aplikacje",
@@ -3738,6 +3757,7 @@ module.exports = [
   "font": "latin",
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "Instalado",
    "Settings": "Configurações",
    "Apps": "Apps",
@@ -3934,6 +3954,7 @@ module.exports = [
   "font": "latin",
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "Instalado",
    "Settings": "Definições",
    "Apps": "Apps",
@@ -4130,6 +4151,7 @@ module.exports = [
   "font": "latin",
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "Instalate",
    "Settings": "Setări",
    "Apps": "Aplicații",
@@ -4326,6 +4348,7 @@ module.exports = [
   "font": "cyrillic",
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "Установленные",
    "Settings": "Настройки",
    "Apps": "Приложения",
@@ -4522,6 +4545,7 @@ module.exports = [
   "font": "latin",
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "Nainštalované",
    "Settings": "Nastavenia",
    "Apps": "Aplikácie",
@@ -4718,6 +4742,7 @@ module.exports = [
   "font": "latin",
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "Nameščeno",
    "Settings": "Nastavitve",
    "Apps": "Aplikacije",
@@ -4914,6 +4939,7 @@ module.exports = [
   "font": "latin",
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "Installerat",
    "Settings": "Inställningar",
    "Apps": "Appar",
@@ -5110,6 +5136,7 @@ module.exports = [
   "drawn": false,
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "ติดตั้งแล้ว",
    "Settings": "การตั้งค่า",
    "Apps": "แอป",
@@ -5306,6 +5333,7 @@ module.exports = [
   "font": "latin",
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "Yüklü",
    "Settings": "Ayarlar",
    "Apps": "Uygulamalar",
@@ -5502,6 +5530,7 @@ module.exports = [
   "font": "cyrillic",
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "Встановлені",
    "Settings": "Налаштування",
    "Apps": "Програми",
@@ -5698,6 +5727,7 @@ module.exports = [
   "font": "vietnamese",
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "Đã cài đặt",
    "Settings": "Cài đặt",
    "Apps": "Ứng dụng",
@@ -5896,6 +5926,7 @@ module.exports = [
   "font": "chinese",
   "words": {
    "Store": "应用商店",
+   "BCS STORE": "BCS STORE",
    "Installed": "已安装",
    "Settings": "设置",
    "Apps": "应用",
@@ -6094,6 +6125,7 @@ module.exports = [
   "font": "chinese-tc",
   "words": {
    "Store": "Store",
+   "BCS STORE": "BCS STORE",
    "Installed": "已安裝",
    "Settings": "設定",
    "Apps": "應用程式",

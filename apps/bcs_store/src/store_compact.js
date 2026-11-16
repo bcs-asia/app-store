@@ -36,7 +36,7 @@ function compact(W, H) {
     const R = W - M;                  // its right edge
     const B = H - M;                  // its bottom
     const CW = R - X;
-    const nav = (sel) => el('nav', 'sideNav', M, M + LOGO_H + 8, RAIL, H - 2 * M - LOGO_H - 8, { items: NAV_ITEMS, sel, labelSize: 22 });
+    const nav = (sel) => el('nav', 'sideNav', M, M + LOGO_H + 8, RAIL, H - 2 * M - LOGO_H - 8, { items: NAV_ITEMS, sel, labelSize: 24 });
     const logo = () => el('headerLogo', 'image', M, M, RAIL, LOGO_H, { src: LOGO, radius: 0 });
     const screen = (name, sel, components) => ({ kind: 'gpu', name, theme: 'm_tricolour', bg: 'theme',
         components: [logo(), nav(sel)].concat(components) });

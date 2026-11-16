@@ -93,7 +93,7 @@ function comps(m) {
 /* Its title, with its source's name where another listed row has the same title (two sources' DOOM). */
 function named(m, c) {
     if (c.id === 'bcs_store') {
-        return 'BCS Store';     // never with its source's name behind it
+        return 'BCS STORE';     // never with its source's name behind it
     }
     const name = sourceNames(comps(m), sources(m))(c);
     return name && comps(m).some((o) => o !== c && o.title === c.title) ? `${c.title} (${name})` : c.title;

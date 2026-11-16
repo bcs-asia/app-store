@@ -391,7 +391,7 @@ Object.keys(UNITS).forEach((unit) => {
     const th = def.opts.tileH;
     // the first row's texts but the letter tiles' letters
     const row0 = texts.filter((t) => t.y < def.y + th && t.str.length > 1 && !/^ID[78]$/.test(t.str));
-    eq(row0.slice(0, 2).map((t) => t.str), ['BCS Store', 'Installed'], `${unit}: title, state (no source line)`);
+    eq(row0.slice(0, 2).map((t) => t.str), ['BCS STORE', 'Installed'], `${unit}: title, state (no source line)`);
     ok(texts.some((t) => t.str === "ID7") && texts.some((t) => t.str === "ID8"), `${unit}: the ID7 and ID8 tags are on the cards`);
     ok(row0.some((t) => t.str === 'Update now' || t.str === 'Install now'), `${unit}: a card that can install has its button`);
     // the card's bottom 8 px hold the focus rings (store_frame.js): every line, descenders included, ends above them
