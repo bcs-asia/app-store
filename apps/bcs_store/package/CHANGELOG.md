@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.7
+
+- Robert Nisipeanu's MGU Store is listed again, to install or remove like any other app. BCS Store itself is still offered only from bcs-asia/app-store.
+
 ## 2.2.6
 
 - The catalog lists the Store under the title "Store", the text of its entry point on the head unit (the Store still shows as "BCS Store" in its own screens). The updater hands an installed app over from a removed source to the source whose listing has the same title; "BCS Store" did not match, so 2.1.x installed from bcs-develop could not be replaced from bcs-asia.
