@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.2.5
+
+- BCS Store is offered only from the bcs-asia/app-store source: another source's copy of it (the retired bcs-develop one) is not shown.
+- Fix: the Store recognised a source by a field the updater does not send, so the retired bcs-develop sources were never removed and the BCS sources were asked for again every start. It now uses the source's label (its repository).
+
 ## 2.2.4
 
 - The app id is `bcs_store` again (the id of the 2.1.x Store), so this installs over 2.1.x as an ordinary update and the updater already gives it its key: Remove, Restart head unit and the Wi-Fi buttons work without any head-unit setup. (2.2.0 to 2.2.3 used `bcs_store_2`.)

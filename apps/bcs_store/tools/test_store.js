@@ -735,6 +735,21 @@ function run() {
         eq(sent.map(secretless), [{ op: 'source-remove', id: 'idrive7-apps' }]);
         eq(last(/storeSourcesStatus\.0\.Text/), 'storeSourcesStatus.0.Text=Remove failed: forbidden');
         eq(states, ['close ST_OnlineApps_StoreSourceRemove'], 'only the confirm closes');
+        // BCS's own sources: the retired bcs-develop ones are removed, the missing BCS ones added, once each (a source's `label` is its repo)
+        const sentBefore = sent.length;
+        app._bcsSourceAttempted = Object.create(null);
+        const wasConnected = app._connected;
+        app._connected = true;
+        const stSources = { busy: false, sources: [{ id: 'a', label: 'bcs-develop/bcs-store' }, { id: 'b', label: 'bcs-develop/bcs-mgu-apps' },
+            { id: 'c', label: 'bcs-asia/app-store' }] };
+        app._ensureBcsSources(stSources);
+        app._ensureBcsSources(stSources);
+        app._ensureBcsSources(stSources);
+        app._ensureBcsSources(stSources);
+        eq(sent.map(secretless).slice(sentBefore, sentBefore + 4), [{ op: 'source-remove', id: 'a' }, { op: 'source-remove', id: 'b' },
+            { op: 'source-add', type: 'github', repo: 'bimmer-lab/apps', channel: 'branch:main' },
+            { op: 'source-add', type: 'github', repo: 'JustAnotherPU/ridetube', channel: 'releases' }], 'BCS sources: retired removed, missing added');
+        app._connected = wasConnected;
         // the refused source's page closes once the confirm step gives it the focus back: Sources has the message
         app._states.ST_OnlineApps_StoreSource.emit('visible', { visible: true });
         app._states.ST_OnlineApps_StoreSource.emit('focus', { focus: true });
