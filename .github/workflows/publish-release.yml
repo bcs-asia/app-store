@@ -16,9 +16,9 @@ jobs:
       - name: Draft versioned release
         env: { GH_TOKEN: "${{ github.token }}" }
         run: |
-          gh release view v2.2.5 >/dev/null 2>&1 && gh release delete v2.2.5 --yes || true
-          gh release create v2.2.5 release-assets/v2.2.5/* --draft --prerelease \
-            --title "BCS Store 2.2.5" --notes-file release-assets/v2.2.5/RELEASE_NOTES.md
+          gh release view v2.2.6 >/dev/null 2>&1 && gh release delete v2.2.6 --yes || true
+          gh release create v2.2.6 release-assets/v2.2.6/* --draft --prerelease \
+            --title "BCS Store 2.2.6" --notes-file release-assets/v2.2.6/RELEASE_NOTES.md
       - name: Publish OTA catalog release
         if: ${{ inputs.publish_catalog }}
         env: { GH_TOKEN: "${{ github.token }}" }

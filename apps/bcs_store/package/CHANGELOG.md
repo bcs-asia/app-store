@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.6
+
+- The catalog lists the Store under the title "Store", the text of its entry point on the head unit (the Store still shows as "BCS Store" in its own screens). The updater hands an installed app over from a removed source to the source whose listing has the same title; "BCS Store" did not match, so 2.1.x installed from bcs-develop could not be replaced from bcs-asia.
+
 ## 2.2.5
 
 - BCS Store is offered only from the bcs-asia/app-store source: another source's copy of it (the retired bcs-develop one) is not shown.

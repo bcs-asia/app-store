@@ -1,12 +1,13 @@
-# Replacing the old BCS Store (2.1.x from bcs-develop)
+# Replacing the old BCS Store (2.1.x installed from bcs-develop)
 
-The updater lets only the source that installed an app update it. 2.1.x was installed from bcs-develop/bcs-store,
-so bcs-asia/app-store is refused ("bcs_store is already installed from ..."). Once that source is gone, the
-installed Store is updated by the source that lists it under the same title ("BCS Store").
+The updater lets only the source that installed an app update it ("bcs_store is already installed from ...").
+When that source is removed, the installed Store is handed to the source whose listing has the same title
+(the Store's entry-point text, "Store"). 2.2.6's catalog uses that title.
 
-On the car, in the OLD BCS Store (2.1.x, it has the updater key):
-1. Sources: remove bcs-develop/bcs-store and bcs-develop/bcs-mgu-apps (open each, Remove).
-2. Make sure bcs-asia/app-store is listed (add it with Add source if not), then Refresh / check for updates.
-3. Apps: BCS Store 2.2.5 shows Update now; install it, then restart the head unit.
+On the car, in the OLD BCS Store (2.1.x; it has the updater key):
+1. Sources: remove bcs-develop/bcs-store and bcs-develop/bcs-mgu-apps.
+2. Keep bcs-asia/app-store listed (Add source if needed), then refresh (Check for updates).
+3. Apps: the Store now shows Update now (2.2.6). Install it, then restart the head unit.
 
-From 2.2.5 on the Store removes the bcs-develop sources by itself and only offers BCS Store from bcs-asia.
+If it still says "already installed from ...", tell me the full text of the message (open the Store page,
+the line is cut off on screen) and which sources are listed.
