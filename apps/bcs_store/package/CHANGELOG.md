@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.2.9
+
+- The Store is named BCS STORE: on the head unit's app tile and in the Store's own screens.
+- Robert Nisipeanu's MGU Store is hidden again; BCS Store is the only Store offered.
+- The side menu's tabs (Apps, Tools, Updates, USB, Sources, Settings) are larger buttons of their own: a bigger icon and word, the open tab in the BCS blue, the count badge inside the button. The iDrive 7 menu is wider.
+
 ## 2.2.8
 
 - No change to the Store itself. Release packaging: merging a version's release assets now publishes the release and refreshes the OTA catalog automatically, and the release carries the icon.

@@ -74,6 +74,9 @@ function notForUnit(row) {
 /* Whether the Store lists the component: not one for another head unit
  * only (compat "no") unless it is installed, so it can be removed. */
 function listed(row) {
+    if (row.id === 'robertn_store') {
+        return false;           // BCS Store is the Store: the upstream Store is not shown at all, to be installed or otherwise
+    }
     return row.compat !== 'no' || !!row.installed;
 }
 
