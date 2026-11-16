@@ -1,11 +1,12 @@
 name: Publish BCS Store release
+# Runs when a version's release-assets are merged to main (or by hand):
+# publishes the versioned release (as the latest, not a pre-release) and
+# refreshes the OTA 'catalog' release the cars read.
 on:
+  push:
+    branches: [main]
+    paths: ['release-assets/**']
   workflow_dispatch:
-    inputs:
-      publish_catalog:
-        description: "Also create/update the OTA 'catalog' release (cars read this)"
-        type: boolean
-        default: false
 permissions:
   contents: write
 jobs:
@@ -13,18 +14,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Draft versioned release
+      - name: Versioned release
         env: { GH_TOKEN: "${{ github.token }}" }
         run: |
-          gh release view v2.2.7 >/dev/null 2>&1 && gh release delete v2.2.7 --yes || true
-          gh release create v2.2.7 release-assets/v2.2.7/* --draft --prerelease \
-            --title "BCS Store 2.2.7" --notes-file release-assets/v2.2.7/RELEASE_NOTES.md
-      - name: Publish OTA catalog release
-        if: ${{ inputs.publish_catalog }}
+          V=$(node -p "require('./apps/bcs_store/mgu-app.json').version")
+          echo "version $V"
+          gh release view "v$V" >/dev/null 2>&1 && gh release delete "v$V" --yes || true
+          gh release create "v$V" release-assets/v$V/* --latest \
+            --title "BCS Store $V" --notes-file release-assets/v$V/RELEASE_NOTES.md
+      - name: OTA catalog release
         env: { GH_TOKEN: "${{ github.token }}" }
         run: |
           if gh release view catalog >/dev/null 2>&1; then
-            gh release upload catalog release-assets/catalog/* --clobber
+            for a in $(gh release view catalog --json assets --jq '.assets[].name'); do
+              gh release delete-asset catalog "$a" --yes
+            done
+            gh release upload catalog release-assets/catalog/*
           else
-            gh release create catalog release-assets/catalog/* --title "Catalog" --notes "OTA catalog"
+            gh release create catalog release-assets/catalog/* --title "Catalog" --notes "OTA catalog" --latest=false
           fi

@@ -1,4 +1,4 @@
-# BCS Store 2.2.7
+# BCS Store 2.2.8
 
 Based on MGU Store 0.9.40 by Robert Nisipeanu (GPL-3.0-or-later). App id `bcs_store`; installs over 2.1.x.
 
@@ -8,6 +8,6 @@ Based on MGU Store 0.9.40 by Robert Nisipeanu (GPL-3.0-or-later). App id `bcs_st
 Replace the old store: UPGRADE.md.
 
 
-## What changed in 2.2.7
+## What changed in 2.2.8
 
-- Robert Nisipeanu's MGU Store is listed again in the BCS Store (install or remove like any other app).
+- Release packaging only: the release and the OTA catalog are published automatically and carry the icon. Robert's MGU Store stays listed (2.2.7).
