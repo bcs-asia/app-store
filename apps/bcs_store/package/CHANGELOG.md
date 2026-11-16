@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.8
+
+- No change to the Store itself. Release packaging: merging a version's release assets now publishes the release and refreshes the OTA catalog automatically, and the release carries the icon.
+
 ## 2.2.7
 
 - Robert Nisipeanu's MGU Store is listed again, to install or remove like any other app. BCS Store itself is still offered only from bcs-asia/app-store.
