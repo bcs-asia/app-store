@@ -753,8 +753,8 @@ function run() {
         for (let i = 0; i < 40; i++) {
             app._ensureBcsSources(stSources);
         }
-        eq(sent.slice(sentBefore + 4).map(secretless).every((x) => x.op === 'source-add' && x.channel === 'releases'), true, 'the community feeds are added on the releases channel');
-        eq(sent.slice(sentBefore + 4).length, 15, 'each remaining BCS feed is added once');
+        eq(sent.slice(sentBefore + 4).map(secretless).every((x) => x.op === 'source-add' && (x.channel === 'releases' || x.channel === 'branch:main')), true, 'the community feeds are added on their release or branch channel');
+        eq(sent.slice(sentBefore + 4).length, 16, 'each remaining BCS feed is added once');
         app._connected = wasConnected;
         // the refused source's page closes once the confirm step gives it the focus back: Sources has the message
         app._states.ST_OnlineApps_StoreSource.emit('visible', { visible: true });
