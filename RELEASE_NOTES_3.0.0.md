@@ -1,4 +1,4 @@
-# BCS Store 2.2.9
+# BCS Store 3.0.0
 
 Based on MGU Store 0.9.40 by Robert Nisipeanu (GPL-3.0-or-later). App id `bcs_store`; installs over 2.1.x.
 
@@ -8,8 +8,8 @@ Based on MGU Store 0.9.40 by Robert Nisipeanu (GPL-3.0-or-later). App id `bcs_st
 Replace the old store: UPGRADE.md.
 
 
-## What changed in 2.2.9
+## What changed in 3.0.0
 
-- The Store is named BCS STORE (head unit tile and its own screens).
-- Robert Nisipeanu's MGU Store is hidden again.
-- Larger, nicer side menu buttons (Apps, Tools, Updates, USB, Sources, Settings).
+- New side menu: round icon buttons over their words; the open tab is a BCS-blue disc with a halo, the count badge a red dot.
+- Community sources added (add-only) from the awesome-bmw-mgu list: eroobeeroo, arefahmad, pinguinooo, nickgcode, aurelmarius (apps, games), hexlay, NamelsMissing, istt1899/x3, JustAnotherPU (ridewatch, moonride, waze-hud), pllanaio/mgu-browser, isaakbruno2/carplay-map-cluster.
+- The Store is BCS STORE; Robert's MGU Store stays hidden.

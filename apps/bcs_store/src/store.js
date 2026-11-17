@@ -89,7 +89,22 @@ const BCS_SOURCES = [
     ['bcs-asia/app-store', 'releases'],
     ['bimmer-lab/apps', 'branch:main'],
     ['JustAnotherPU/ridetube', 'releases'],
-    ['JustAnotherPU/mgu-apps', 'releases']
+    ['JustAnotherPU/mgu-apps', 'releases'],
+    // community collections from the awesome-bmw-mgu list (releases channel: the updater shows a source with nothing published as unavailable)
+    ['eroobeeroo/idrive7-apps', 'releases'],
+    ['arefahmad/idrive7-apps', 'releases'],
+    ['pinguinooo/idrive7-apps', 'releases'],
+    ['nickgcode/idrive7-apps', 'releases'],
+    ['aurelmarius/bmw-apps', 'releases'],
+    ['aurelmarius/bmw-games', 'releases'],
+    ['hexlay/idrive7-custom-apps', 'releases'],
+    ['NamelsMissing/mgu-apps', 'releases'],
+    ['istt1899/x3', 'releases'],
+    ['JustAnotherPU/ridewatch', 'releases'],
+    ['JustAnotherPU/moonride', 'releases'],
+    ['JustAnotherPU/waze-hud', 'releases'],
+    ['pllanaio/mgu-browser', 'releases'],
+    ['isaakbruno2/carplay-map-cluster', 'releases']
 ];
 /* The updater writes the privileged secret, and while the phone page is on
  * its access URL, into this app's data folder (owner this app's uid, 0400);

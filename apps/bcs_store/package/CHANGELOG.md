@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.0.0
+
+- New side menu: each tab is a round icon button over its word. The open tab is a BCS-blue disc with a soft halo, the count badge is a red dot on the disc.
+- More community sources are added to the Store (add-only): eroobeeroo, arefahmad, pinguinooo, nickgcode, aurelmarius (apps and games), hexlay, NamelsMissing, istt1899/x3, JustAnotherPU (ridewatch, moonride, waze-hud), pllanaio/mgu-browser, isaakbruno2/carplay-map-cluster, from the awesome-bmw-mgu list.
+
 ## 2.2.9
 
 - The Store is named BCS STORE: on the head unit's app tile and in the Store's own screens.

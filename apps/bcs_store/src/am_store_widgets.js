@@ -268,25 +268,26 @@ const navItems = (o) => (Array.isArray(o.items) ? o.items
     : lines(o.items).map((l, i) => ({ id: l[0].toLowerCase(), label: l[0], vicon: l[1] || '', badge: l[2] || '' })));
 // (the Store: o.labelSize for a narrower menu; the default is the design's)
 function sideNav(cv, t, b, o) {
-    const items = navItems(o), n = Math.max(1, items.length), ih = b.h / n, ls = o.labelSize || 34, pad = Math.max(4, Math.round(ih * 0.06));
+    const items = navItems(o), n = Math.max(1, items.length), ih = b.h / n, ls = o.labelSize || 34;
     cv.fillRect(b.x, b.y, b.w, b.h, withAlpha(t.panelBottom, 0.85));
     cv.fillRect(b.x + b.w - 1.5, b.y, 1.5, b.h, t.panelEdge);
     items.forEach((it, i) => {
-        const on = i === (o.sel | 0), tx = b.x + 9, ty = b.y + i * ih + pad, tw = b.w - 22, th = ih - 2 * pad, r = Math.min(26, th * 0.3);
-        const fg = on ? '#ffffff' : t.text;
-        // each tab is a button of its own: a faint one, the BCS blue one when open
-        if (on) cv.card(tx, ty, tw, th, r, [[0, BLUE], [1, withAlpha(BLUE, 0.72)]]);
-        else {
-            cv.card(tx, ty, tw, th, r, [[0, withAlpha('#ffffff', 0.10)], [1, withAlpha('#ffffff', 0.04)]]);
-            cv.strokeRoundRect(tx, ty, tw, th, r, 2, withAlpha('#ffffff', 0.16));
+        const on = i === (o.sel | 0), cx = b.x + (b.w - 1.5) / 2, y = b.y + i * ih;
+        // a round icon button over its word: the open tab's disc is BCS blue with a soft halo, the others a faint disc
+        const d = Math.round(Math.min(ih * 0.56, b.w * 0.5, 84)), block = d + ls * 1.3, top = y + (ih - block) / 2 + 2, cy = top + d / 2;
+        if (on) {
+            cv.circle(cx, cy, d / 2 + 6, withAlpha(BLUE, 0.22));
+            cv.circle(cx, cy, d / 2, BLUE);
+        } else {
+            cv.circle(cx, cy, d / 2, withAlpha('#ffffff', 0.10));
         }
-        const is = Math.round(Math.min(th * 0.5, 84)), room = tw - 16;     // the icon over the word, in the button
-        const ts = W.shrink(cv, String(it.label), room, ls, 'bold', 0.6), label = W.fit(cv, String(it.label), room, ts, 'bold');
-        vicon(cv, it.vicon, tx + tw / 2 - is / 2, ty + th * 0.09, is, fg);
-        cv.text(label, tx + tw / 2, ty + th * 0.09 + is + ts * 1.15, ts, fg, { align: 'center', font: 'bold' });
+        const g = Math.round(d * 0.54);
+        vicon(cv, it.vicon, cx - g / 2, cy - g / 2, g, on ? '#06121c' : t.text);
+        const room = b.w - 16, ts = W.shrink(cv, String(it.label), room, ls, 'bold', 0.6);
+        cv.text(W.fit(cv, String(it.label), room, ts, 'bold'), cx, top + d + ts * 1.05, ts, on ? '#ffffff' : t.dim, { align: 'center', font: 'bold' });
         if (it.badge && String(it.badge) !== '0') {
-            const rr = Math.min(24, th * 0.26), bx = tx + tw - rr - 4, by = ty + rr + 4;
-            cv.circle(bx, by, rr + 3, on ? '#ffffff' : t.bg); cv.circle(bx, by, rr, on ? t.bg : BLUE);
+            const rr = Math.max(14, Math.round(d * 0.26)), bx = cx + d * 0.42, by = cy - d * 0.42;
+            cv.circle(bx, by, rr + 3, t.bg); cv.circle(bx, by, rr, '#e5484d');
             cv.text(String(it.badge), bx, by + rr * 0.42, Math.round(rr * 1.2), '#ffffff', { align: 'center', font: 'bold' });
         }
     });

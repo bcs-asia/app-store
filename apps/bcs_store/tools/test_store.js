@@ -749,6 +749,12 @@ function run() {
         eq(sent.map(secretless).slice(sentBefore, sentBefore + 4), [{ op: 'source-remove', id: 'a' }, { op: 'source-remove', id: 'b' },
             { op: 'source-add', type: 'github', repo: 'bimmer-lab/apps', channel: 'branch:main' },
             { op: 'source-add', type: 'github', repo: 'JustAnotherPU/ridetube', channel: 'releases' }], 'BCS sources: retired removed, missing added');
+        // the other community feeds follow one by one; the rest of this test run does not need them
+        for (let i = 0; i < 40; i++) {
+            app._ensureBcsSources(stSources);
+        }
+        eq(sent.slice(sentBefore + 4).map(secretless).every((x) => x.op === 'source-add' && x.channel === 'releases'), true, 'the community feeds are added on the releases channel');
+        eq(sent.slice(sentBefore + 4).length, 15, 'each remaining BCS feed is added once');
         app._connected = wasConnected;
         // the refused source's page closes once the confirm step gives it the focus back: Sources has the message
         app._states.ST_OnlineApps_StoreSource.emit('visible', { visible: true });
