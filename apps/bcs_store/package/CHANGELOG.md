@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.1
+
+- Adds the aidac/apps source (a bimmer-lab fork: Cluster Themes, HUD Widgets), add-only, from the main branch.
+
 ## 3.0.0
 
 - New side menu: each tab is a round icon button over its word. The open tab is a BCS-blue disc with a soft halo, the count badge is a red dot on the disc.

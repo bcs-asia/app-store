@@ -104,7 +104,8 @@ const BCS_SOURCES = [
     ['JustAnotherPU/moonride', 'releases'],
     ['JustAnotherPU/waze-hud', 'releases'],
     ['pllanaio/mgu-browser', 'releases'],
-    ['isaakbruno2/carplay-map-cluster', 'releases']
+    ['isaakbruno2/carplay-map-cluster', 'releases'],
+    ['aidac/apps', 'branch:main']
 ];
 /* The updater writes the privileged secret, and while the phone page is on
  * its access URL, into this app's data folder (owner this app's uid, 0400);
