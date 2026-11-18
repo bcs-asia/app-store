@@ -975,6 +975,17 @@ function runWidgetsExtra() {
         reset();
         app._act({ do: 'remove', id: 'doom', tools: ['mgu-renderd'] });
         eq(sent.map(secretless), [{ op: 'uninstall', id: 'doom', tools: ['mgu-renderd'] }], 'as the drawn Remove all does');
+        {   // Settings > Theme: the look is kept and drawn
+            const lf = path.join(DATA, 'look'), had = require('fs').existsSync(lf) ? require('fs').readFileSync(lf, 'utf8') : null;
+            eq(app._drawnModel().look, 'red', 'Performance Red by default');
+            app._act({ do: 'look', id: 'blue' });
+            eq([app._drawnModel().look, require('fs').readFileSync(lf, 'utf8')], ['blue', 'blue'], 'the look chosen is kept');
+            app._act({ do: 'look', id: 'nope' });
+            eq(app._drawnModel().look, 'blue', 'an unknown look is ignored');
+            app._act({ do: 'look', id: 'red' });
+            eq(app._drawnModel().look, 'red');
+            if (had === null) { require('fs').unlinkSync(lf); } else { require('fs').writeFileSync(lf, had); }
+        }
         // a refused Remove: the updater's reason, for that component's page, until its page or Remove opens again
         app._client.emit('reply-error', 'Waze on cluster needs doom', 'uninstall');
         eq(app._drawnModel().removeNote, { id: 'doom', error: 'Waze on cluster needs doom', by: null }, 'a refused Remove keeps the reason');

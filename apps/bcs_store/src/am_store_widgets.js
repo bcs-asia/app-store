@@ -11,14 +11,15 @@ const { withAlpha, mix } = require('./kit_canvas.js');
 const { vicon } = require('./kit_vicons.js');
 const W = require('./am_widgets.js');
 const { t: tr } = require('./i18n.js');
+const look = require('./bcs_look.js');
 
-const GREEN = '#35d07f', BLUE = '#3d9bff', AMBER = '#ffb020';
+const GREEN = '#35d07f', BLUE = '#e4002b', AMBER = '#ffb020';
 const C = (t, c, d) => (c ? t[c] || c : d);
 const mid = (cv, s, x, cy, size, c, opts) => cv.text(String(s), x, cy + size * 0.36, size, c, opts);
 const lines = (s) => String(s || '').split('\n').map((l) => l.split(',').map((x) => x.trim())).filter((l) => l[0]);
 const pair = (s, d) => { const p = String(s || '').split(',').map((x) => x.trim()).filter(Boolean); return p.length >= 2 ? p : d; };
 const tapped = (o, id, part) => { o.tapN = (o.tapN || 0) + 1; o.tap = { id, part, n: o.tapN }; };
-const BADGE = { installed: [GREEN, 'check'], update: [BLUE, 'arrowDown'], queued: [AMBER, 'clock'] };
+const BADGE = { installed: () => [GREEN, 'check'], update: () => [look.get().accent, 'arrowDown'], queued: () => [AMBER, 'clock'] };
 
 /**
  * App icon in the s x s square at (x, y): the picture a.icon names, else a gradient (a.colors) with the vector glyph
@@ -45,9 +46,9 @@ function appIcon(cv, t, a, x, y, s, bg) {
     if (typeof a.progress === 'number' && a.progress >= 0) {
         const r0 = s / 2 + s * 0.06, r1 = s / 2 + s * 0.1;
         cv.arc(cx, cy, r0, r1, 0, 360, withAlpha('#ffffff', 0.15));
-        if (a.progress > 0) cv.arc(cx, cy, r0, r1, 0, 360 * Math.min(1, a.progress), BLUE);
+        if (a.progress > 0) cv.arc(cx, cy, r0, r1, 0, 360 * Math.min(1, a.progress), look.get().accent);
     }
-    const bd = BADGE[a.badge];
+    const bd = BADGE[a.badge] && BADGE[a.badge]();
     if (bd) {
         const br = s * 0.17, bx = x + s - br * 0.6, by = y + br * 0.6, gs = br * 1.3;
         cv.circle(bx, by, br + Math.max(2, s * 0.03), bg || t.bg);
@@ -151,27 +152,34 @@ function appGrid(cv, t, b, o) {
         const first = g.first * g.cols;
         g.all.slice(first, g.end * g.cols).forEach((a, i) => {
             const card = cardBox(b, g, first + i), { x, y, w: cw, h: ch } = card, L = cardLayout(card, a);
-            // a soft card: no side bar, a light top edge and a thin border
-            cv.card(x, y, cw, ch, 24, [[0, '#14405f'], [1, '#07192b']]);
-            cv.card(x, y, cw, ch * 0.5, 24, [[0, withAlpha('#ffffff', 0.08)], [1, withAlpha('#ffffff', 0)]]);
-            cv.strokeRoundRect(x + 1, y + 1, cw - 2, ch - 2, 24, 2, withAlpha('#5fb8ee', 0.4));
-            appIcon(cv, t, a, L.iconX, L.iconY, L.iconS, '#0b1b31');
+            const sport = look.get().sport;
+            if (sport) {         // a sport card: graphite, a thin border and a red bar on its left edge
+                cv.card(x, y, cw, ch, 12, [[0, '#232325'], [1, '#0b0b0c']]);
+                cv.card(x, y, cw, ch * 0.5, 12, [[0, withAlpha('#ffffff', 0.07)], [1, withAlpha('#ffffff', 0)]]);
+                cv.strokeRoundRect(x + 1, y + 1, cw - 2, ch - 2, 12, 2, withAlpha('#ffffff', 0.14));
+                cv.roundRect(x, y + 6, 10, ch - 12, 4, '#e4002b');
+            } else {             // a soft card: no side bar, a light top edge and a thin border
+                cv.card(x, y, cw, ch, 24, [[0, '#14405f'], [1, '#07192b']]);
+                cv.card(x, y, cw, ch * 0.5, 24, [[0, withAlpha('#ffffff', 0.08)], [1, withAlpha('#ffffff', 0)]]);
+                cv.strokeRoundRect(x + 1, y + 1, cw - 2, ch - 2, 24, 2, withAlpha('#5fb8ee', 0.4));
+            }
+            appIcon(cv, t, a, L.iconX, L.iconY, L.iconS, sport ? '#0b0b0c' : '#0b1b31');
             // (the source line is not shown on a card)
             const ns = W.shrink(cv, String(a.title || ''), L.maxW, L.nameSize, 'bold', 0.7);
-            cv.text(W.fit(cv, String(a.title || ''), L.maxW, ns, 'bold'), L.tx, L.nameY, ns, '#f0f8ff', { font: 'bold' });
+            cv.text(W.fit(cv, String(a.title || ''), L.maxW, ns, 'bold'), L.tx, L.nameY, ns, sport ? '#ffffff' : '#f0f8ff', { font: 'bold' });
             // a long state (a translation) takes a smaller size before it is cut
             const ss2 = a.sub ? W.shrink(cv, String(a.sub), L.maxW, L.subSize, 'label', 0.8) : 0;
-            if (a.sub) cv.text(W.fit(cv, String(a.sub), L.maxW, ss2), L.tx, L.subY, ss2, C(t, a.subColor, '#5de0ff'));
+            if (a.sub) cv.text(W.fit(cv, String(a.sub), L.maxW, ss2), L.tx, L.subY, ss2, C(t, a.subColor, sport ? '#ff8a96' : '#5de0ff'));
             // ID7 / ID8 tags (the head units it supports), top right of the card
             if (ch >= 150 && Array.isArray(a.tags) && a.tags.length) {
                 const th = Math.round(Math.min(36, ch * 0.13)); let tx2 = x + cw - 18;
                 for (let i = a.tags.length - 1; i >= 0; i--) {
-                    tx2 -= chip(cv, a.tags[i], tx2, y + 14, th, a.tags[i] === 'ID8' ? '#27e1c1' : '#00bfff', false, true) + th * 0.25;
+                    tx2 -= chip(cv, a.tags[i], tx2, y + 14, th, a.tags[i] === 'ID8' ? (sport ? '#ffffff' : '#27e1c1') : (sport ? '#ff5a64' : '#00bfff'), false, true) + th * 0.25;
                 }
             }
             if (L.btn) {
                 const q = L.btn, bs = Math.round(q.h * 0.44);
-                cv.card(q.x, q.y, q.w, q.h, q.h / 2, [[0, '#22b8ff'], [1, '#0b78d4']]);
+                cv.card(q.x, q.y, q.w, q.h, q.h / 2, sport ? [[0, '#ff2a4a'], [1, '#b3001f']] : [[0, '#22b8ff'], [1, '#0b78d4']]);
                 cv.strokeRoundRect(q.x + 1, q.y + 1, q.w - 2, q.h - 2, q.h / 2, 2, withAlpha('#ffffff', 0.25));
                 cv.text(W.fit(cv, String(a.btn), q.w - 24, bs, 'bold'), q.x + q.w / 2, q.y + q.h / 2 + bs * 0.36, bs, '#ffffff', { align: 'center', font: 'bold' });
             }
@@ -180,7 +188,7 @@ function appGrid(cv, t, b, o) {
         if (!g.all.length && o.empty) mid(cv, o.empty, b.x + b.w / 2, b.y + b.h / 2, 36, t.dim, { align: 'center' });
         if (g.max > 0 && o.bar !== false) {
             const h = b.h * g.shown / g.rows, y = b.y + (b.h - h) * g.top / g.max;
-            cv.roundRect(b.x + b.w - 6, y, 6, h, 3, '#00bfff');
+            cv.roundRect(b.x + b.w - 6, y, 6, h, 3, look.get().accent);
         }
         return;
     }
@@ -256,7 +264,7 @@ function appList(cv, t, b, o) {
                 const on = rb.arg === 'on', tw = 150 * q, th = 76 * q, tx0 = re - tw;
                 cv.roundRect(tx0, cy - th / 2, tw, th, th / 2, on ? GREEN : '#3a4352');
                 cv.circle(on ? tx0 + tw - th / 2 : tx0 + th / 2, cy, th / 2 - 8 * q, '#ffffff');
-            } else if (rb.kind === 'chip') chip(cv, rb.arg, re, cy - 30 * q, 60 * q, C(t, it.chipColor, BLUE), it.chipDot, true);
+            } else if (rb.kind === 'chip') chip(cv, rb.arg, re, cy - 30 * q, 60 * q, C(t, it.chipColor, look.get().accent), it.chipDot, true);
         }
     });
     cv.noclip();
@@ -269,33 +277,55 @@ const navItems = (o) => (Array.isArray(o.items) ? o.items
 // (the Store: o.labelSize for a narrower menu; the default is the design's)
 function sideNav(cv, t, b, o) {
     const items = navItems(o), n = Math.max(1, items.length), ih = b.h / n, ls = o.labelSize || 34;
-    cv.fillRect(b.x, b.y, b.w, b.h, withAlpha(t.panelBottom, 0.85));
-    cv.fillRect(b.x + b.w - 1.5, b.y, 1.5, b.h, t.panelEdge);
+    const sport = look.get().sport;
+    if (sport) {
+        cv.fillRect(b.x, b.y, b.w, b.h, withAlpha('#050505', 0.92));
+        cv.fillRect(b.x + b.w - 1.5, b.y, 1.5, b.h, withAlpha('#ffffff', 0.12));
+    } else {
+        cv.fillRect(b.x, b.y, b.w, b.h, withAlpha(t.panelBottom, 0.85));
+        cv.fillRect(b.x + b.w - 1.5, b.y, 1.5, b.h, t.panelEdge);
+    }
     items.forEach((it, i) => {
         const on = i === (o.sel | 0), cx = b.x + (b.w - 1.5) / 2, y = b.y + i * ih;
-        // a round icon button over its word: the open tab's disc is BCS blue with a soft halo, the others a faint disc
         const d = Math.round(Math.min(ih * 0.56, b.w * 0.5, 84)), block = d + ls * 1.3, top = y + (ih - block) / 2 + 2, cy = top + d / 2;
-        if (on) {
-            cv.circle(cx, cy, d / 2 + 6, withAlpha(BLUE, 0.22));
-            cv.circle(cx, cy, d / 2, BLUE);
+        const k = sport ? k0(ih) : 0;
+        if (!sport) {        // a round icon button over its word: the open tab's disc is BCS blue with a soft halo, the others a faint disc
+            if (on) {
+                cv.circle(cx, cy, d / 2 + 6, withAlpha('#3d9bff', 0.22));
+                cv.circle(cx, cy, d / 2, '#3d9bff');
+            } else {
+                cv.circle(cx, cy, d / 2, withAlpha('#ffffff', 0.10));
+            }
+        } else if (on) {     // the open tab: a slanted red band across the menu, a white disc with a red icon
+            const y0 = y + 3, y1 = y + ih - 3, x0 = b.x, x1 = b.x + b.w - 3;
+            cv.quad([[x0, y0], [x1, y0], [x1 - k, y1], [x0, y1]], '#e4002b');
+            cv.quad([[x0, y0], [x1, y0], [x1 - k * 0.5, y0 + (y1 - y0) * 0.5], [x0, y0 + (y1 - y0) * 0.5]], withAlpha('#ffffff', 0.10));
+            cv.line(x1, y0, x1 - k, y1, 3, '#ffffff');
+            cv.circle(cx - k * 0.25, cy, d / 2, '#ffffff');
         } else {
-            cv.circle(cx, cy, d / 2, withAlpha('#ffffff', 0.10));
+            cv.circle(cx, cy, d / 2, '#161616');
+            cv.circle(cx, cy, d / 2 - 1, '#1d1d1f');
         }
-        const g = Math.round(d * 0.54);
-        vicon(cv, it.vicon, cx - g / 2, cy - g / 2, g, on ? '#06121c' : t.text);
-        const room = b.w - 16, ts = W.shrink(cv, String(it.label), room, ls, 'bold', 0.6);
-        cv.text(W.fit(cv, String(it.label), room, ts, 'bold'), cx, top + d + ts * 1.05, ts, on ? '#ffffff' : t.dim, { align: 'center', font: 'bold' });
+        const g = Math.round(d * 0.54), mx = on ? cx - k * 0.25 : cx;
+        vicon(cv, it.vicon, mx - g / 2, cy - g / 2, g, sport ? (on ? '#c4001f' : '#d8d8d8') : (on ? '#06121c' : t.text));
+        const room = b.w - (sport ? 24 : 16), ts = W.shrink(cv, String(it.label), room, ls, 'bold', 0.6);
+        cv.text(W.fit(cv, String(it.label), room, ts, 'bold'), mx, top + d + ts * 1.05, ts, on ? '#ffffff' : sport ? '#9a9a9a' : t.dim, { align: 'center', font: 'bold' });
         if (it.badge && String(it.badge) !== '0') {
-            const rr = Math.max(14, Math.round(d * 0.26)), bx = cx + d * 0.42, by = cy - d * 0.42;
-            cv.circle(bx, by, rr + 3, t.bg); cv.circle(bx, by, rr, '#e5484d');
-            cv.text(String(it.badge), bx, by + rr * 0.42, Math.round(rr * 1.2), '#ffffff', { align: 'center', font: 'bold' });
+            const rr = Math.max(14, Math.round(d * 0.26)), bx = mx + d * 0.42, by = cy - d * 0.42;
+            if (sport) {
+                cv.circle(bx, by, rr + 3, on ? '#e4002b' : '#050505'); cv.circle(bx, by, rr, on ? '#ffffff' : '#e4002b');
+            } else {
+                cv.circle(bx, by, rr + 3, t.bg); cv.circle(bx, by, rr, '#e5484d');
+            }
+            cv.text(String(it.badge), bx, by + rr * 0.42, Math.round(rr * 1.2), sport && on ? '#c4001f' : '#ffffff', { align: 'center', font: 'bold' });
         }
     });
 }
+const k0 = (ih) => Math.round(ih * 0.16);
 
 // ---- button with a vector icon -------------------------------------------------------------------------------
 function vbutton(cv, t, b, o) {
-    const c = C(t, o.color, BLUE), s = o.size || Math.round(b.h * 0.34), is = Math.round(b.h * 0.4), r = Math.min(18, b.h / 2);
+    const c = C(t, o.color, look.get().accent), s = o.size || Math.round(b.h * 0.34), is = Math.round(b.h * 0.4), r = Math.min(18, b.h / 2);
     const off = o.disabled;
     if (o.style === 'round') {                       // an icon on a soft disc (back, close)
         const d = Math.min(b.w, b.h), g = d * 0.55;

@@ -1,5 +1,6 @@
 'use strict';
 const { t: tr } = require('./i18n.js');
+const look = require('./bcs_look.js');
 /**
  * What the renderer screens (src/am_screens.js) show, from mgu-updater's
  * state: view(model) -> { screen, values: { element: opts } } for the page on
@@ -30,7 +31,8 @@ const { t: tr } = require('./i18n.js');
  * { do: 'add-token' }, { do: 'sign-in' }, { do: 'sign-in-cancel' }, { do: 'phone' },
  * { do: 'pick', channel }, { do: 'pick-retry' }, { do: 'pick-add-token' }, { do: 'key', key } (typeKey),
  * { do: 'wifi-power' }, { do: 'wifi-5ghz' }, { do: 'wifi-scan' }, { do: 'wifi-join', ssid }, { do: 'wifi-password', ssid },
- * { do: 'wifi-forget', ssid }, { do: 'uplink-prefer', kind }, { do: 'usb-phone' }, { do: 'proxy-toggle' }, { do: 'proxy-edit' }.
+ * { do: 'wifi-forget', ssid }, { do: 'uplink-prefer', kind }, { do: 'usb-phone' }, { do: 'proxy-toggle' }, { do: 'proxy-edit' },
+ * { do: 'look', id } (Settings > Theme: blue or red).
  *
  * The type page ({ name: 'type', title, text, shift, sym, layout, symbols,
  * go, secret, max, min, label }) is text typed on the drawn keyboard: layout 'url'
@@ -52,7 +54,7 @@ const { PHASE, percent, rowAction, statusLine, sourceLabel, sourceState, sourceA
     notForUnit, removable, requiredAlone, undoable, setupable, pickOptions, probeStatus, removeRefusal, sourceNames, listed, startPending } = require('./store_view.js');
 
 const GREEN = '#27e1c1';
-const BLUE = '#00bfff';
+const BLUE = '#e4002b';
 const AMBER = '#ffb020';
 const RED = '#ff5a5f';
 const TEAL = '#a5edff';
@@ -383,6 +385,7 @@ function settingsView(m) {
     if (web) {
         row('phone', tr("Phone access"), phoneState(web), 'phone');
     }
+    row('theme', 'Theme', look.LOOKS[look.known(m.look) ? m.look : look.DEFAULT].name, 'gauge');
     row('system', "System", m.version ? tr("Store {0}", m.version) : '', 'gear');
     const half = Math.ceil(rows.length / 2);
     return {
@@ -812,8 +815,21 @@ function preferView(m) {
     };
 }
 
+/* Settings > Theme: the looks to choose from (src/bcs_look.js). */
+function themeView(m) {
+    const now = look.known(m.look) ? m.look : look.DEFAULT;
+    return {
+        title: { text: 'Theme' },
+        status: { text: 'Choose how BCS Store looks', color: DIM },
+        list: { items: look.list().map((l) => ({ id: l.id, title: l.name, sub: l.sport ? 'Black and red, sport' : 'Blue, soft', plain: true,
+            vicon: 'gauge', iconColor: l.accent, right: l.id === now ? 'chip:Selected' : '', chipColor: l.accent,
+            act: l.id === now ? null : { do: 'look', id: l.id } })), empty: '' }
+    };
+}
+
 /* The screen and its values for the page on top. */
 function view(m) {
+    look.use(m.look);
     const page = m.stack[m.stack.length - 1] || { name: 'main' };
     const tabSel = Math.max(0, TABS.indexOf(m.tab));
     let screen = page.name === 'main' ? m.tab : page.name;
@@ -837,6 +853,7 @@ function view(m) {
     case 'wifi': values = wifiView(m); break;
     case 'prefer': values = preferView(m); break;
     case 'proxy': values = proxyView(m); break;
+    case 'theme': values = themeView(m); break;
     default: screen = 'store'; values = storeView(m, 'app');
     }
     values.nav = nav(m, tabSel);

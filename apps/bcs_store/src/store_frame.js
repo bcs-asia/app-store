@@ -28,6 +28,7 @@ const { record } = require('./am_gpu.js');
 const { Recorder } = require('./kit_record.js');
 const { withAlpha } = require('./kit_canvas.js');
 const { theme: kitTheme } = require('./kit_themes.js');
+const look = require('./bcs_look.js');
 const { view, icons } = require('./store_ui.js');
 const { tabCells } = require('./am_widgets.js');
 const { gridView, listView, navItems, rightBoxes, keyBoxes, shown, cardBox, cardLayout } = require('./am_store_widgets.js');
@@ -161,7 +162,7 @@ function translated(opts) {
 function screenOf(v, scroll, layout) {
     const def = (layout || SCREENS).screens.find((s) => s.name === v.screen);
     const components = def.components.map((c) => {
-        const opts = Object.assign(translated(c.opts), v.values[c.name] || {});
+        const opts = look.paint(Object.assign(translated(c.opts), v.values[c.name] || {}));
         if (layout) {
             SIZES.filter((k) => c.opts[k] !== undefined).forEach((k) => { opts[k] = c.opts[k]; });
         }
@@ -173,7 +174,7 @@ function screenOf(v, scroll, layout) {
     const shift = Object.assign({}, ...components.filter((c) => c.opts.shift && !c.opts.hidden).map((c) => c.opts.shift));
     const placed = components.map((c) => (!shift[c.name] ? c
         : Object.assign({}, c, { x: c.x + shift[c.name][0], w: c.w + shift[c.name][1] })));
-    return { kind: 'gpu', name: def.name, theme: def.theme, bg: 'theme',
+    return { kind: 'gpu', name: def.name, theme: look.get().theme, bg: 'theme',
         components: placed.map((c) => {
             const a = c.opts.after && placed.find((o) => o.name === c.opts.after);
             const end = a && a.opts.text ? a.x + measure.textWidth(a.opts.text, a.opts.size, { font: a.opts.font }) + AFTER_GAP : 0;

@@ -163,6 +163,8 @@ function screens() {
         ['prefer', { tab: 'settings', stack: main.concat([{ name: 'prefer' }]) }],
         // the proxy: off, on, failing; its address typed
         ['proxy', { tab: 'settings', stack: main.concat([{ name: 'proxy' }]) }],
+        ['theme', { tab: 'settings', stack: main.concat([{ name: 'theme' }]) }],
+        ['theme-blue', { tab: 'settings', stack: main.concat([{ name: 'theme' }]), look: 'blue' }],
         ['proxy-on', { tab: 'settings', stack: main.concat([{ name: 'proxy' }]) }, proxySt({ on: true, kind: 'socks5', address: '192.168.8.1:7891' })],
         ['proxy-error', { tab: 'settings', stack: main.concat([{ name: 'proxy' }]) },
             proxySt({ on: true, kind: 'http', address: '192.168.8.1:7890', error: 'proxy 192.168.8.1:7890: connection refused (5 tries)' })],

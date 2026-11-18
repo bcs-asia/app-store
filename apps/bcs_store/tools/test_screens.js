@@ -430,10 +430,24 @@ eq(text(f, 'subtitle'), '5 sources');
 // Settings: a row per page (Wi-Fi, Accounts, Phone access, Preferred connection, Proxy, System), none without its feature
 f = screen('settings');
 const rowIds = (g) => g.values.accessLeft.items.concat(g.values.accessRight.items).map((i) => i.id);
-eq(rowIds(f), ['wifi', 'accounts', 'prefer', 'proxy', 'phone', 'system'], 'Settings: the pages, in order, in two columns');
-eq(rowIds(screen('settings', {}, { uplink: null, web: null, proxy: null, tokens: null })), ['system'], 'only System without the uplink, the phone page, the proxy and accounts');
-eq(f.values.accessLeft.items.length, 3, 'three rows each');
+eq(rowIds(f), ['wifi', 'accounts', 'prefer', 'proxy', 'phone', 'theme', 'system'], 'Settings: the pages, in order, in two columns');
+eq(rowIds(screen('settings', {}, { uplink: null, web: null, proxy: null, tokens: null })), ['theme', 'system'], 'only Theme and System without the uplink, the phone page, the proxy and accounts');
+eq(f.values.accessLeft.items.length, 4, 'four rows in the first column');
 f.values.accessLeft.items.concat(f.values.accessRight.items).forEach((i) => eq(i.act.do, 'open', `${i.id} opens its page`));
+// Theme: BCS Blue and Performance Red; the one in use is marked, the other a tap away
+f = screen('theme');
+eq([text(f, 'title'), own(f)], ['Theme', ['BCS Blue', 'Back']]);
+eq(f.values.list.items.map((i) => [i.right, i.act]), [['', { do: 'look', id: 'blue' }], ['chip:Selected', null]], 'Performance Red is the default');
+f = screen('theme-blue');
+eq(f.values.list.items.map((i) => [i.right, i.act]), [['chip:Selected', null], ['', { do: 'look', id: 'red' }]]);
+eq(screen('settings').values.accessRight.items.concat(screen('settings').values.accessLeft.items).find((i) => i.id === 'theme').sub, 'Performance Red');
+// the look in use sets the screen's theme and the accent
+{
+    const look = require('../src/bcs_look.js');
+    const stOf = (lk) => require('../src/store_frame.js').layoutOf(fixture.model({ tab: 'settings', stack: [{ name: 'main' }], look: lk }), { layout: ID7.layout, textScale: ID7.scale }).st;
+    eq([stOf('blue').theme, stOf('red').theme], ['m_tricolour', 'm_red'], 'each look has its screen theme');
+    look.use('blue'); eq(look.accent('#e4002b'), '#00bfff'); look.use('red'); eq(look.accent('#e4002b'), '#e4002b');
+}
 // System: the unit, the versions, Check now, Restart head unit; who made this Store
 f = screen('system');
 eq(text(f, 'unit'), 'iDrive 7 · BMW MGU P18_23w44.2-1-3 mgu-high');
@@ -739,7 +753,7 @@ eq([text(f, 'state'), text(f, 'note'), f.values.networks.empty, f.values.scan.di
 // the proxy (an updater from 0.8.27): a row in Settings' access card; its page turns it on or off and sets its address
 f = screen('settings');
 eq(f.values.access.items.map((i) => [i.title, i.sub]), [['Wi-Fi', 'Online · Mario iPhone'], ['Accounts', '2 accounts'], ['Preferred connection', 'Wi-Fi'], ['Proxy', 'Off'],
-    ['Phone access', 'Off'], ['System', 'Store 0.7.0']]);
+    ['Phone access', 'Off'], ['Theme', 'Performance Red'], ['System', 'Store 0.7.0']]);
 eq(f.items.find((i) => i.label === 'Proxy').act, { do: 'open', page: { name: 'proxy' } });
 ok(screen('settings', {}, { proxy: undefined }).labels.indexOf('Proxy') < 0, 'no Proxy row with an updater before 0.8.27');
 eq(screen('settings-proxy-on').values.access.items[3].sub, '192.168.8.1:7891');

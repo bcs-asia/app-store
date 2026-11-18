@@ -17,7 +17,7 @@ const path = require('path');
 const HERE = path.join(__dirname, '..');
 const up = require('./upstream/am_screens.upstream.js');
 const S = JSON.parse(JSON.stringify(up.screens));
-const BLUE = '#00bfff';
+const BLUE = '#e4002b';
 const NAV = 'Apps, grid\nTools, wrench\nUpdates, check\nUSB, usb\nSources, unlock\nSettings, gear';
 const LOGO_MARK = '__BCS_LOGO__';
 
@@ -84,13 +84,20 @@ settings.components.push(
     comp('accessLeft', 'appList', 470, 292, 1170, 548, { items: [], rowH: 170, fit: true }),
     comp('accessRight', 'appList', 1690, 292, 1150, 548, { items: [], rowH: 170, fit: true }));
 
+// Theme: the looks to choose from (a clone of the preferred-connection page with one list)
+const theme = clone('prefer', 'theme');
+theme.components = theme.components.filter((c) => c.name !== 'usbPhone');
+find(theme, 'title').opts.text = '';
+find(theme, 'list').h = 2 * 108 + 14;
+
 // Updates (Robert's installed lists) keeps its layout
 const screens = S.filter((s) => s.name !== 'sources' && s.name !== 'system');
 const at = screens.findIndex((s) => s.name === 'settings');
-screens.splice(at + 1, 0, sources, system);
+screens.splice(at + 1, 0, sources, system, theme);
 
 // every screen: six tabs, the logo above the menu, the BCS blue
 screens.forEach((st) => {
+    st.theme = 'm_red';
     st.components.forEach((c) => { if (c.name === 'nav') { c.opts.items = NAV; } });
     st.components.unshift(comp('headerLogo', 'image', 126, 38, 300, 64, { src: LOGO_MARK, radius: 0 }));
 });

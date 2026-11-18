@@ -1,0 +1,37 @@
+'use strict';
+/**
+ * BCS Store's looks, the choice on Settings > Theme:
+ *
+ *   blue  BCS Blue         the cyan-blue look on the kit's tricolour theme, soft round cards
+ *   red   Performance Red  the black and red sport look: slanted tab, sharp cards with a red edge
+ *
+ * The layouts and the view-model name one accent, RED (the Performance Red's); the drawing maps it to the chosen
+ * look's (accent()), and the widgets (src/am_store_widgets.js) draw each look's own style. The choice is kept by the
+ * Store in data/look (src/store.js) and reaches the drawing through the model's `look`.
+ */
+const RED = '#e4002b';
+const LOOKS = {
+    blue: { id: 'blue', name: 'BCS Blue', theme: 'm_tricolour', accent: '#00bfff', sport: false },
+    red: { id: 'red', name: 'Performance Red', theme: 'm_red', accent: RED, sport: true }
+};
+const ORDER = ['blue', 'red'];
+const DEFAULT = 'red';
+let current = LOOKS[DEFAULT];
+
+const known = (id) => Object.prototype.hasOwnProperty.call(LOOKS, id);
+/* The look in use for the drawing (set by the view of each frame). */
+function use(id) { current = LOOKS[known(id) ? id : DEFAULT]; return current; }
+const get = () => current;
+const list = () => ORDER.map((id) => LOOKS[id]);
+/* The layout's accent in the look in use: any other colour stays as it is. */
+const accent = (c) => (c === RED ? current.accent : c);
+/* Deep copy of options with the accent mapped (a no-op for the red look). */
+function paint(v) {
+    if (current.accent === RED) return v;
+    if (typeof v === 'string') return v === RED ? current.accent : v;
+    if (Array.isArray(v)) return v.map(paint);
+    if (v && typeof v === 'object') { const o = {}; Object.keys(v).forEach((k) => { o[k] = paint(v[k]); }); return o; }
+    return v;
+}
+
+module.exports = { RED, LOOKS, DEFAULT, known, use, get, list, accent, paint };

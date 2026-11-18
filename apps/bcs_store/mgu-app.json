@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "id": "bcs_store",
-  "version": "3.0.3",
+  "version": "3.2.0",
   "tree": "package",
   "modules": [
     "src/store.js",
@@ -16,6 +16,7 @@
     "src/store_ui.js",
     "src/store_elements.js",
     "src/bcs_brand.js",
+    "src/bcs_look.js",
     "src/am_screens.js",
     "src/am_gpu.js",
     "src/am_elements.js",
