@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.0.2
+
+- Community sources that do not work on the cars are removed, and no longer added: eroobeeroo, arefahmad, pinguinooo and nickgcode (idrive7-apps), aurelmarius/bmw-games, hexlay/idrive7-custom-apps, NamelsMissing/mgu-apps, isaakbruno2/carplay-map-cluster. Where a car already has one, the Store removes it from the updater.
+- Kept: aurelmarius/bmw-apps, istt1899/x3, aidac/apps and the BCS, bimmer-lab and JustAnotherPU feeds.
+
 ## 3.0.1
 
 - Adds the aidac/apps source (a bimmer-lab fork: Cluster Themes, HUD Widgets), add-only, from the main branch.

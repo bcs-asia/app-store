@@ -1,4 +1,4 @@
-# BCS Store 3.0.1
+# BCS Store 3.0.2
 
 Based on MGU Store 0.9.40 by Robert Nisipeanu (GPL-3.0-or-later). App id `bcs_store`; installs over 2.1.x.
 
@@ -8,6 +8,7 @@ Based on MGU Store 0.9.40 by Robert Nisipeanu (GPL-3.0-or-later). App id `bcs_st
 Replace the old store: UPGRADE.md.
 
 
-## What changed in 3.0.1
+## What changed in 3.0.2
 
-- Adds the aidac/apps source (a bimmer-lab fork: Cluster Themes, HUD Widgets), add-only, from the main branch.
+- Community sources that do not work on the cars are removed and no longer added: eroobeeroo, arefahmad, pinguinooo, nickgcode (idrive7-apps), aurelmarius/bmw-games, hexlay/idrive7-custom-apps, NamelsMissing/mgu-apps, isaakbruno2/carplay-map-cluster. A car that already has one has it removed by the Store.
+- Kept: aurelmarius/bmw-apps, istt1899/x3, aidac/apps, and the BCS, bimmer-lab and JustAnotherPU feeds.

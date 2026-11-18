@@ -5,7 +5,7 @@
     "type": "OnlineApp",
     "name": "bcs_store",
     "vendor": "BCS Automotive Solutions",
-    "version": "3.0.1",
+    "version": "3.0.2",
     "defaultLanguage": "en_GB",
     "uiDescriptions": [
       {
