@@ -4,6 +4,7 @@ Based on MGU Store 0.9.40 by Robert Nisipeanu (GPL-3.0-or-later). App id `bcs_st
 
 - Performance Red is sharp: square cards, buttons, tags, rows and icons, a red corner flag and a fading red line on each card, a flat red band on the open tab.
 - Performance Red shows a black, red and white BMW M4 GT3 photo behind the Apps, Tools and USB cards. BCS Blue keeps its plain look.
+- Luxury Carbon, a third look: carbon-fibre photo backdrop, black glass cards with gold frames, gold buttons, gold bar on the open tab.
 - Settings > Theme: a tile per look, each with a miniature of the Apps screen.
 - Includes 3.2.0 (Settings > Theme) and earlier.
 

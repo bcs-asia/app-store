@@ -1441,7 +1441,7 @@ module.exports = {
      "h": 548,
      "opts": {
       "items": [],
-      "cols": 2,
+      "cols": 3,
       "tileH": 548,
       "cardStyle": "billboard",
       "empty": ""

@@ -3,7 +3,8 @@
  * BCS Store's looks, the choice on Settings > Theme:
  *
  *   blue  BCS Blue         the cyan-blue look on the kit's tricolour theme, soft round cards
- *   red   Performance Red  the black and red sport look: slanted tab, sharp cards with a red edge
+ *   red   Performance Red  the black and red sport look: square cards with a red corner flag, a flat red tab, the M4 GT3 backdrop
+ *   carbon Luxury Carbon   black carbon fibre with a light sweep, gold buttons and thin gold frames
  *
  * The layouts and the view-model name one accent, RED (the Performance Red's); the drawing maps it to the chosen
  * look's (accent()), and the widgets (src/am_store_widgets.js) draw each look's own style. The choice is kept by the
@@ -13,9 +14,10 @@ const kit = require('./kit_record.js');
 const RED = '#e4002b';
 const LOOKS = {
     blue: { id: 'blue', name: 'BCS Blue', theme: 'm_tricolour', accent: '#00bfff', sport: false, sharp: false },
-    red: { id: 'red', name: 'Performance Red', theme: 'm_red', accent: RED, sport: true, sharp: true }
+    carbon: { id: 'carbon', name: 'Luxury Carbon', theme: 'm_carbon', accent: '#d4b36a', sport: true, sharp: true, lux: true, photo: 'carbon' },
+    red: { id: 'red', name: 'Performance Red', theme: 'm_red', accent: RED, sport: true, sharp: true, photo: 'red' }
 };
-const ORDER = ['blue', 'red'];
+const ORDER = ['blue', 'red', 'carbon'];
 const DEFAULT = 'red';
 let current = LOOKS[DEFAULT];
 

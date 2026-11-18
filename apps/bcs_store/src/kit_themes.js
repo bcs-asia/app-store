@@ -16,6 +16,14 @@ const THEMES = {
         glow: '#e1001a55', stripes: ['#e1001a'], oil: '#e1001a', bar: '#d7001a', sel: '#e1001a', marker: '#ffffff', ramp: ['#7a0010', '#e1001a', '#ff5a64'],
         hotRamp: ['#7a0010', '#b00016', '#e1001a', '#ff2030', '#ff5a64'],
     },
+    m_carbon: {
+        name: 'Luxury Carbon',
+        bg: '#050505', panelTop: '#18181a', panelBottom: '#0c0c0d', panelEdge: '#3a3328',
+        tab: '#d4b36a', track: '#222224', tick: '#5a5750', text: '#f4f1ea', dim: '#a39e92',
+        accent: '#d4b36a', accent2: '#ecd39a', ok: '#d4b36a', warn: '#ffb31a', crit: '#ff4040', cold: '#8fd3ff',
+        glow: '#d4b36a40', stripes: ['#d4b36a'], oil: '#d4b36a', bar: '#d4b36a', sel: '#d4b36a', marker: '#ffffff', ramp: ['#7a6330', '#d4b36a', '#f3e2b3'],
+        hotRamp: ['#7a6330', '#b8914a', '#d4b36a', '#ff9d4a', '#ff4040'],
+    },
     m_tricolour: {
         name: 'M Tricolour',
         bg: '#04060a', panelTop: '#141a24', panelBottom: '#0a0d13', panelEdge: '#242c39',

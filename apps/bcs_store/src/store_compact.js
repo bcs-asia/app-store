@@ -261,7 +261,7 @@ function compact(W, H) {
         back(),
         title('', titleX),
         status('status', R - 520, 520),
-        el('grid', 'appGrid', X - 8, GRID_Y, CW + 8, B - GRID_Y, { items: '', cols: 2, tileH: B - GRID_Y, cardStyle: 'billboard', empty: '' })
+        el('grid', 'appGrid', X - 8, GRID_Y, CW + 8, B - GRID_Y, { items: '', cols: 3, tileH: B - GRID_Y, cardStyle: 'billboard', empty: '' })
     ]);
     const proxyW = Math.min(1100, CW);
     const proxy = screen('proxy', 3, [

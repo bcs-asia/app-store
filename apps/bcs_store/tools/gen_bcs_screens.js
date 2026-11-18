@@ -85,11 +85,11 @@ settings.components.push(
     comp('accessLeft', 'appList', 470, 292, 1170, 548, { items: [], rowH: 170, fit: true }),
     comp('accessRight', 'appList', 1690, 292, 1150, 548, { items: [], rowH: 170, fit: true }));
 
-// Theme: a tile per look (a miniature of the Apps screen over its name), in a grid of two
+// Theme: a tile per look (a miniature of the Apps screen over its name), in a grid of three
 const theme = clone('prefer', 'theme');
 theme.components = theme.components.filter((c) => ['usbPhone', 'list'].indexOf(c.name) < 0);
 find(theme, 'title').opts.text = '';
-theme.components.push(comp('grid', 'appGrid', 460, 292, 2380, 548, { items: [], cols: 2, tileH: 548, cardStyle: 'billboard', empty: '' }));
+theme.components.push(comp('grid', 'appGrid', 460, 292, 2380, 548, { items: [], cols: 3, tileH: 548, cardStyle: 'billboard', empty: '' }));
 
 // Updates (Robert's installed lists) keeps its layout
 const screens = S.filter((s) => s.name !== 'sources' && s.name !== 'system');

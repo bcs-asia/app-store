@@ -13,7 +13,7 @@ const W = require('./am_widgets.js');
 const { t: tr } = require('./i18n.js');
 const look = require('./bcs_look.js');
 const kit = require('./kit_record.js');
-const { BG, RATIO: BG_RATIO } = require('./bcs_bg.js');
+const { BG, CARBON, RATIO: BG_RATIO } = require('./bcs_bg.js');
 
 const GREEN = '#35d07f', BLUE = '#e4002b', AMBER = '#ffb020';
 const C = (t, c, d) => (c ? t[c] || c : d);
@@ -103,13 +103,13 @@ function appIconEl(cv, t, b, o) {
 // ---- Settings > Theme: a tile per look, a miniature of the Apps screen in that look over its name ---------------
 /* The Apps screen of look `id` in miniature inside box (x, y, w, h). The corners are those of that look, whichever look is in use. */
 function themeThumb(cv, id, x, y, w, h) {
-    const red = id === 'red', inUse = look.get().sharp;
+    const red = id !== 'blue', lux = id === 'carbon', inUse = look.get().sharp, AC = look.LOOKS[id].accent;
     kit.setSharp(red);
     try {
         const rd = red ? 0 : Math.max(4, w * 0.012), nw = w * 0.13;
         if (red) {
             cv.fillRect(x, y, w, h, '#0a0a0a');
-            const ih = Math.min(h, (w - nw) / BG_RATIO), img = W.picture(BG);
+            const ih = Math.min(h, (w - nw) / BG_RATIO), img = W.picture(lux ? CARBON : BG);
             if (img) cv.image(img, x + nw, y + h - ih, w - nw, ih, 0);
         } else {
             cv.card(x, y, w, h, 0, [[0, '#0d3a5c'], [1, '#06182a']]);
@@ -117,7 +117,8 @@ function themeThumb(cv, id, x, y, w, h) {
         // side menu: the open tab (a flat red band / a round blue disc) over three more
         cv.fillRect(x, y, nw, h, red ? withAlpha('#050505', 0.94) : withAlpha('#07192b', 0.9));
         const ty = y + h * 0.06, th = h * 0.15;
-        if (red) cv.card(x, ty, nw, th, 0, [[0, '#e4002b'], [1, withAlpha('#e4002b', 0.62)]]);
+        if (lux) { cv.card(x, ty, nw, th, 0, [[0, withAlpha('#ffffff', 0.14)], [1, withAlpha('#ffffff', 0)]]); cv.fillRect(x, ty, Math.max(2, nw * 0.07), th, AC); }
+        else if (red) cv.card(x, ty, nw, th, 0, [[0, '#e4002b'], [1, withAlpha('#e4002b', 0.62)]]);
         else cv.circle(x + nw / 2, ty + th / 2, th * 0.4, '#3d9bff');
         for (let i = 1; i < 5; i++) {
             const cy = ty + i * (h * 0.17) + th / 2;
@@ -128,14 +129,18 @@ function themeThumb(cv, id, x, y, w, h) {
         const hx = x + nw + w * 0.04, hy = y + h * 0.07, hh = h * 0.07;
         cv.roundRect(hx, hy, w * 0.14, hh, rd / 2, '#ffffff');
         const tw = w * 0.1, tg = hy - h * 0.012, tgh = h * 0.1;
-        cv.roundRect(x + w - w * 0.03 - tw * 2 - w * 0.015, tg, tw, tgh, rd, red ? '#ffffff' : '#00bfff');
-        if (red) { cv.roundRect(x + w - w * 0.03 - tw, tg, tw, tgh, 0, withAlpha('#ffffff', 0.12)); cv.fillRect(x + w - w * 0.03 - tw, tg + tgh - 2, tw, 2, '#e4002b'); }
+        cv.roundRect(x + w - w * 0.03 - tw * 2 - w * 0.015, tg, tw, tgh, rd, lux ? AC : red ? '#ffffff' : '#00bfff');
+        if (lux) cv.strokeRoundRect(x + w - w * 0.03 - tw, tg, tw, tgh, 0, 2, AC);
+        else if (red) { cv.roundRect(x + w - w * 0.03 - tw, tg, tw, tgh, 0, withAlpha('#ffffff', 0.12)); cv.fillRect(x + w - w * 0.03 - tw, tg + tgh - 2, tw, 2, '#e4002b'); }
         else cv.strokeRoundRect(x + w - w * 0.03 - tw, tg, tw, tgh, rd, 2, '#00bfff');
         // six cards
         const gx = x + nw + w * 0.04, gw = (x + w - w * 0.03 - gx - 2 * w * 0.02) / 3, gy = y + h * 0.27, gh = (y + h - h * 0.07 - gy - h * 0.04) / 2;
         for (let r = 0; r < 2; r++) for (let c = 0; c < 3; c++) {
             const cx = gx + c * (gw + w * 0.02), cy = gy + r * (gh + h * 0.04);
-            if (red) {
+            if (lux) {
+                cv.card(cx, cy, gw, gh, 0, [[0, withAlpha('#000000', 0.78)], [1, withAlpha('#000000', 0.86)]]);
+                cv.strokeRoundRect(cx, cy, gw, gh, 0, 1.5, withAlpha(AC, 0.9));
+            } else if (red) {
                 cv.card(cx, cy, gw, gh, 0, [[0, withAlpha('#141414', 0.85)], [1, withAlpha('#0a0a0a', 0.35)]]);
                 cv.quad([[cx, cy], [cx + gh * 0.2, cy], [cx, cy + gh * 0.2], [cx, cy]], '#e4002b');
                 cv.fillRect(cx, cy + gh - 2, gw * 0.7, 2, '#e4002b');
@@ -205,8 +210,13 @@ function appGrid(cv, t, b, o) {
         const first = g.first * g.cols;
         g.all.slice(first, g.end * g.cols).forEach((a, i) => {
             const card = cardBox(b, g, first + i), { x, y, w: cw, h: ch } = card, L = cardLayout(card, a);
-            const sport = look.get().sport;
-            if (sport) {         // a sport card: square, see-through and fading to the bottom, a red flag in the corner and a red line under it
+            const LK = look.get(), sport = LK.sport, lux = !!LK.lux, AC = LK.accent;
+            if (lux) {           // a carbon card: dark glass over the backdrop, a thin gold frame and a gold line under it
+                cv.card(x, y, cw, ch, 0, [[0, withAlpha('#000000', 0.74)], [1, withAlpha('#000000', 0.82)]]);
+                cv.card(x, y, cw, ch * 0.45, 0, [[0, withAlpha('#ffffff', 0.09)], [1, withAlpha('#ffffff', 0)]]);
+                cv.strokeRoundRect(x + 1, y + 1, cw - 2, ch - 2, 0, 2, withAlpha(AC, 0.85));
+                cv.fillRect(x + cw * 0.04, y + ch - 3, cw * 0.62, 2, withAlpha(AC, 0.9));
+            } else if (sport) {  // a sport card: square, see-through and fading to the bottom, a red flag in the corner and a red line under it
                 cv.card(x, y, cw, ch, 0, [[0, withAlpha('#141414', 0.82)], [0.55, withAlpha('#0c0c0c', 0.62)], [1, withAlpha('#0a0a0a', 0.3)]]);
                 cv.strokeRoundRect(x + 1, y + 1, cw - 2, ch - 2, 0, 2, withAlpha('#ffffff', 0.13));
                 const fl = Math.round(Math.min(40, ch * 0.16));
@@ -221,13 +231,13 @@ function appGrid(cv, t, b, o) {
                 cv.strokeRoundRect(x + 1, y + 1, cw - 2, ch - 2, 24, 2, withAlpha('#5fb8ee', 0.4));
             }
             if (a.thumb) {       // Settings > Theme: the look's miniature, its name and what a tap does
-                const pad = Math.round(Math.min(18, cw * 0.02)), th = Math.round(ch * 0.64), acc = a.thumb === 'red' ? '#e4002b' : '#00bfff';
+                const pad = Math.round(Math.min(18, cw * 0.02)), th = Math.round(ch * 0.64), acc = look.LOOKS[a.thumb] ? look.LOOKS[a.thumb].accent : '#00bfff';
                 themeThumb(cv, a.thumb, x + pad, y + pad, cw - 2 * pad, th);
                 cv.strokeRoundRect(x + pad, y + pad, cw - 2 * pad, th, 0, 1, withAlpha('#ffffff', 0.25));
                 if (a.selected) cv.strokeRoundRect(x, y, cw, ch, sport ? 0 : 24, 4, acc);
                 const ns2 = Math.round(Math.max(20, Math.min(40, ch * 0.075))), ss3 = Math.round(Math.max(15, ns2 * 0.62)), by = y + pad + th + ns2 * 1.35;
                 cv.text(String(a.title || ''), x + pad + 6, by, ns2, '#ffffff', { font: 'bold' });
-                cv.text(W.fit(cv, String(a.sub || ''), cw * 0.62, ss3), x + pad + 6, by + ss3 * 1.5, ss3, withAlpha('#ffffff', 0.62));
+                cv.text(W.fit(cv, String(a.sub || ''), cw - 2 * pad - 12, ss3), x + pad + 6, by + ss3 * 1.5, ss3, withAlpha('#ffffff', 0.62));
                 const cs = Math.round(ss3 * 1.05), label = String(a.state || ''), cw2 = cv.textWidth(label, cs, { font: 'bold' }) + cs * 1.8, ch2 = cs * 2.1;
                 const cx0 = x + cw - pad - cw2, cy0 = y + ch - pad - ch2;
                 if (a.selected) cv.roundRect(cx0, cy0, cw2, ch2, sport ? 0 : ch2 / 2, acc);
@@ -241,19 +251,19 @@ function appGrid(cv, t, b, o) {
             cv.text(W.fit(cv, String(a.title || ''), L.maxW, ns, 'bold'), L.tx, L.nameY, ns, sport ? '#ffffff' : '#f0f8ff', { font: 'bold' });
             // a long state (a translation) takes a smaller size before it is cut
             const ss2 = a.sub ? W.shrink(cv, String(a.sub), L.maxW, L.subSize, 'label', 0.8) : 0;
-            if (a.sub) cv.text(W.fit(cv, String(a.sub), L.maxW, ss2), L.tx, L.subY, ss2, C(t, a.subColor, sport ? '#ff8a96' : '#5de0ff'));
+            if (a.sub) cv.text(W.fit(cv, String(a.sub), L.maxW, ss2), L.tx, L.subY, ss2, C(t, a.subColor, lux ? '#e8d29b' : sport ? '#ff8a96' : '#5de0ff'));
             // ID7 / ID8 tags (the head units it supports), top right of the card
             if (ch >= 150 && Array.isArray(a.tags) && a.tags.length) {
                 const th = Math.round(Math.min(36, ch * 0.13)); let tx2 = x + cw - 18;
                 for (let i = a.tags.length - 1; i >= 0; i--) {
-                    tx2 -= chip(cv, a.tags[i], tx2, y + 14, th, a.tags[i] === 'ID8' ? (sport ? '#ffffff' : '#27e1c1') : (sport ? '#ff5a64' : '#00bfff'), false, true) + th * 0.25;
+                    tx2 -= chip(cv, a.tags[i], tx2, y + 14, th, a.tags[i] === 'ID8' ? (sport ? '#ffffff' : '#27e1c1') : (lux ? AC : sport ? '#ff5a64' : '#00bfff'), false, true) + th * 0.25;
                 }
             }
             if (L.btn) {
                 const q = L.btn, bs = Math.round(q.h * 0.44);
-                cv.card(q.x, q.y, q.w, q.h, q.h / 2, sport ? [[0, '#ff2a4a'], [1, '#b3001f']] : [[0, '#22b8ff'], [1, '#0b78d4']]);
+                cv.card(q.x, q.y, q.w, q.h, q.h / 2, lux ? [[0, '#ecd39a'], [1, '#b8914a']] : sport ? [[0, '#ff2a4a'], [1, '#b3001f']] : [[0, '#22b8ff'], [1, '#0b78d4']]);
                 cv.strokeRoundRect(q.x + 1, q.y + 1, q.w - 2, q.h - 2, q.h / 2, 2, withAlpha('#ffffff', 0.25));
-                cv.text(W.fit(cv, String(a.btn), q.w - 24, bs, 'bold'), q.x + q.w / 2, q.y + q.h / 2 + bs * 0.36, bs, '#ffffff', { align: 'center', font: 'bold' });
+                cv.text(W.fit(cv, String(a.btn), q.w - 24, bs, 'bold'), q.x + q.w / 2, q.y + q.h / 2 + bs * 0.36, bs, lux ? '#14110a' : '#ffffff', { align: 'center', font: 'bold' });
             }
         });
         cv.noclip();
@@ -311,7 +321,8 @@ function appList(cv, t, b, o) {
     v.all.slice(v.first, v.end).forEach((it, k) => {
         const y = b.y + (v.first + k - v.top) * v.rh, h = v.rh - gap, s = Math.round(h * 0.73);
         cv.card(b.x, y, b.w, h, 22 * q, [[0, t.panelTop], [1, t.panelBottom]]);
-        if (look.get().sport) { const fl = Math.round(Math.min(30, h * 0.28)); cv.quad([[b.x, y], [b.x + fl, y], [b.x, y + fl], [b.x, y]], '#e4002b'); }
+        if (look.get().lux) cv.fillRect(b.x, y, 4, h, look.get().accent);
+        else if (look.get().sport) { const fl = Math.round(Math.min(30, h * 0.28)); cv.quad([[b.x, y], [b.x + fl, y], [b.x, y + fl], [b.x, y]], '#e4002b'); }
         let tx = b.x + 28 * q;
         if (it.icon || it.vicon || it.colors || it.letter) {
             if (it.plain && it.vicon) vicon(cv, it.vicon, b.x + 28 * q, y + (h - s) / 2, s, C(t, it.iconColor, t.text));
@@ -350,7 +361,7 @@ const navItems = (o) => (Array.isArray(o.items) ? o.items
 // (the Store: o.labelSize for a narrower menu; the default is the design's)
 function sideNav(cv, t, b, o) {
     const items = navItems(o), n = Math.max(1, items.length), ih = b.h / n, ls = o.labelSize || 34;
-    const sport = look.get().sport;
+    const LK = look.get(), sport = LK.sport, lux = !!LK.lux, AC = LK.accent;
     if (sport) {
         cv.fillRect(b.x, b.y, b.w, b.h, withAlpha('#050505', 0.92));
         cv.fillRect(b.x + b.w - 1.5, b.y, 1.5, b.h, withAlpha('#ffffff', 0.12));
@@ -368,23 +379,27 @@ function sideNav(cv, t, b, o) {
             } else {
                 cv.circle(cx, cy, d / 2, withAlpha('#ffffff', 0.10));
             }
+        } else if (on && lux) {   // the open tab: a gold bar on the left and a soft light band
+            const y0 = y + 3, y1 = y + ih - 3;
+            cv.card(b.x, y0, b.w - 1.5, y1 - y0, 0, [[0, withAlpha('#ffffff', 0.14)], [1, withAlpha('#ffffff', 0)]]);
+            cv.fillRect(b.x, y0, 5, y1 - y0, AC);
         } else if (on) {     // the open tab: a flat red band across the menu, fading out to the right
             const y0 = y + 3, y1 = y + ih - 3;
             cv.card(b.x, y0, b.w - 1.5, y1 - y0, 0, [[0, '#e4002b'], [1, withAlpha('#e4002b', 0.62)]]);
             cv.fillRect(b.x, y0, 5, y1 - y0, '#ffffff');
         }
         const g = Math.round(d * (sport ? 0.62 : 0.54)), mx = cx;
-        vicon(cv, it.vicon, mx - g / 2, cy - g / 2, g, sport ? (on ? '#ffffff' : '#c9c9c9') : (on ? '#06121c' : t.text));
+        vicon(cv, it.vicon, mx - g / 2, cy - g / 2, g, sport ? (on ? (lux ? AC : '#ffffff') : '#c9c9c9') : (on ? '#06121c' : t.text));
         const room = b.w - (sport ? 24 : 16), ts = W.shrink(cv, String(it.label), room, ls, 'bold', 0.6);
-        cv.text(W.fit(cv, String(it.label), room, ts, 'bold'), mx, top + d + ts * 1.05, ts, on ? '#ffffff' : sport ? '#9a9a9a' : t.dim, { align: 'center', font: 'bold' });
+        cv.text(W.fit(cv, String(it.label), room, ts, 'bold'), mx, top + d + ts * 1.05, ts, on ? (lux ? AC : '#ffffff') : sport ? '#9a9a9a' : t.dim, { align: 'center', font: 'bold' });
         if (it.badge && String(it.badge) !== '0') {
             const rr = Math.max(14, Math.round(d * 0.26)), bx = mx + d * 0.42, by = cy - d * 0.42;
             if (sport) {
-                cv.circle(bx, by, rr + 3, on ? '#e4002b' : '#050505'); cv.circle(bx, by, rr, on ? '#ffffff' : '#e4002b');
+                cv.circle(bx, by, rr + 3, '#050505'); cv.circle(bx, by, rr, AC);
             } else {
                 cv.circle(bx, by, rr + 3, t.bg); cv.circle(bx, by, rr, '#e5484d');
             }
-            cv.text(String(it.badge), bx, by + rr * 0.42, Math.round(rr * 1.2), sport && on ? '#c4001f' : '#ffffff', { align: 'center', font: 'bold' });
+            cv.text(String(it.badge), bx, by + rr * 0.42, Math.round(rr * 1.2), lux ? '#14110a' : '#ffffff', { align: 'center', font: 'bold' });
         }
     });
 }
@@ -406,9 +421,9 @@ function vbutton(cv, t, b, o) {
         vicon(cv, o.vicon, b.x + (b.w - g) / 2, b.y + (b.h - g) / 2, g, off ? t.dim : c);
         return;
     }
-    if (o.style === 'primary') cv.card(b.x, b.y, b.w, b.h, r, off ? [[0, '#2a3341'], [1, '#232a35']] : look.get().sport ? [[0, c], [1, c]] : [[0, c], [1, withAlpha(c, 0.78)]]);
+    if (o.style === 'primary') cv.card(b.x, b.y, b.w, b.h, r, off ? [[0, '#2a3341'], [1, '#232a35']] : look.get().lux ? [[0, '#ecd39a'], [1, '#b8914a']] : look.get().sport ? [[0, c], [1, c]] : [[0, c], [1, withAlpha(c, 0.78)]]);
     else cv.strokeRoundRect(b.x, b.y, b.w, b.h, r, 3, off ? t.panelEdge : o.style === 'outline' ? withAlpha(t.text, 0.6) : withAlpha(c, 0.6));
-    const fg = off ? t.dim : o.style === 'primary' ? '#ffffff' : o.style === 'outline' ? t.text : c;
+    const fg = off ? t.dim : o.style === 'primary' ? (look.get().lux ? '#14110a' : '#ffffff') : o.style === 'outline' ? t.text : c;
     const hasIcon = !!o.vicon, room = b.w - 2 * r - (hasIcon ? is + 18 : 0);
     const ts = W.shrink(cv, String(o.text || ''), room, s, 'bold'), text = W.fit(cv, String(o.text || ''), room, ts, 'bold');
     const tw = cv.textWidth(text, ts, { font: 'bold' }) + (hasIcon ? is + 18 : 0), x1 = b.x + (b.w - tw) / 2;
