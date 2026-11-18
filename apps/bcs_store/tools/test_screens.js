@@ -437,9 +437,10 @@ f.values.accessLeft.items.concat(f.values.accessRight.items).forEach((i) => eq(i
 // Theme: BCS Blue and Performance Red; the one in use is marked, the other a tap away
 f = screen('theme');
 eq([text(f, 'title'), own(f)], ['Theme', ['BCS Blue', 'Back']]);
-eq(f.values.list.items.map((i) => [i.right, i.act]), [['', { do: 'look', id: 'blue' }], ['chip:Selected', null]], 'Performance Red is the default');
+eq(f.values.grid.items.map((i) => [i.title, i.thumb, i.state]), [['BCS Blue', 'blue', 'TAP TO USE'], ['Performance Red', 'red', 'SELECTED']], 'a tile with a miniature per look');
+eq(f.values.grid.items.map((i) => [i.selected ? 'chip:Selected' : '', i.act]), [['', { do: 'look', id: 'blue' }], ['chip:Selected', null]], 'Performance Red is the default');
 f = screen('theme-blue');
-eq(f.values.list.items.map((i) => [i.right, i.act]), [['chip:Selected', null], ['', { do: 'look', id: 'red' }]]);
+eq(f.values.grid.items.map((i) => [i.selected ? 'chip:Selected' : '', i.act]), [['chip:Selected', null], ['', { do: 'look', id: 'red' }]]);
 eq(screen('settings').values.accessRight.items.concat(screen('settings').values.accessLeft.items).find((i) => i.id === 'theme').sub, 'Performance Red');
 // the look in use sets the screen's theme and the accent
 {

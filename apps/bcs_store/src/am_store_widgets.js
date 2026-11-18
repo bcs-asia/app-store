@@ -12,6 +12,8 @@ const { vicon } = require('./kit_vicons.js');
 const W = require('./am_widgets.js');
 const { t: tr } = require('./i18n.js');
 const look = require('./bcs_look.js');
+const kit = require('./kit_record.js');
+const { BG, RATIO: BG_RATIO } = require('./bcs_bg.js');
 
 const GREEN = '#35d07f', BLUE = '#e4002b', AMBER = '#ffb020';
 const C = (t, c, d) => (c ? t[c] || c : d);
@@ -98,6 +100,57 @@ function appIconEl(cv, t, b, o) {
     appIcon(cv, t, o, b.x + (b.w - s) / 2, b.y + (b.h - s) / 2, s);
 }
 
+// ---- Settings > Theme: a tile per look, a miniature of the Apps screen in that look over its name ---------------
+/* The Apps screen of look `id` in miniature inside box (x, y, w, h). The corners are those of that look, whichever look is in use. */
+function themeThumb(cv, id, x, y, w, h) {
+    const red = id === 'red', inUse = look.get().sharp;
+    kit.setSharp(red);
+    try {
+        const rd = red ? 0 : Math.max(4, w * 0.012), nw = w * 0.13;
+        if (red) {
+            cv.fillRect(x, y, w, h, '#0a0a0a');
+            const ih = Math.min(h, (w - nw) / BG_RATIO), img = W.picture(BG);
+            if (img) cv.image(img, x + nw, y + h - ih, w - nw, ih, 0);
+        } else {
+            cv.card(x, y, w, h, 0, [[0, '#0d3a5c'], [1, '#06182a']]);
+        }
+        // side menu: the open tab (a flat red band / a round blue disc) over three more
+        cv.fillRect(x, y, nw, h, red ? withAlpha('#050505', 0.94) : withAlpha('#07192b', 0.9));
+        const ty = y + h * 0.06, th = h * 0.15;
+        if (red) cv.card(x, ty, nw, th, 0, [[0, '#e4002b'], [1, withAlpha('#e4002b', 0.62)]]);
+        else cv.circle(x + nw / 2, ty + th / 2, th * 0.4, '#3d9bff');
+        for (let i = 1; i < 5; i++) {
+            const cy = ty + i * (h * 0.17) + th / 2;
+            if (red) cv.fillRect(x + nw * 0.34, cy - nw * 0.1, nw * 0.32, nw * 0.2, '#6a6a6a');
+            else cv.circle(x + nw / 2, cy, th * 0.3, withAlpha('#ffffff', 0.12));
+        }
+        // header: the title bar, the two toggles
+        const hx = x + nw + w * 0.04, hy = y + h * 0.07, hh = h * 0.07;
+        cv.roundRect(hx, hy, w * 0.14, hh, rd / 2, '#ffffff');
+        const tw = w * 0.1, tg = hy - h * 0.012, tgh = h * 0.1;
+        cv.roundRect(x + w - w * 0.03 - tw * 2 - w * 0.015, tg, tw, tgh, rd, red ? '#ffffff' : '#00bfff');
+        if (red) { cv.roundRect(x + w - w * 0.03 - tw, tg, tw, tgh, 0, withAlpha('#ffffff', 0.12)); cv.fillRect(x + w - w * 0.03 - tw, tg + tgh - 2, tw, 2, '#e4002b'); }
+        else cv.strokeRoundRect(x + w - w * 0.03 - tw, tg, tw, tgh, rd, 2, '#00bfff');
+        // six cards
+        const gx = x + nw + w * 0.04, gw = (x + w - w * 0.03 - gx - 2 * w * 0.02) / 3, gy = y + h * 0.27, gh = (y + h - h * 0.07 - gy - h * 0.04) / 2;
+        for (let r = 0; r < 2; r++) for (let c = 0; c < 3; c++) {
+            const cx = gx + c * (gw + w * 0.02), cy = gy + r * (gh + h * 0.04);
+            if (red) {
+                cv.card(cx, cy, gw, gh, 0, [[0, withAlpha('#141414', 0.85)], [1, withAlpha('#0a0a0a', 0.35)]]);
+                cv.quad([[cx, cy], [cx + gh * 0.2, cy], [cx, cy + gh * 0.2], [cx, cy]], '#e4002b');
+                cv.fillRect(cx, cy + gh - 2, gw * 0.7, 2, '#e4002b');
+            } else {
+                cv.card(cx, cy, gw, gh, rd * 1.8, [[0, '#14405f'], [1, '#07192b']]);
+                cv.strokeRoundRect(cx, cy, gw, gh, rd * 1.8, 1, withAlpha('#5fb8ee', 0.4));
+            }
+            cv.roundRect(cx + gw * 0.08, cy + gh * 0.3, gh * 0.4, gh * 0.4, red ? 0 : rd, red ? '#7a7a7a' : '#2a6a9a');
+            cv.roundRect(cx + gw * 0.08 + gh * 0.5, cy + gh * 0.34, gw * 0.3, gh * 0.1, 0, withAlpha('#ffffff', 0.85));
+        }
+    } finally {
+        kit.setSharp(inUse);
+    }
+}
+
 // ---- app grid: tiles in rows, scrolled by the pixel (o.top: rows scrolled, fractional) -------------------------
 const gridItems = (o) => (Array.isArray(o.items) ? o.items
     : lines(o.items).map((l, i) => ({ id: `item${i}`, title: l[0], sub: l[1] || '', vicon: l[2] || '', colors: l[3] ? `${l[3]},${l[4] || l[3]}` : '' })));
@@ -153,15 +206,34 @@ function appGrid(cv, t, b, o) {
         g.all.slice(first, g.end * g.cols).forEach((a, i) => {
             const card = cardBox(b, g, first + i), { x, y, w: cw, h: ch } = card, L = cardLayout(card, a);
             const sport = look.get().sport;
-            if (sport) {         // a sport card: graphite, a thin border and a red bar on its left edge
-                cv.card(x, y, cw, ch, 12, [[0, '#232325'], [1, '#0b0b0c']]);
-                cv.card(x, y, cw, ch * 0.5, 12, [[0, withAlpha('#ffffff', 0.07)], [1, withAlpha('#ffffff', 0)]]);
-                cv.strokeRoundRect(x + 1, y + 1, cw - 2, ch - 2, 12, 2, withAlpha('#ffffff', 0.14));
-                cv.roundRect(x, y + 6, 10, ch - 12, 4, '#e4002b');
+            if (sport) {         // a sport card: square, see-through and fading to the bottom, a red flag in the corner and a red line under it
+                cv.card(x, y, cw, ch, 0, [[0, withAlpha('#141414', 0.82)], [0.55, withAlpha('#0c0c0c', 0.62)], [1, withAlpha('#0a0a0a', 0.3)]]);
+                cv.strokeRoundRect(x + 1, y + 1, cw - 2, ch - 2, 0, 2, withAlpha('#ffffff', 0.13));
+                const fl = Math.round(Math.min(40, ch * 0.16));
+                cv.quad([[x, y], [x + fl, y], [x, y + fl], [x, y]], '#e4002b');
+                [[0, 0.95], [0.22, 0.75], [0.44, 0.5], [0.66, 0.28], [0.84, 0.12]].forEach(([k0_, al], j, arr) => {
+                    const x1 = j + 1 < arr.length ? arr[j + 1][0] : 1;
+                    cv.fillRect(x + cw * k0_, y + ch - 4, cw * (x1 - k0_), 4, withAlpha('#e4002b', al));
+                });
             } else {             // a soft card: no side bar, a light top edge and a thin border
                 cv.card(x, y, cw, ch, 24, [[0, '#14405f'], [1, '#07192b']]);
                 cv.card(x, y, cw, ch * 0.5, 24, [[0, withAlpha('#ffffff', 0.08)], [1, withAlpha('#ffffff', 0)]]);
                 cv.strokeRoundRect(x + 1, y + 1, cw - 2, ch - 2, 24, 2, withAlpha('#5fb8ee', 0.4));
+            }
+            if (a.thumb) {       // Settings > Theme: the look's miniature, its name and what a tap does
+                const pad = Math.round(Math.min(18, cw * 0.02)), th = Math.round(ch * 0.64), acc = a.thumb === 'red' ? '#e4002b' : '#00bfff';
+                themeThumb(cv, a.thumb, x + pad, y + pad, cw - 2 * pad, th);
+                cv.strokeRoundRect(x + pad, y + pad, cw - 2 * pad, th, 0, 1, withAlpha('#ffffff', 0.25));
+                if (a.selected) cv.strokeRoundRect(x, y, cw, ch, sport ? 0 : 24, 4, acc);
+                const ns2 = Math.round(Math.max(20, Math.min(40, ch * 0.075))), ss3 = Math.round(Math.max(15, ns2 * 0.62)), by = y + pad + th + ns2 * 1.35;
+                cv.text(String(a.title || ''), x + pad + 6, by, ns2, '#ffffff', { font: 'bold' });
+                cv.text(W.fit(cv, String(a.sub || ''), cw * 0.62, ss3), x + pad + 6, by + ss3 * 1.5, ss3, withAlpha('#ffffff', 0.62));
+                const cs = Math.round(ss3 * 1.05), label = String(a.state || ''), cw2 = cv.textWidth(label, cs, { font: 'bold' }) + cs * 1.8, ch2 = cs * 2.1;
+                const cx0 = x + cw - pad - cw2, cy0 = y + ch - pad - ch2;
+                if (a.selected) cv.roundRect(cx0, cy0, cw2, ch2, sport ? 0 : ch2 / 2, acc);
+                else cv.strokeRoundRect(cx0, cy0, cw2, ch2, sport ? 0 : ch2 / 2, 2, acc);
+                cv.text(label, cx0 + cw2 / 2, cy0 + ch2 / 2 + cs * 0.36, cs, a.selected ? '#ffffff' : acc, { align: 'center', font: 'bold' });
+                return;
             }
             appIcon(cv, t, a, L.iconX, L.iconY, L.iconS, sport ? '#0b0b0c' : '#0b1b31');
             // (the source line is not shown on a card)
@@ -239,6 +311,7 @@ function appList(cv, t, b, o) {
     v.all.slice(v.first, v.end).forEach((it, k) => {
         const y = b.y + (v.first + k - v.top) * v.rh, h = v.rh - gap, s = Math.round(h * 0.73);
         cv.card(b.x, y, b.w, h, 22 * q, [[0, t.panelTop], [1, t.panelBottom]]);
+        if (look.get().sport) { const fl = Math.round(Math.min(30, h * 0.28)); cv.quad([[b.x, y], [b.x + fl, y], [b.x, y + fl], [b.x, y]], '#e4002b'); }
         let tx = b.x + 28 * q;
         if (it.icon || it.vicon || it.colors || it.letter) {
             if (it.plain && it.vicon) vicon(cv, it.vicon, b.x + 28 * q, y + (h - s) / 2, s, C(t, it.iconColor, t.text));
@@ -288,7 +361,6 @@ function sideNav(cv, t, b, o) {
     items.forEach((it, i) => {
         const on = i === (o.sel | 0), cx = b.x + (b.w - 1.5) / 2, y = b.y + i * ih;
         const d = Math.round(Math.min(ih * 0.56, b.w * 0.5, 84)), block = d + ls * 1.3, top = y + (ih - block) / 2 + 2, cy = top + d / 2;
-        const k = sport ? k0(ih) : 0;
         if (!sport) {        // a round icon button over its word: the open tab's disc is BCS blue with a soft halo, the others a faint disc
             if (on) {
                 cv.circle(cx, cy, d / 2 + 6, withAlpha('#3d9bff', 0.22));
@@ -296,18 +368,13 @@ function sideNav(cv, t, b, o) {
             } else {
                 cv.circle(cx, cy, d / 2, withAlpha('#ffffff', 0.10));
             }
-        } else if (on) {     // the open tab: a slanted red band across the menu, a white disc with a red icon
-            const y0 = y + 3, y1 = y + ih - 3, x0 = b.x, x1 = b.x + b.w - 3;
-            cv.quad([[x0, y0], [x1, y0], [x1 - k, y1], [x0, y1]], '#e4002b');
-            cv.quad([[x0, y0], [x1, y0], [x1 - k * 0.5, y0 + (y1 - y0) * 0.5], [x0, y0 + (y1 - y0) * 0.5]], withAlpha('#ffffff', 0.10));
-            cv.line(x1, y0, x1 - k, y1, 3, '#ffffff');
-            cv.circle(cx - k * 0.25, cy, d / 2, '#ffffff');
-        } else {
-            cv.circle(cx, cy, d / 2, '#161616');
-            cv.circle(cx, cy, d / 2 - 1, '#1d1d1f');
+        } else if (on) {     // the open tab: a flat red band across the menu, fading out to the right
+            const y0 = y + 3, y1 = y + ih - 3;
+            cv.card(b.x, y0, b.w - 1.5, y1 - y0, 0, [[0, '#e4002b'], [1, withAlpha('#e4002b', 0.62)]]);
+            cv.fillRect(b.x, y0, 5, y1 - y0, '#ffffff');
         }
-        const g = Math.round(d * 0.54), mx = on ? cx - k * 0.25 : cx;
-        vicon(cv, it.vicon, mx - g / 2, cy - g / 2, g, sport ? (on ? '#c4001f' : '#d8d8d8') : (on ? '#06121c' : t.text));
+        const g = Math.round(d * (sport ? 0.62 : 0.54)), mx = cx;
+        vicon(cv, it.vicon, mx - g / 2, cy - g / 2, g, sport ? (on ? '#ffffff' : '#c9c9c9') : (on ? '#06121c' : t.text));
         const room = b.w - (sport ? 24 : 16), ts = W.shrink(cv, String(it.label), room, ls, 'bold', 0.6);
         cv.text(W.fit(cv, String(it.label), room, ts, 'bold'), mx, top + d + ts * 1.05, ts, on ? '#ffffff' : sport ? '#9a9a9a' : t.dim, { align: 'center', font: 'bold' });
         if (it.badge && String(it.badge) !== '0') {
@@ -321,19 +388,25 @@ function sideNav(cv, t, b, o) {
         }
     });
 }
-const k0 = (ih) => Math.round(ih * 0.16);
 
 // ---- button with a vector icon -------------------------------------------------------------------------------
 function vbutton(cv, t, b, o) {
     const c = C(t, o.color, look.get().accent), s = o.size || Math.round(b.h * 0.34), is = Math.round(b.h * 0.4), r = Math.min(18, b.h / 2);
     const off = o.disabled;
+    if (o.style === 'round' && look.get().sport) {   // Performance Red: an icon in a square frame
+        const g = Math.min(b.w, b.h) * 0.5;
+        cv.roundRect(b.x, b.y, b.w, b.h, 0, withAlpha('#000000', 0.35));
+        cv.strokeRoundRect(b.x, b.y, b.w, b.h, 0, 2, withAlpha('#ffffff', 0.45));
+        vicon(cv, o.vicon, b.x + (b.w - g) / 2, b.y + (b.h - g) / 2, g, off ? t.dim : '#ffffff');
+        return;
+    }
     if (o.style === 'round') {                       // an icon on a soft disc (back, close)
         const d = Math.min(b.w, b.h), g = d * 0.55;
         cv.circle(b.x + b.w / 2, b.y + b.h / 2, d / 2, withAlpha(off ? t.dim : c, 0.14));
         vicon(cv, o.vicon, b.x + (b.w - g) / 2, b.y + (b.h - g) / 2, g, off ? t.dim : c);
         return;
     }
-    if (o.style === 'primary') cv.card(b.x, b.y, b.w, b.h, r, off ? [[0, '#2a3341'], [1, '#232a35']] : [[0, c], [1, withAlpha(c, 0.78)]]);
+    if (o.style === 'primary') cv.card(b.x, b.y, b.w, b.h, r, off ? [[0, '#2a3341'], [1, '#232a35']] : look.get().sport ? [[0, c], [1, c]] : [[0, c], [1, withAlpha(c, 0.78)]]);
     else cv.strokeRoundRect(b.x, b.y, b.w, b.h, r, 3, off ? t.panelEdge : o.style === 'outline' ? withAlpha(t.text, 0.6) : withAlpha(c, 0.6));
     const fg = off ? t.dim : o.style === 'primary' ? '#ffffff' : o.style === 'outline' ? t.text : c;
     const hasIcon = !!o.vicon, room = b.w - 2 * r - (hasIcon ? is + 18 : 0);

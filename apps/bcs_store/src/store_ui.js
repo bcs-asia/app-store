@@ -821,9 +821,8 @@ function themeView(m) {
     return {
         title: { text: 'Theme' },
         status: { text: 'Choose how BCS Store looks', color: DIM },
-        list: { items: look.list().map((l) => ({ id: l.id, title: l.name, sub: l.sport ? 'Black and red, sport' : 'Blue, soft', plain: true,
-            vicon: 'gauge', iconColor: l.accent, right: l.id === now ? 'chip:Selected' : '', chipColor: l.accent,
-            act: l.id === now ? null : { do: 'look', id: l.id } })), empty: '' }
+        grid: { items: look.list().map((l) => ({ id: l.id, title: l.name, sub: l.sport ? 'Black, red and sharp, M4 GT3 backdrop' : 'Blue and soft, rounded cards',
+            thumb: l.id, selected: l.id === now, state: l.id === now ? 'SELECTED' : 'TAP TO USE', act: l.id === now ? null : { do: 'look', id: l.id } })), empty: '' }
     };
 }
 

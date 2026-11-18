@@ -14,6 +14,7 @@
  */
 
 const { LOGO } = require('./bcs_brand.js');
+const { BG } = require('./bcs_bg.js');
 
 const M = 14;                 // the box's margin: the focus ring's room
 const RAIL = 150;
@@ -38,8 +39,10 @@ function compact(W, H) {
     const CW = R - X;
     const nav = (sel) => el('nav', 'sideNav', M, M + LOGO_H + 8, RAIL, H - 2 * M - LOGO_H - 8, { items: NAV_ITEMS, sel, labelSize: 24 });
     const logo = () => el('headerLogo', 'image', M, M, RAIL, LOGO_H, { src: LOGO, radius: 0 });
+    // Performance Red's backdrop (the M4 GT3 photo) sits behind the Apps, Tools and USB cards; the other looks drop it (store_frame.js)
+    const photo = () => el('bgPhoto', 'image', M + RAIL, 0, W - M - RAIL, H, { src: BG, radius: 0 });
     const screen = (name, sel, components) => ({ kind: 'gpu', name, theme: 'm_red', bg: 'theme',
-        components: [logo(), nav(sel)].concat(components) });
+        components: (name === 'store' || name === 'usb' ? [photo()] : []).concat([logo(), nav(sel)], components) });
     // the header row: the title, then the status on its baseline (one right after the title moved right of a longer title)
     const HEAD = M + 64;
     const title = (t, x) => text('title', x === undefined ? X : x, M + 2, 640, 60, t, 50, 'bold');
@@ -258,7 +261,7 @@ function compact(W, H) {
         back(),
         title('', titleX),
         status('status', R - 520, 520),
-        list('list', X, HEAD + 14, Math.min(1100, CW), 2 * LIST.rowH, { empty: '' })
+        el('grid', 'appGrid', X - 8, GRID_Y, CW + 8, B - GRID_Y, { items: '', cols: 2, tileH: B - GRID_Y, cardStyle: 'billboard', empty: '' })
     ]);
     const proxyW = Math.min(1100, CW);
     const proxy = screen('proxy', 3, [
