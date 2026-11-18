@@ -29,6 +29,7 @@ const { Recorder } = require('./kit_record.js');
 const { withAlpha } = require('./kit_canvas.js');
 const { theme: kitTheme } = require('./kit_themes.js');
 const look = require('./bcs_look.js');
+const { BG, CARBON } = require('./bcs_bg.js');
 const { view, icons } = require('./store_ui.js');
 const { tabCells } = require('./am_widgets.js');
 const { gridView, listView, navItems, rightBoxes, keyBoxes, shown, cardBox, cardLayout } = require('./am_store_widgets.js');
@@ -161,8 +162,9 @@ function translated(opts) {
  * dw] }) moves those components right by dx and widens them by dw. */
 function screenOf(v, scroll, layout) {
     const def = (layout || SCREENS).screens.find((s) => s.name === v.screen);
-    const components = def.components.map((c) => {
+    const components = def.components.filter((c) => c.name !== 'bgPhoto' || look.get().photo).map((c) => {
         const opts = look.paint(Object.assign(translated(c.opts), v.values[c.name] || {}));
+        if (c.name === 'bgPhoto') opts.src = look.get().photo === 'carbon' ? CARBON : BG;
         if (layout) {
             SIZES.filter((k) => c.opts[k] !== undefined).forEach((k) => { opts[k] = c.opts[k]; });
         }
@@ -261,7 +263,7 @@ function frame(m, opts) {
     const rec = record(l.st, recordOpts(o.layout || null, o.textScale));
     const f = l.items[o.focus];
     if (f && !f.reveal) {
-        rec.strokeRoundRect(f.x - 8, f.y - 8, f.w + 16, f.h + 16, f.r + 8, 5, FOCUS);
+        rec.strokeRoundRect(f.x - 8, f.y - 8, f.w + 16, f.h + 16, f.r + 8, 5, FOCUS);   // (square in Performance Red: the recorder)
     }
     return { screen: l.screen, rec, items: l.items, regions: l.regions, icons: l.icons, values: l.values };
 }

@@ -436,16 +436,18 @@ eq(f.values.accessLeft.items.length, 4, 'four rows in the first column');
 f.values.accessLeft.items.concat(f.values.accessRight.items).forEach((i) => eq(i.act.do, 'open', `${i.id} opens its page`));
 // Theme: BCS Blue and Performance Red; the one in use is marked, the other a tap away
 f = screen('theme');
-eq([text(f, 'title'), own(f)], ['Theme', ['BCS Blue', 'Back']]);
-eq(f.values.list.items.map((i) => [i.right, i.act]), [['', { do: 'look', id: 'blue' }], ['chip:Selected', null]], 'Performance Red is the default');
+eq([text(f, 'title'), own(f)], ['Theme', ['BCS Blue', 'Luxury Carbon', 'Back']]);
+eq(f.values.grid.items.map((i) => [i.title, i.thumb, i.state]), [['BCS Blue', 'blue', 'TAP TO USE'], ['Performance Red', 'red', 'SELECTED'], ['Luxury Carbon', 'carbon', 'TAP TO USE']], 'a tile with a miniature per look');
+eq(f.values.grid.items.map((i) => [i.selected ? 'chip:Selected' : '', i.act]), [['', { do: 'look', id: 'blue' }], ['chip:Selected', null], ['', { do: 'look', id: 'carbon' }]], 'Performance Red is the default');
 f = screen('theme-blue');
-eq(f.values.list.items.map((i) => [i.right, i.act]), [['chip:Selected', null], ['', { do: 'look', id: 'red' }]]);
+eq(f.values.grid.items.map((i) => [i.selected ? 'chip:Selected' : '', i.act]), [['chip:Selected', null], ['', { do: 'look', id: 'red' }], ['', { do: 'look', id: 'carbon' }]]);
 eq(screen('settings').values.accessRight.items.concat(screen('settings').values.accessLeft.items).find((i) => i.id === 'theme').sub, 'Performance Red');
 // the look in use sets the screen's theme and the accent
 {
     const look = require('../src/bcs_look.js');
     const stOf = (lk) => require('../src/store_frame.js').layoutOf(fixture.model({ tab: 'settings', stack: [{ name: 'main' }], look: lk }), { layout: ID7.layout, textScale: ID7.scale }).st;
-    eq([stOf('blue').theme, stOf('red').theme], ['m_tricolour', 'm_red'], 'each look has its screen theme');
+    eq([stOf('blue').theme, stOf('red').theme, stOf('carbon').theme], ['m_tricolour', 'm_red', 'm_carbon'], 'each look has its screen theme');
+    eq(stOf('carbon').components.length, stOf('red').components.length, 'the backdrop is on in both photo looks'); look.use('carbon'); eq(look.accent('#e4002b'), '#d4b36a'); look.use('red');
     look.use('blue'); eq(look.accent('#e4002b'), '#00bfff'); look.use('red'); eq(look.accent('#e4002b'), '#e4002b');
 }
 // System: the unit, the versions, Check now, Restart head unit; who made this Store

@@ -980,8 +980,10 @@ function runWidgetsExtra() {
             eq(app._drawnModel().look, 'red', 'Performance Red by default');
             app._act({ do: 'look', id: 'blue' });
             eq([app._drawnModel().look, require('fs').readFileSync(lf, 'utf8')], ['blue', 'blue'], 'the look chosen is kept');
+            app._act({ do: 'look', id: 'carbon' });
+            eq(app._drawnModel().look, 'carbon', 'Luxury Carbon');
             app._act({ do: 'look', id: 'nope' });
-            eq(app._drawnModel().look, 'blue', 'an unknown look is ignored');
+            eq(app._drawnModel().look, 'carbon', 'an unknown look is ignored');
             app._act({ do: 'look', id: 'red' });
             eq(app._drawnModel().look, 'red');
             if (had === null) { require('fs').unlinkSync(lf); } else { require('fs').writeFileSync(lf, had); }

@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.2.1
+
+- Performance Red is sharp: square cards, buttons, tags, rows and icons; a red corner flag and a fading red line on every card; a flat red band on the open tab.
+- Performance Red shows a black, red and white BMW M4 GT3 photo behind the Apps, Tools and USB cards (BCS Blue keeps its plain look).
+- Luxury Carbon, a third look: carbon-fibre photo backdrop with a curved light sweep, black glass cards with gold frames, gold buttons and a gold bar on the open tab.
+- Settings > Theme: a tile per look with a miniature of the Apps screen in it.
+
 ## 3.2.0
 
 - Settings > Theme: choose BCS Blue or Performance Red. The choice is kept on the head unit; Performance Red stays the default.

@@ -1,5 +1,6 @@
 'use strict';
 const { LOGO } = require('./bcs_brand.js');
+const { BG } = require('./bcs_bg.js');
 /**
  * The Store's renderer screens, in iDrive 8 design pixels (2880 x 960; the
  * Store scales them into iDrive 8's box, src/store_compact.js lays the same
@@ -25,6 +26,19 @@ module.exports = {
    "bg": "theme",
    "bgArea": "app",
    "components": [
+    {
+     "name": "bgPhoto",
+     "rtype": "gpu",
+     "gpu": "image",
+     "x": 422,
+     "y": 0,
+     "w": 2458,
+     "h": 960,
+     "opts": {
+      "src": BG,
+      "radius": 0
+     }
+    },
     {
      "name": "headerLogo",
      "rtype": "gpu",
@@ -845,6 +859,19 @@ module.exports = {
    "bgArea": "app",
    "components": [
     {
+     "name": "bgPhoto",
+     "rtype": "gpu",
+     "gpu": "image",
+     "x": 422,
+     "y": 0,
+     "w": 2458,
+     "h": 960,
+     "opts": {
+      "src": BG,
+      "radius": 0
+     }
+    },
+    {
      "name": "headerLogo",
      "rtype": "gpu",
      "gpu": "image",
@@ -1405,16 +1432,18 @@ module.exports = {
      }
     },
     {
-     "name": "list",
+     "name": "grid",
      "rtype": "gpu",
-     "gpu": "appList",
-     "x": 610,
+     "gpu": "appGrid",
+     "x": 460,
      "y": 292,
-     "w": 1500,
-     "h": 230,
+     "w": 2380,
+     "h": 548,
      "opts": {
       "items": [],
-      "rowH": 108,
+      "cols": 3,
+      "tileH": 548,
+      "cardStyle": "billboard",
       "empty": ""
      }
     }

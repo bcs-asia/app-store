@@ -127,7 +127,7 @@ class Recorder {
         this.n += 6; return this;
     }
     gradientRect(x, y, w, h, stops) { return this._grad(OP.GRAD, x, y, w, h, 0, stops); }
-    card(x, y, w, h, r, stops) { return this._grad(OP.CARD, x, y, w, h, r, stops); }
+    card(x, y, w, h, r, stops) { return this._grad(OP.CARD, x, y, w, h, sharp ? 0 : r, stops); }
     _grad(op, x, y, w, h, r, stops) {
         const k = stops.length, card = op === OP.CARD;
         this._grow(7 + k * 2); const f = this.f; let i = this.n;
@@ -140,12 +140,12 @@ class Recorder {
     roundRect(x, y, w, h, r, c) {
         if (!(w > 0 && h > 0)) return this;
         this._grow(7); const f = this.f, i = this.n;
-        this.u[i] = OP.RRECT; f[i + 1] = x; f[i + 2] = y; f[i + 3] = w; f[i + 4] = h; f[i + 5] = r; this.u[i + 6] = pack(c);
+        this.u[i] = OP.RRECT; f[i + 1] = x; f[i + 2] = y; f[i + 3] = w; f[i + 4] = h; f[i + 5] = sharp ? 0 : r; this.u[i + 6] = pack(c);
         this.n += 7; return this;
     }
     strokeRoundRect(x, y, w, h, r, width, c) {
         this._grow(8); const f = this.f, i = this.n;
-        this.u[i] = OP.RSTROKE; f[i + 1] = x; f[i + 2] = y; f[i + 3] = w; f[i + 4] = h; f[i + 5] = r; f[i + 6] = width; this.u[i + 7] = pack(c);
+        this.u[i] = OP.RSTROKE; f[i + 1] = x; f[i + 2] = y; f[i + 3] = w; f[i + 4] = h; f[i + 5] = sharp ? 0 : r; f[i + 6] = width; this.u[i + 7] = pack(c);
         this.n += 8; return this;
     }
     rampRect(x, y, w, h, r, stops, spanX, spanW) {
@@ -266,7 +266,7 @@ class Recorder {
         if (!img || img.imageId === undefined || !(w > 0 && h > 0)) return this;
         this._grow(7); const f = this.f, i = this.n;
         // same layout as OP.RRECT (x y w h r colour): for an older renderer the transport swaps in a plain tile
-        this.u[i] = OP.IMAGE; f[i + 1] = x; f[i + 2] = y; f[i + 3] = w; f[i + 4] = h; f[i + 5] = r || 0; this.u[i + 6] = img.imageId;
+        this.u[i] = OP.IMAGE; f[i + 1] = x; f[i + 2] = y; f[i + 3] = w; f[i + 4] = h; f[i + 5] = sharp && (r || 0) < Math.min(w, h) / 2 ? 0 : r || 0; this.u[i + 6] = img.imageId;
         this.n += 7;
         (this.images || (this.images = new Set())).add(img.imageId);
         (this.imageAt || (this.imageAt = [])).push(i);
@@ -375,5 +375,9 @@ function play(words, real) {
     return real;
 }
 
-module.exports = { Recorder, OP, pack, unpack, rampId, rampList, atlasId, atlasList, atlasById, dropAtlases, makeLayer, dropLayer, layerById,
+/* Square corners for every rounded rectangle the recorder draws (Performance Red); circles and arcs stay round. */
+let sharp = false;
+const setSharp = (on) => { sharp = !!on; };
+
+module.exports = { setSharp, Recorder, OP, pack, unpack, rampId, rampList, atlasId, atlasList, atlasById, dropAtlases, makeLayer, dropLayer, layerById,
     makeImage, dropImage, imageById, play, softLayer };

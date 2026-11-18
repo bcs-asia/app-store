@@ -20,6 +20,7 @@ const S = JSON.parse(JSON.stringify(up.screens));
 const BLUE = '#e4002b';
 const NAV = 'Apps, grid\nTools, wrench\nUpdates, check\nUSB, usb\nSources, unlock\nSettings, gear';
 const LOGO_MARK = '__BCS_LOGO__';
+const BG_MARK = '__BCS_BG__';
 
 const find = (st, n) => st.components.find((c) => c.name === n);
 const drop = (st, ...names) => { st.components = st.components.filter((c) => names.indexOf(c.name) < 0); };
@@ -84,11 +85,11 @@ settings.components.push(
     comp('accessLeft', 'appList', 470, 292, 1170, 548, { items: [], rowH: 170, fit: true }),
     comp('accessRight', 'appList', 1690, 292, 1150, 548, { items: [], rowH: 170, fit: true }));
 
-// Theme: the looks to choose from (a clone of the preferred-connection page with one list)
+// Theme: a tile per look (a miniature of the Apps screen over its name), in a grid of three
 const theme = clone('prefer', 'theme');
-theme.components = theme.components.filter((c) => c.name !== 'usbPhone');
+theme.components = theme.components.filter((c) => ['usbPhone', 'list'].indexOf(c.name) < 0);
 find(theme, 'title').opts.text = '';
-find(theme, 'list').h = 2 * 108 + 14;
+theme.components.push(comp('grid', 'appGrid', 460, 292, 2380, 548, { items: [], cols: 3, tileH: 548, cardStyle: 'billboard', empty: '' }));
 
 // Updates (Robert's installed lists) keeps its layout
 const screens = S.filter((s) => s.name !== 'sources' && s.name !== 'system');
@@ -100,11 +101,13 @@ screens.forEach((st) => {
     st.theme = 'm_red';
     st.components.forEach((c) => { if (c.name === 'nav') { c.opts.items = NAV; } });
     st.components.unshift(comp('headerLogo', 'image', 126, 38, 300, 64, { src: LOGO_MARK, radius: 0 }));
+    // Performance Red's backdrop behind the Apps, Tools and USB cards (the other looks drop it)
+    if (st.name === 'store' || st.name === 'usb') st.components.unshift(comp('bgPhoto', 'image', 422, 0, 2458, 960, { src: BG_MARK, radius: 0 }));
 });
 const json = JSON.stringify({ design: up.design, screens }, null, 1).split('"text": "Scan"').join('"text": ""').split('#3d9bff').join(BLUE).replace(JSON.stringify(LOGO_MARK), 'LOGO')
-    .split(JSON.stringify(LOGO_MARK)).join('LOGO');
+    .split(JSON.stringify(LOGO_MARK)).join('LOGO').split(JSON.stringify(BG_MARK)).join('BG');
 const head = fs.readFileSync(path.join(__dirname, 'upstream', 'am_screens.upstream.js'), 'utf8').split('module.exports')[0]
-    .replace("'use strict';\n", "'use strict';\nconst { LOGO } = require('./bcs_brand.js');\n")
+    .replace("'use strict';\n", "'use strict';\nconst { LOGO } = require('./bcs_brand.js');\nconst { BG } = require('./bcs_bg.js');\n")
     .replace(' * own in the same frame.', ' * own in the same frame; BCS Store lays them out for six tabs and large cards (tools/gen_bcs_screens.js writes this file\n * from tools/upstream/am_screens.upstream.js).');
 fs.writeFileSync(path.join(HERE, 'src', 'am_screens.js'), `${head}module.exports = ${json};\n`);
 console.error(`src/am_screens.js: ${screens.length} screens`);
