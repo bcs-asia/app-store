@@ -99,13 +99,31 @@ ok(screen('store-apps').values.grid.items.every((t) => t.kind === 'app'), 'Apps 
 ok(screen('store', { tab: 'tools' }).values.grid.items.every((t) => t.kind === 'service'), 'Tools shows only the tools');
 eq(screen('store', { tab: 'tools' }).values.title.text, 'Tools');
 
+// All apps / Installed (and the same on Tools): Robert's Store is never in All, and is in Installed once it is installed
+{
+    const stR = fixture.state();
+    stR.components = stR.components.map((c) => Object.assign({}, c, { pendingReboot: false })).concat([{ id: 'robertn_store', kind: 'app', title: 'Store', installed: '0.9.40', version: '0.9.40', size: null, status: 'installed',
+        source: 'mgu-store', build: null, optional: false, uninstallable: true, revision: null, mguHmi: ['ID7', 'ID8'], compat: 'yes', provides: null,
+        service: null, pendingReboot: false, queued: false, error: null }]);
+    const vOf = (over) => frame(fixture.model(Object.assign({ tab: 'store' }, over || {}), stR), { textScale: ID7.scale, focus: -1, scroll: {}, layout: ID7.layout });
+    const titles = (g) => g.values.grid.items.map((t) => t.title);
+    const all = vOf({ view: 'all' }), inst = vOf({ view: 'installed' });
+    ok(all.values.grid.items.every((t) => t.id !== 'robertn_store'), 'All apps does not list Robert\'s Store');
+    ok(inst.values.grid.items.some((t) => t.id === 'robertn_store'), 'Installed apps lists Robert\'s Store once it is installed');
+    ok(inst.values.grid.items.every((t) => t.installed !== false), 'Installed lists installed ones only');
+    eq([all.values.viewAll.text, all.values.viewInstalled.text, all.values.viewAll.style, all.values.viewInstalled.style], ['All apps', 'Installed', 'primary', 'outline'], 'All apps is the open one');
+    eq([inst.values.viewAll.style, inst.values.viewInstalled.style], ['outline', 'primary'], 'Installed is the open one');
+    eq(vOf({ tab: 'tools', view: 'all' }).values.viewAll.text, 'All tools', 'Tools has All tools');
+    eq([vOf({ view: 'installed' }).values.viewAll.act, inst.values.viewInstalled.act], [{ do: 'view', view: 'all' }, { do: 'view', view: 'installed' }], 'a toggle sets the view');
+}
+
 // focus on a tile out of view scrolls it in; hit() takes only what is in view
 const many = fixture.state();
 many.components = [many.components[0]];
 for (let i = 0; i < 44; i++) {
     many.components.push(Object.assign({}, many.components[0], { id: `x${i}`, title: `Extra ${i}` }));
 }
-const T = 7;                    // the first card: after the side menu and Restart now (installed ones: no button of their own)
+const T = 8;                    // the first card: after the side menu and the All / Installed toggles (installed ones: no button of their own)
 const scroll = {};
 f = frame(fixture.model({}, many), { textScale: 1, focus: T + 40, scroll, layout: ID7.layout });
 ok(scroll['store.grid'] > 0 && !f.items[T + 40].reveal, 'the focused tile scrolled into view');

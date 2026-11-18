@@ -1257,7 +1257,7 @@ function runDrawn() {
     }).then(() => {
         eq(drawn.stack.length, 1, 'BACK leaves the page');
         eq(gpu.visible, true, 'and the tabs show');
-        eq(drawn.focus, 6, 'the focus back on the tile the page opened from');
+        eq(drawn.focus, 8, 'the focus back on the tile the page opened from');
         // touch: under Tools, a tap on Renderer's tile opens it; Install installs it beside the other renderer
         app._act({ do: 'tab', tab: 'tools' });
         reset();
@@ -1695,6 +1695,7 @@ function runDrawn() {
             drawn.focusLost = false;
             ccu(101);
             eq(drawn.focus, 6);
+            drawn.focus = 8;                // the first tile: after the side menu and the All / Installed toggles
             reset();
             ccu(101, 'DREHGEBER_KURZ_GEDRUECKT');
             ccu(101, 'DREHGEBER_KURZ_GEDRUECKT');
@@ -1704,11 +1705,11 @@ function runDrawn() {
             eq(states.length, 1, 'once while held, an invalid sample in between');
             ccu(101);
             drawn.pop();
-            drawn.focus = 6;
+            drawn.focus = 8;
             reset();
             ccu(101, 'DREHGEBER_KURZ_GEDRUECKT', 1);
             drawn.pop();
-            drawn.focus = 6;
+            drawn.focus = 8;
             ccu(101, 'DREHGEBER_KURZ_GEDRUECKT', 2);
             eq(states.filter((x) => x.indexOf('open') === 0).length, 2, 'a new sequence number while pushed is a new push');
             ccu(101);

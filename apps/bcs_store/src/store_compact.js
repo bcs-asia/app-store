@@ -62,6 +62,8 @@ function compact(W, H) {
 
     const SAFE_W = 470;
     const ONLINE_W = 190;
+    const TOG_W = 176;                              // All apps / Installed: two buttons left of the online state
+    const TOGS = 2 * TOG_W + 10 + 16;
     const filterX = R - ONLINE_W - 20;
     const store = screen('store', 0, [
         title('Apps'),
@@ -70,6 +72,8 @@ function compact(W, H) {
         // Leave safe mode in Restart now's place (store_ui.js safeModeOff), wider for its longer words
         button('safeModeOff', filterX - 16 - SAFE_W, M, SAFE_W, HB_H, 'Leave safe mode', 'primary', 25,
             { vicon: 'unlock', color: BLUE, hidden: true, shift: { subtitle: [0, -SAFE_W - 16] } }),
+        button('viewAll', filterX - 16 - 2 * TOG_W - 10, M, TOG_W, HB_H, '', 'outline', 25, { shift: { subtitle: [0, -TOGS] } }),
+        button('viewInstalled', filterX - 16 - TOG_W, M, TOG_W, HB_H, '', 'outline', 25),
         el('online', 'chips', R - ONLINE_W, M + 8, ONLINE_W, 48, { items: '', align: 'right' }),
         grid()
     ]);

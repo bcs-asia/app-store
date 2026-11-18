@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.3
+
+- Apps and Tools have two buttons left of the Wi-Fi state: All apps (All tools) and Installed. Installed lists what is installed, including Robert's MGU Store when it is installed; All keeps hiding it.
+
 ## 3.0.2
 
 - Community sources that do not work on the cars are removed, and no longer added: eroobeeroo, arefahmad, pinguinooo and nickgcode (idrive7-apps), aurelmarius/bmw-games, hexlay/idrive7-custom-apps, NamelsMissing/mgu-apps, isaakbruno2/carplay-map-cluster. Where a car already has one, the Store removes it from the updater.

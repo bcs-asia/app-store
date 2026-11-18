@@ -153,6 +153,7 @@ class Drawn extends EventEmitter {
         this.stack = [{ name: 'main' }];
         this.tab = 'store';
         this.filter = 'app';
+        this.view = 'all';                  // Apps and Tools: all, or only what is installed
         this.focus = 0;
         this.scroll = {};
         this.items = [];
@@ -349,6 +350,13 @@ class Drawn extends EventEmitter {
             this.pop();
         }
         this.tab = tab;
+        this.view = 'all';
+        this._page();
+        this.render();
+    }
+
+    setView(view) {
+        this.view = view === 'installed' ? 'installed' : 'all';
         this._page();
         this.render();
     }
@@ -575,7 +583,7 @@ class Drawn extends EventEmitter {
     }
 
     _model() {
-        return Object.assign(this.host.model(), { stack: this.stack, tab: this.tab, filter: this.filter, held: this._held() });
+        return Object.assign(this.host.model(), { stack: this.stack, tab: this.tab, filter: this.filter, view: this.view, held: this._held() });
     }
 
     /* The Installed lists' rows and its Restart now as drawn while the focus

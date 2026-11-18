@@ -36,6 +36,10 @@ store.title = 'Apps';
 place(find(store, 'grid'), 460, 270, 2380, 570);
 card(find(store, 'grid'));
 place(find(store, 'online'), 2200, 146, 640, 84);
+// All apps / Installed: two buttons left of the Wi-Fi chip (texts are set by the view: All apps / All tools, Installed)
+store.components.push(
+    comp('viewAll', 'vbutton', 1630, 134, 260, 84, { text: '', vicon: '', style: 'outline', size: 30, shift: { subtitle: [0, -170] } }, 'event:viewAll'),
+    comp('viewInstalled', 'vbutton', 1910, 134, 270, 84, { text: '', vicon: '', style: 'outline', size: 30 }, 'event:viewInstalled'));
 
 const usb = get('usb');
 place(find(usb, 'grid'), 460, 270, 2380, 570);
