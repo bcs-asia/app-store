@@ -740,21 +740,22 @@ function run() {
         app._bcsSourceAttempted = Object.create(null);
         const wasConnected = app._connected;
         app._connected = true;
-        const stSources = { busy: false, sources: [{ id: 'a', label: 'bcs-develop/bcs-store' }, { id: 'b', label: 'bcs-develop/bcs-mgu-apps' },
+        const stSources = { busy: false, sources: [{ id: 'a', label: 'bcs-develop/bcs-store' }, { id: 'b', label: 'bcs-develop/bcs-mgu-apps' }, { id: 'r1', label: 'nickgcode/idrive7-apps' }, { id: 'r2', label: 'aurelmarius/bmw-games' }, { id: 'k1', label: 'aurelmarius/bmw-apps' },
             { id: 'c', label: 'bcs-asia/app-store' }] };
         app._ensureBcsSources(stSources);
         app._ensureBcsSources(stSources);
         app._ensureBcsSources(stSources);
         app._ensureBcsSources(stSources);
         eq(sent.map(secretless).slice(sentBefore, sentBefore + 4), [{ op: 'source-remove', id: 'a' }, { op: 'source-remove', id: 'b' },
-            { op: 'source-add', type: 'github', repo: 'bimmer-lab/apps', channel: 'branch:main' },
-            { op: 'source-add', type: 'github', repo: 'JustAnotherPU/ridetube', channel: 'releases' }], 'BCS sources: retired removed, missing added');
-        // the other community feeds follow one by one; the rest of this test run does not need them
+            { op: 'source-remove', id: 'r1' }, { op: 'source-remove', id: 'r2' }], 'BCS sources: the retired and the non-working feeds are removed, the working one is kept');
+        // then the missing BCS feeds follow one by one; the rest of this test run does not need them
         for (let i = 0; i < 40; i++) {
             app._ensureBcsSources(stSources);
         }
-        eq(sent.slice(sentBefore + 4).map(secretless).every((x) => x.op === 'source-add' && (x.channel === 'releases' || x.channel === 'branch:main')), true, 'the community feeds are added on their release or branch channel');
-        eq(sent.slice(sentBefore + 4).length, 16, 'each remaining BCS feed is added once');
+        const added = sent.slice(sentBefore + 4).map(secretless);
+        eq(added.every((x) => x.op === 'source-add' && (x.channel === 'releases' || x.channel === 'branch:main')), true, 'the feeds are added on their release or branch channel');
+        eq(added.length, 9, 'each missing BCS feed is added once (not the one already there)');
+        eq(added.some((x) => /bmw-games|nickgcode|eroobeeroo|hexlay|NamelsMissing/.test(x.repo)), false, 'a retired feed is never added');
         app._connected = wasConnected;
         // the refused source's page closes once the confirm step gives it the focus back: Sources has the message
         app._states.ST_OnlineApps_StoreSource.emit('visible', { visible: true });

@@ -84,6 +84,9 @@ const tr = i18n.t;
 const SOCKET = '/dev/shm/mgu-updater/updater.sock';
 // the id the updater knows the Store by (updater.conf store_app)
 const APP_ID = 'bcs_store';
+// retired: bcs-develop's feeds, and community feeds that proved not to work on the cars (error or sign-in needed); removed from the updater when found
+const RETIRED_SOURCE = new RegExp('^(bcs-develop/|' + ['eroobeeroo/idrive7-apps', 'arefahmad/idrive7-apps', 'pinguinooo/idrive7-apps', 'nickgcode/idrive7-apps',
+    'aurelmarius/bmw-games', 'hexlay/idrive7-custom-apps', 'NamelsMissing/mgu-apps', 'isaakbruno2/carplay-map-cluster'].map((r) => r.replace(/[/-]/g, '\\$&') + '$').join('|') + ')', 'i');
 // [repo, channel]: BCS's own source first, then the community feeds BCS Store adds when they are missing
 const BCS_SOURCES = [
     ['bcs-asia/app-store', 'releases'],
@@ -91,20 +94,12 @@ const BCS_SOURCES = [
     ['JustAnotherPU/ridetube', 'releases'],
     ['JustAnotherPU/mgu-apps', 'releases'],
     // community collections from the awesome-bmw-mgu list (releases channel: the updater shows a source with nothing published as unavailable)
-    ['eroobeeroo/idrive7-apps', 'releases'],
-    ['arefahmad/idrive7-apps', 'releases'],
-    ['pinguinooo/idrive7-apps', 'releases'],
-    ['nickgcode/idrive7-apps', 'releases'],
     ['aurelmarius/bmw-apps', 'releases'],
-    ['aurelmarius/bmw-games', 'releases'],
-    ['hexlay/idrive7-custom-apps', 'releases'],
-    ['NamelsMissing/mgu-apps', 'releases'],
     ['istt1899/x3', 'releases'],
     ['JustAnotherPU/ridewatch', 'releases'],
     ['JustAnotherPU/moonride', 'releases'],
     ['JustAnotherPU/waze-hud', 'releases'],
     ['pllanaio/mgu-browser', 'releases'],
-    ['isaakbruno2/carplay-map-cluster', 'releases'],
     ['aidac/apps', 'branch:main']
 ];
 /* The updater writes the privileged secret, and while the phone page is on
@@ -1302,7 +1297,7 @@ class Store extends OnlineApp {
      * not tried again this run: Sources has Add source. */
     /* The retired bcs-develop feeds: removed from the updater when found, once each per run. */
     _dropRetiredSources(st) {
-        const old = st.sources.find((src) => /^bcs-develop\//i.test(String(src.label || src.repo || '')) && !this._bcsSourceAttempted[`drop:${src.id}`]);
+        const old = st.sources.find((src) => RETIRED_SOURCE.test(String(src.label || src.repo || '')) && !this._bcsSourceAttempted[`drop:${src.id}`]);
         if (!old) {
             return false;
         }
