@@ -254,6 +254,12 @@ function compact(W, H) {
         list('list', X, HEAD + 14, Math.min(1100, CW), 4 * LIST.rowH, { empty: '' }),
         list('usbPhone', X, HEAD + 14 + 4 * LIST.rowH + 8, Math.min(1100, CW), LIST.rowH, { empty: '' })
     ]);
+    const theme = screen('theme', 3, [
+        back(),
+        title('', titleX),
+        status('status', R - 520, 520),
+        list('list', X, HEAD + 14, Math.min(1100, CW), 2 * LIST.rowH, { empty: '' })
+    ]);
     const proxyW = Math.min(1100, CW);
     const proxy = screen('proxy', 3, [
         back(),
@@ -262,7 +268,7 @@ function compact(W, H) {
         text('error', X, HEAD + 14 + 2 * LIST.rowH + 20, proxyW, 130, '', 26, 'label', AMBER, { wrap: true })
     ]);
     return { design: { w: W, h: H }, screens: [store, app, confirm, installed, usb, settings, sources, system, source, accounts, pick, login, phone, type,
-        wifi, prefer, proxy] };
+        wifi, prefer, proxy, theme] };
 }
 
 module.exports = { compact };

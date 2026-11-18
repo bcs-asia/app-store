@@ -70,6 +70,7 @@ const someipBuilders = require('oap-sdk/src/someip/someipBuilders');
 const { UpdaterClient } = require('./client.js');
 const i18n = require('./i18n.js');
 const { qrPng } = require('./qr.js');
+const look = require('./bcs_look.js');
 const { spell } = require('./speller.js');
 const { Drawn, DEPTHS } = require('./store_drawn.js');
 const { typeKey, wifiOf, proxyOf } = require('./store_ui.js');
@@ -108,6 +109,7 @@ const BCS_SOURCES = [
 const DATA_DIR = path.join(__dirname, '..', '..', 'data');
 const SECRET_FILE = path.join(DATA_DIR, 'updater-secret');
 const WEB_URL_FILE = path.join(DATA_DIR, 'web-url');
+const LOOK_FILE = path.join(DATA_DIR, 'look');      // the look chosen in Settings > Theme (src/bcs_look.js)
 const RECONNECT_MS = 2000;
 const PRESS_DEDUPE_MS = 400;
 const HIDE_SETTLE_MS = 800;
@@ -263,6 +265,7 @@ class Store extends OnlineApp {
         this._typing = null;            // the drawn keyboard's page up: { page, resolve, under (the page it took the place of) }
         this._setupNote = null;         // set when a request needs the updater's key and the Store has none
         this._uplinkNote = null;        // the refusal of the last Wi-Fi or preferred-connection request
+        this._look = look.known(readFile(LOOK_FILE).trim()) ? readFile(LOOK_FILE).trim() : look.DEFAULT;
         this._proxyNote = null;         // why the last proxy change was refused
         this._removeNote = null;        // the updater's refusal of the last Remove: { id, error, by }
         this._qr = { login: { key: null, file: null, chain: Promise.resolve() },
@@ -717,7 +720,7 @@ class Store extends OnlineApp {
             version: this._version(), note: this._sourcesNote, login: this._login,
             webText: web && web.enabled ? readFile(WEB_URL_FILE) : '', accountsNote: this._accountsNote,
             pick: this._pick && { repo: this._pick.repo, probe: this._pick.probe, tokenNote: !!this._pick.tokenNote },
-            setupNote: this._setupNote || null, uplinkNote: this._uplinkNote, proxyNote: this._proxyNote, removeNote: this._removeNote, language: i18n.language() };
+            setupNote: this._setupNote || null, uplinkNote: this._uplinkNote, proxyNote: this._proxyNote, removeNote: this._removeNote, language: i18n.language(), look: this._look };
     }
 
     /* A press on the drawn screens (src/store_ui.js acts). */
@@ -727,6 +730,18 @@ class Store extends OnlineApp {
         case 'tab': this._drawn.setTab(act.tab); break;
         case 'filter': this._drawn.setFilter(act.filter); break;
         case 'view': this._drawn.setView(act.view); break;
+        case 'look':
+            if (look.known(act.id) && act.id !== this._look) {
+                this._look = act.id;
+                try {
+                    fs.mkdirSync(DATA_DIR, { recursive: true });
+                    fs.writeFileSync(LOOK_FILE, act.id);
+                } catch (e) {
+                    logger.warn(`look not kept: ${e.message}`);
+                }
+                this._render();
+            }
+            break;
         case 'back': this._back(); break;
         case 'check': this._send({ op: 'check' }); break;
         case 'open':

@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.2.0
+
+- Settings > Theme: choose BCS Blue or Performance Red. The choice is kept on the head unit; Performance Red stays the default.
+
 ## 3.1.0
 
 - Sport design in red and black: graphite cards with a red bar on their left edge, red buttons and accents, a black menu with a slanted red band on the open tab (a white disc with a red icon), red count badges.

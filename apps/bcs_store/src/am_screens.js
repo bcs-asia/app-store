@@ -1326,6 +1326,102 @@ module.exports = {
   },
   {
    "kind": "gpu",
+   "name": "theme",
+   "theme": "m_red",
+   "bg": "theme",
+   "components": [
+    {
+     "name": "headerLogo",
+     "rtype": "gpu",
+     "gpu": "image",
+     "x": 126,
+     "y": 38,
+     "w": 300,
+     "h": 64,
+     "opts": {
+      "src": LOGO,
+      "radius": 0
+     }
+    },
+    {
+     "name": "nav",
+     "rtype": "gpu",
+     "gpu": "sideNav",
+     "x": 126,
+     "y": 114,
+     "w": 300,
+     "h": 726,
+     "opts": {
+      "items": "Apps, grid\nTools, wrench\nUpdates, check\nUSB, usb\nSources, unlock\nSettings, gear",
+      "sel": 0
+     }
+    },
+    {
+     "name": "back",
+     "rtype": "gpu",
+     "gpu": "vbutton",
+     "x": 480,
+     "y": 138,
+     "w": 96,
+     "h": 96,
+     "opts": {
+      "text": "",
+      "vicon": "back",
+      "style": "round",
+      "color": "#f4f7fb"
+     },
+     "onTap": "event:back"
+    },
+    {
+     "name": "title",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 610,
+     "y": 138,
+     "w": 1600,
+     "h": 90,
+     "opts": {
+      "text": "",
+      "size": 72,
+      "font": "bold",
+      "align": "left",
+      "color": "text"
+     }
+    },
+    {
+     "name": "status",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 610,
+     "y": 227,
+     "w": 1600,
+     "h": 43,
+     "opts": {
+      "text": "",
+      "size": 34,
+      "font": "label",
+      "align": "left",
+      "color": "dim"
+     }
+    },
+    {
+     "name": "list",
+     "rtype": "gpu",
+     "gpu": "appList",
+     "x": 610,
+     "y": 292,
+     "w": 1500,
+     "h": 230,
+     "opts": {
+      "items": [],
+      "rowH": 108,
+      "empty": ""
+     }
+    }
+   ]
+  },
+  {
+   "kind": "gpu",
    "name": "source",
    "theme": "m_red",
    "bg": "theme",

@@ -84,10 +84,16 @@ settings.components.push(
     comp('accessLeft', 'appList', 470, 292, 1170, 548, { items: [], rowH: 170, fit: true }),
     comp('accessRight', 'appList', 1690, 292, 1150, 548, { items: [], rowH: 170, fit: true }));
 
+// Theme: the looks to choose from (a clone of the preferred-connection page with one list)
+const theme = clone('prefer', 'theme');
+theme.components = theme.components.filter((c) => c.name !== 'usbPhone');
+find(theme, 'title').opts.text = '';
+find(theme, 'list').h = 2 * 108 + 14;
+
 // Updates (Robert's installed lists) keeps its layout
 const screens = S.filter((s) => s.name !== 'sources' && s.name !== 'system');
 const at = screens.findIndex((s) => s.name === 'settings');
-screens.splice(at + 1, 0, sources, system);
+screens.splice(at + 1, 0, sources, system, theme);
 
 // every screen: six tabs, the logo above the menu, the BCS blue
 screens.forEach((st) => {
