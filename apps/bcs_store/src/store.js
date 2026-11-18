@@ -726,6 +726,7 @@ class Store extends OnlineApp {
         switch (act.do) {
         case 'tab': this._drawn.setTab(act.tab); break;
         case 'filter': this._drawn.setFilter(act.filter); break;
+        case 'view': this._drawn.setView(act.view); break;
         case 'back': this._back(); break;
         case 'check': this._send({ op: 'check' }); break;
         case 'open':

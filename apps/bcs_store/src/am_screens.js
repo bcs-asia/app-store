@@ -151,6 +151,44 @@ module.exports = {
       "titleSize": 40,
       "subSize": 27
      }
+    },
+    {
+     "name": "viewAll",
+     "rtype": "gpu",
+     "gpu": "vbutton",
+     "x": 1630,
+     "y": 134,
+     "w": 260,
+     "h": 84,
+     "opts": {
+      "text": "",
+      "vicon": "",
+      "style": "outline",
+      "size": 30,
+      "shift": {
+       "subtitle": [
+        0,
+        -170
+       ]
+      }
+     },
+     "onTap": "event:viewAll"
+    },
+    {
+     "name": "viewInstalled",
+     "rtype": "gpu",
+     "gpu": "vbutton",
+     "x": 1910,
+     "y": 134,
+     "w": 270,
+     "h": 84,
+     "opts": {
+      "text": "",
+      "vicon": "",
+      "style": "outline",
+      "size": 30
+     },
+     "onTap": "event:viewInstalled"
     }
    ],
    "entry": true

@@ -23,7 +23,7 @@ const { t: tr } = require('./i18n.js');
  *
  * What a press does rides on the values as `act`: on a button's opts, on
  * each nav, grid and list item, on each filter cell (acts). The acts:
- * { do: 'tab', tab }, { do: 'filter', filter }, { do: 'open', page },
+ * { do: 'tab', tab }, { do: 'filter', filter }, { do: 'view', view: 'all' | 'installed' }, { do: 'open', page },
  * { do: 'back' }, { do: 'check' }, { do: 'install', id }, { do: 'update-all' },
  * { do: 'remove', id, tools? }, { do: 'restart' }, { do: 'safe-mode-off' },
  * { do: 'source-remove', id }, { do: 'account-remove', id }, { do: 'add-source' },
@@ -265,16 +265,25 @@ function storeView(m, kind) {
     // the status line names a row as the tiles tell it apart
     const st = m.st && Object.assign({}, m.st, { components: m.st.components.map((c) => (listed(c) ? Object.assign({}, c, { title: named(m, c) }) : c)) });
     const own = (c) => Number(c.id !== 'bcs_store');
-    const list = comps(m).filter((c) => (kind === 'tool' ? isTool(c) : !isTool(c))).sort((a, b) => own(a) - own(b));
+    const installedOnly = m.view === 'installed';
+    // All: what the Store offers (not Robert's Store). Installed: what is installed of the kind, Robert's Store too when it is
+    const base = installedOnly ? rawComps(m).filter((c) => c.installed && (c.id !== 'bcs_store' || comps(m).indexOf(c) >= 0)) : comps(m);
+    const list = base.filter((c) => (kind === 'tool' ? isTool(c) : !isTool(c))).sort((a, b) => own(a) - own(b));
     const name = sourceNames(list, sources(m));
+    const noun = kind === 'tool' ? 'tools' : 'apps';
+    // Restart now and Leave safe mode take the toggles' place while they show
+    const crowded = !safeModeOff(m).hidden || !restartNow(m).hidden;
+    const toggle = (view, text) => (m.connected && !crowded ? button(text, { do: 'view', view }, { style: (installedOnly ? 'installed' : 'all') === view ? 'primary' : 'outline', color: BLUE, size: 28 }) : hidden);
     return {
         title: { text: kind === 'tool' ? "Tools" : tr("Apps") },
         subtitle: busyRow ? { text: `${busy.phase === 'download' ? tr("Downloading {0} %", percent(busy)) : tr(PHASE[busy.phase] || 'Installing')} · ${named(m, busyRow)}`, color: BLUE }
             : { text: m.connected ? statusLine(st, true) : statusLine(null, false, m.secret), color: DIM },
         online: { items: wifiChip(m) },
+        viewAll: toggle('all', `All ${noun}`),
+        viewInstalled: toggle('installed', 'Installed'),
         safeModeOff: safeModeOff(m),
         restartNow: safeModeOff(m).hidden ? restartNow(m) : hidden,
-        grid: { items: list.map((c) => tile(m, c, busy, name)), empty: m.connected ? tr("Nothing here") : '' }
+        grid: { items: list.map((c) => tile(m, c, busy, name)), empty: m.connected ? (installedOnly ? `No ${noun} installed` : tr("Nothing here")) : '' }
     };
 }
 
