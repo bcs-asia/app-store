@@ -21,7 +21,7 @@ const NAV_ITEMS = 'Apps, grid\nTools, wrench\nUpdates, check\nUSB, usb\nSources,
 const TEXT = 'text';
 const DIM = 'dim';
 const AMBER = '#ffb020';
-const BLUE = '#00bfff';
+const BLUE = '#e4002b';
 const LOGO_H = 32;            // the BCS logo above the side menu
 
 const el = (name, gpu, x, y, w, h, opts, onTap) => Object.assign({ name, rtype: 'gpu', gpu, x: Math.round(x), y: Math.round(y),
@@ -38,7 +38,7 @@ function compact(W, H) {
     const CW = R - X;
     const nav = (sel) => el('nav', 'sideNav', M, M + LOGO_H + 8, RAIL, H - 2 * M - LOGO_H - 8, { items: NAV_ITEMS, sel, labelSize: 24 });
     const logo = () => el('headerLogo', 'image', M, M, RAIL, LOGO_H, { src: LOGO, radius: 0 });
-    const screen = (name, sel, components) => ({ kind: 'gpu', name, theme: 'm_tricolour', bg: 'theme',
+    const screen = (name, sel, components) => ({ kind: 'gpu', name, theme: 'm_red', bg: 'theme',
         components: [logo(), nav(sel)].concat(components) });
     // the header row: the title, then the status on its baseline (one right after the title moved right of a longer title)
     const HEAD = M + 64;

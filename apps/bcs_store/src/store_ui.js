@@ -52,7 +52,7 @@ const { PHASE, percent, rowAction, statusLine, sourceLabel, sourceState, sourceA
     notForUnit, removable, requiredAlone, undoable, setupable, pickOptions, probeStatus, removeRefusal, sourceNames, listed, startPending } = require('./store_view.js');
 
 const GREEN = '#27e1c1';
-const BLUE = '#00bfff';
+const BLUE = '#e4002b';
 const AMBER = '#ffb020';
 const RED = '#ff5a5f';
 const TEAL = '#a5edff';

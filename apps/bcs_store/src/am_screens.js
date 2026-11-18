@@ -21,7 +21,7 @@ module.exports = {
    "name": "store",
    "kind": "gpu",
    "title": "Apps",
-   "theme": "m_tricolour",
+   "theme": "m_red",
    "bg": "theme",
    "bgArea": "app",
    "components": [
@@ -96,7 +96,7 @@ module.exports = {
       "vicon": "refresh",
       "style": "primary",
       "size": 34,
-      "color": "#00bfff",
+      "color": "#e4002b",
       "hidden": true,
       "shift": {}
      },
@@ -115,7 +115,7 @@ module.exports = {
       "vicon": "unlock",
       "style": "primary",
       "size": 34,
-      "color": "#00bfff",
+      "color": "#e4002b",
       "hidden": true
      },
      "onTap": "event:safeModeOff"
@@ -197,7 +197,7 @@ module.exports = {
    "name": "app",
    "kind": "gpu",
    "title": "App Manager",
-   "theme": "m_tricolour",
+   "theme": "m_red",
    "bg": "theme",
    "bgArea": "app",
    "components": [
@@ -390,7 +390,7 @@ module.exports = {
       "size": 64,
       "font": "num",
       "align": "left",
-      "color": "#00bfff"
+      "color": "#e4002b"
      }
     },
     {
@@ -471,7 +471,7 @@ module.exports = {
       "text": "",
       "vicon": "arrowDown",
       "style": "primary",
-      "color": "#00bfff"
+      "color": "#e4002b"
      },
      "onTap": "event:primary"
     },
@@ -513,7 +513,7 @@ module.exports = {
    "name": "confirm",
    "kind": "gpu",
    "title": "App Manager",
-   "theme": "m_tricolour",
+   "theme": "m_red",
    "bg": "theme",
    "bgArea": "app",
    "components": [
@@ -628,7 +628,7 @@ module.exports = {
       "text": "Restart now",
       "vicon": "refresh",
       "style": "primary",
-      "color": "#00bfff"
+      "color": "#e4002b"
      },
      "onTap": "event:restartNow"
     },
@@ -669,7 +669,7 @@ module.exports = {
    "name": "installed",
    "kind": "gpu",
    "title": "App Manager",
-   "theme": "m_tricolour",
+   "theme": "m_red",
    "bg": "theme",
    "bgArea": "app",
    "components": [
@@ -743,7 +743,7 @@ module.exports = {
       "text": "",
       "vicon": "arrowDown",
       "style": "primary",
-      "color": "#00bfff"
+      "color": "#e4002b"
      },
      "onTap": "event:updateAll"
     },
@@ -760,7 +760,7 @@ module.exports = {
       "vicon": "refresh",
       "style": "primary",
       "size": 34,
-      "color": "#00bfff",
+      "color": "#e4002b",
       "hidden": true,
       "shift": {
        "updateAll": [
@@ -840,7 +840,7 @@ module.exports = {
    "name": "usb",
    "kind": "gpu",
    "title": "App Manager",
-   "theme": "m_tricolour",
+   "theme": "m_red",
    "bg": "theme",
    "bgArea": "app",
    "components": [
@@ -927,7 +927,7 @@ module.exports = {
    "name": "settings",
    "kind": "gpu",
    "title": "App Manager",
-   "theme": "m_tricolour",
+   "theme": "m_red",
    "bg": "theme",
    "bgArea": "app",
    "components": [
@@ -1039,7 +1039,7 @@ module.exports = {
    "name": "sources",
    "kind": "gpu",
    "title": "App Manager",
-   "theme": "m_tricolour",
+   "theme": "m_red",
    "bg": "theme",
    "bgArea": "app",
    "components": [
@@ -1126,7 +1126,7 @@ module.exports = {
       "text": "Add source",
       "vicon": "plus",
       "style": "tinted",
-      "color": "#00bfff"
+      "color": "#e4002b"
      },
      "onTap": "event:addRepo"
     },
@@ -1158,7 +1158,7 @@ module.exports = {
       "text": "",
       "vicon": "plus",
       "style": "tinted",
-      "color": "#00bfff"
+      "color": "#e4002b"
      },
      "onTap": "event:addRepo"
     }
@@ -1167,7 +1167,7 @@ module.exports = {
   {
    "kind": "gpu",
    "name": "system",
-   "theme": "m_tricolour",
+   "theme": "m_red",
    "bg": "theme",
    "components": [
     {
@@ -1327,7 +1327,7 @@ module.exports = {
   {
    "kind": "gpu",
    "name": "source",
-   "theme": "m_tricolour",
+   "theme": "m_red",
    "bg": "theme",
    "components": [
     {
@@ -1524,7 +1524,7 @@ module.exports = {
   {
    "kind": "gpu",
    "name": "accounts",
-   "theme": "m_tricolour",
+   "theme": "m_red",
    "bg": "theme",
    "components": [
     {
@@ -1627,7 +1627,7 @@ module.exports = {
       "text": "Sign in with GitHub",
       "vicon": "plus",
       "style": "primary",
-      "color": "#00bfff"
+      "color": "#e4002b"
      },
      "onTap": "event:signIn"
     },
@@ -1651,7 +1651,7 @@ module.exports = {
   {
    "kind": "gpu",
    "name": "pick",
-   "theme": "m_tricolour",
+   "theme": "m_red",
    "bg": "theme",
    "components": [
     {
@@ -1754,7 +1754,7 @@ module.exports = {
       "text": "Sign in with GitHub",
       "vicon": "plus",
       "style": "primary",
-      "color": "#00bfff"
+      "color": "#e4002b"
      },
      "onTap": "event:signIn"
     },
@@ -1793,7 +1793,7 @@ module.exports = {
   {
    "kind": "gpu",
    "name": "login",
-   "theme": "m_tricolour",
+   "theme": "m_red",
    "bg": "theme",
    "components": [
     {
@@ -1933,7 +1933,7 @@ module.exports = {
   {
    "kind": "gpu",
    "name": "phone",
-   "theme": "m_tricolour",
+   "theme": "m_red",
    "bg": "theme",
    "components": [
     {
@@ -2058,7 +2058,7 @@ module.exports = {
   {
    "kind": "gpu",
    "name": "type",
-   "theme": "m_tricolour",
+   "theme": "m_red",
    "bg": "theme",
    "components": [
     {
@@ -2151,7 +2151,7 @@ module.exports = {
   {
    "kind": "gpu",
    "name": "wifi",
-   "theme": "m_tricolour",
+   "theme": "m_red",
    "bg": "theme",
    "components": [
     {
@@ -2366,7 +2366,7 @@ module.exports = {
   {
    "kind": "gpu",
    "name": "prefer",
-   "theme": "m_tricolour",
+   "theme": "m_red",
    "bg": "theme",
    "components": [
     {
@@ -2476,7 +2476,7 @@ module.exports = {
   {
    "kind": "gpu",
    "name": "proxy",
-   "theme": "m_tricolour",
+   "theme": "m_red",
    "bg": "theme",
    "components": [
     {
