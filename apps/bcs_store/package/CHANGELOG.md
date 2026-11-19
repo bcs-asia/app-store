@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.3.2
+
+- Usage statistics are on: the Store now reports to the BCS statistics server (bcs-stats.bcs-asia.workers.dev). See PRIVACY.md.
+- Source removed: istt1899/x3 (the Store takes it out of the updater when it finds it, and does not add it again).
+
 ## 3.3.1
 
 - Source removed: istt1899/x3 (the Store takes it out of the updater when it finds it, and does not add it again).
