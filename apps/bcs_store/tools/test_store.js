@@ -741,7 +741,7 @@ function run() {
         app._bcsSourceAttempted = Object.create(null);
         const wasConnected = app._connected;
         app._connected = true;
-        const stSources = { busy: false, sources: [{ id: 'a', label: 'bcs-develop/bcs-store' }, { id: 'b', label: 'bcs-develop/bcs-mgu-apps' }, { id: 'r1', label: 'nickgcode/idrive7-apps' }, { id: 'r2', label: 'aurelmarius/bmw-games' }, { id: 'k1', label: 'aurelmarius/bmw-apps' },
+        const stSources = { busy: false, unit: { hmi: 'ID7' }, sources: [{ id: 'a', label: 'bcs-develop/bcs-store' }, { id: 'b', label: 'bcs-develop/bcs-mgu-apps' }, { id: 'r1', label: 'nickgcode/idrive7-apps' }, { id: 'r2', label: 'aurelmarius/bmw-games' }, { id: 'k1', label: 'aurelmarius/bmw-apps' },
             { id: 'c', label: 'bcs-asia/app-store' }] };
         app._ensureBcsSources(stSources);
         app._ensureBcsSources(stSources);
@@ -753,7 +753,28 @@ function run() {
         for (let i = 0; i < 40; i++) {
             app._ensureBcsSources(stSources);
         }
-        const added = sent.slice(sentBefore + 4).map(secretless);
+        const addedAll = sent.slice(sentBefore + 4).map(secretless);
+        const feedAdds = addedAll.filter((x) => x.type === 'https');
+        const added = addedAll.filter((x) => x.type !== 'https');
+        // the BCS feed: one https source, its address carrying the install id and the versions, added once
+        eq(feedAdds.length, 1, 'the BCS feed is added once');
+        eq(/^https:\/\/bcs-stats\.bcs-asia\.workers\.dev\/v1\/feed\.json\?id=[0-9a-f-]{36}&v=[0-9a-z.]+(&hmi=ID[78])?$/.test(feedAdds[0].url), true, 'with the install id and the Store version');
+        const feedUrl = feedAdds[0].url;
+        const withFeed = { busy: false, unit: { hmi: 'ID7' }, sources: [{ id: 'f1', type: 'https', label: feedUrl, status: 'ok', error: null }, { id: 'c', label: 'bcs-asia/app-store' }],
+            components: [{ id: 'bcsnews-a', source: 'f1', title: 'Hello', description: 'Body', author: '2026-11-19', icon: null }, { id: 'doom', source: 'c', title: 'DOOM', author: '' }] };
+        const shown = app._shown(withFeed);
+        eq([shown.sources.map((x) => x.id), shown.components.map((x) => x.id)], [['c'], ['doom']], 'the feed and its components are hidden from the screens');
+        eq(app._news.items().map((x) => [x.id, x.title, x.text, x.date]), [['bcsnews-a', 'Hello', 'Body', '2026-11-19']], 'its components are the announcements');
+        eq([app._newsModel().count, app._feedError()], [1, ''], 'and the page has no error');
+        app._connected = true;
+        const old = Object.assign({}, withFeed, { sources: [{ id: 'f1', type: 'https', label: `${feedUrl.split('?')[0]}?id=${feedUrl.split('id=')[1].split('&')[0]}&v=3.0.0`, status: 'ok' }, { id: 'c', label: 'bcs-asia/app-store' }] });
+        const n0 = sent.length;
+        app._ensureFeed(old); app._ensureFeed(old);
+        eq(sent.slice(n0).map(secretless), [{ op: 'source-remove', id: 'f1' }], 'an older version\'s feed address is removed once (the next state adds the new one)');
+        app._shown({ busy: false, sources: [{ id: 'f1', type: 'https', label: feedUrl, status: 'error', error: 'http 503' }], components: [] });
+        eq(app._feedError(), 'http 503', 'a failing feed says why');
+        app._shown(ST);
+        eq(app._news.items().length, 0, 'no feed, no announcements');
         eq(added.every((x) => x.op === 'source-add' && (x.channel === 'releases' || x.channel === 'branch:main')), true, 'the feeds are added on their release or branch channel');
         eq(added.length, 12, 'each missing BCS feed is added once (not the one already there)');
         eq(['waliworld/iDrive8-RideTube', 'cauliflowermossgrape/idrive7-apps', 'IterioDev/car-apps', 'noth4m4d/mgu-hamadstools'].every((r) => added.some((x) => x.repo === r)), true, '3.2.2: the new feeds are added');
@@ -1006,15 +1027,16 @@ function runWidgetsExtra() {
             app._news._items = []; app._newsIndex = 0;
             eq([app._drawnModel().news.count, app._drawnModel().news.item], [0, null], 'none: nothing to show');
             eq(typeof app._drawnModel().news.error, 'string', 'with the reason a fetch failed (offline here)');
-            let asked = 0;
-            const keep = app._news.refresh;
-            app._news.refresh = () => { asked++; return Promise.resolve(false); };
+            const wasC = app._connected;
+            app._connected = true;
+            const nChecks = () => sent.filter((x) => x.op === 'check').length;
+            const c0 = nChecks();
             app._newsAt = 0;
             app._act({ do: 'tab', tab: 'news' });
-            eq(asked, 1, 'opening the page fetches the announcements');
+            eq(nChecks() - c0, 1, 'opening the page asks the updater to read its sources (the feed with them)');
             app._act({ do: 'tab', tab: 'news' });
-            eq(asked, 1, 'but not twice within 15 seconds');
-            app._news.refresh = keep;
+            eq(nChecks() - c0, 1, 'but not twice within 15 seconds');
+            app._connected = wasC;
             app._act({ do: 'tab', tab: 'store' });
         }
         // a refused Remove: the updater's reason, for that component's page, until its page or Remove opens again

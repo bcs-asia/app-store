@@ -1,4 +1,4 @@
-# BCS Store (bcs_store) 3.3.3
+# BCS Store (bcs_store) 3.3.4
 
 BCS Automotive Solutions' Store for the BMW MGU head unit, based on [MGU Store](https://github.com/robertnisipeanu/mgu-store) by Robert Nisipeanu (GPL-3.0-or-later). The text below is the upstream Store's README (0.9.26); BCS Store's own screens are listed in package/CHANGELOG.md (2.2.1). `tools/gen_bcs_screens.js` writes src/am_screens.js from tools/upstream/.
 
@@ -234,14 +234,18 @@ already restarting the unit, and with an updater older than 0.1.4.
 
 ## Announcements and usage statistics (BCS)
 
+- **The BCS feed**: on a head unit only the updater reaches the internet; the Store app cannot even look up names (`getaddrinfo ENOTFOUND`). So
+  the Store adds one hidden https source to the updater, `FEED_URL` in `src/bcs_config.js` plus `?id=<install id>&v=<version>&hmi=<ID7|ID8>`, and
+  hides it (and its components) from every screen (`_shown` in `src/store.js`). The updater reads it with its other sources; the BCS Worker
+  in `analytics/` answers with a catalog whose entries are the announcements and records the request as the usage check-in.
 - **News tab** (where Sources was; Sources is now a row in Settings): one announcement at a time, its photo on the left, arrows to
-  step through. Fetched from `announcements/news.json` in the BCS GitHub (`src/bcs_news.js`) at start and every half hour, kept in the
-  Store's data folder. One not opened yet has a **NEW** tag and the tab shows a count. Add one by dropping a photo (and an optional
-  `.txt`: title, then text) into `announcements/inbox/` on GitHub: a workflow converts it (`tools/announce.py`). See `announcements/README.md`.
-- **Usage statistics**: no page and no question. When `STATS_URL` in `src/bcs_config.js` is set, the Store tells the Worker in
-  `analytics/` that it is alive (`src/bcs_stats.js`): a random install ID made at the first check-in, the Store and iDrive versions,
-  every five minutes. Nothing about the owner. The Worker adds country, region and city from the connection and keeps a shortened
-  address. Empty `STATS_URL` = nothing is sent. `PRIVACY.md`.
+  step through (`src/bcs_news.js`). The announcements are the feed's components (title, text, date in `author`, photo as the updater's kept
+  icon, a PNG under 128 KiB). One not opened yet has a **NEW** tag and the tab shows a count. Opening the page asks the updater to check. Add one
+  by dropping a photo (and an optional `.txt`: title, then text) into `announcements/inbox/` on GitHub: a workflow converts it
+  (`tools/announce.py`). See `announcements/README.md`.
+- **Usage statistics**: no page and no question: the feed request is the check-in (random install ID made at the first start, Store and
+  iDrive versions). Nothing about the owner. The Worker adds country, region and city from the connection and keeps a shortened
+  address. Empty `FEED_URL` = nothing is sent. `PRIVACY.md`.
 
 ## Sources
 

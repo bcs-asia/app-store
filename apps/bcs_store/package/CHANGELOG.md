@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.3.4
+
+- Fix: News and the usage statistics could not reach the internet. On a head unit only the updater can (the Store app got `getaddrinfo ENOTFOUND raw.githubusercontent.com`). The Store now adds one hidden source to the updater, the BCS feed on our server: the updater reads it with its other sources, the announcements come back as its entries (text and photo), and the request is the usage check-in. The source and its entries are not shown anywhere else.
+- News: opening the page asks the updater to check; with no announcements it says why (for example Offline).
+- Announcement photos are under 120 KB now (the updater keeps an icon of 128 KiB at most).
+
 ## 3.3.3
 
 - Fix: 3.3.2 stayed on "loading" on the car. The usage statistics asked for a random ID with a function the car's older Node does not have (crypto.randomUUID), which stopped the Store from starting. The ID is now made with randomBytes, and a statistics or announcements error can no longer stop the Store from starting.

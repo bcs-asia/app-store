@@ -5,6 +5,6 @@ compatibility_date = "2024-11-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "bcs-stats"
-database_id = "REPLACE_WITH_THE_ID_FROM_wrangler_d1_create"
+database_id = "9295d158-35d1-4deb-b08e-9d3a262a89ff"
 
 # secret (not stored here):  wrangler secret put DASH_TOKEN
