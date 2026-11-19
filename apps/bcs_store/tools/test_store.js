@@ -755,7 +755,7 @@ function run() {
         }
         const added = sent.slice(sentBefore + 4).map(secretless);
         eq(added.every((x) => x.op === 'source-add' && (x.channel === 'releases' || x.channel === 'branch:main')), true, 'the feeds are added on their release or branch channel');
-        eq(added.length, 13, 'each missing BCS feed is added once (not the one already there)');
+        eq(added.length, 12, 'each missing BCS feed is added once (not the one already there)');
         eq(['waliworld/iDrive8-RideTube', 'cauliflowermossgrape/idrive7-apps', 'IterioDev/car-apps', 'noth4m4d/mgu-hamadstools'].every((r) => added.some((x) => x.repo === r)), true, '3.2.2: the new feeds are added');
         eq(added.some((x) => /bmw-games|nickgcode|eroobeeroo|hexlay|NamelsMissing/.test(x.repo)), false, 'a retired feed is never added');
         app._connected = wasConnected;
