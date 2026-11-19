@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.3.1
+
+- News: the page fetches the announcements every time it is opened (and when the Store opens), not only at start and every half hour; it says Checking... while it does and, when it cannot load them, why (for example offline).
+
 ## 3.3.0
 
 - New source added when missing: noth4m4d/mgu-hamadstools (AirPlay screen mirroring while parked, and Waze Cards on the instrument cluster; iDrive 7).

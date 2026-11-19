@@ -1004,7 +1004,17 @@ function runWidgetsExtra() {
             app._act({ do: 'news', step: -1 });
             eq(app._drawnModel().news.item.id, 'n1', 'back too');
             app._news._items = []; app._newsIndex = 0;
-            eq(app._drawnModel().news, { count: 0, index: 0, unseen: 0, item: null }, 'none: nothing to show');
+            eq([app._drawnModel().news.count, app._drawnModel().news.item], [0, null], 'none: nothing to show');
+            eq(typeof app._drawnModel().news.error, 'string', 'with the reason a fetch failed (offline here)');
+            let asked = 0;
+            const keep = app._news.refresh;
+            app._news.refresh = () => { asked++; return Promise.resolve(false); };
+            app._newsAt = 0;
+            app._act({ do: 'tab', tab: 'news' });
+            eq(asked, 1, 'opening the page fetches the announcements');
+            app._act({ do: 'tab', tab: 'news' });
+            eq(asked, 1, 'but not twice within 15 seconds');
+            app._news.refresh = keep;
             app._act({ do: 'tab', tab: 'store' });
         }
         // a refused Remove: the updater's reason, for that component's page, until its page or Remove opens again
