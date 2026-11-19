@@ -467,11 +467,20 @@ class Store extends OnlineApp {
         return f.status === 'ok' || f.status === 'checking' ? '' : String(f.error || f.status || '').replace(/\s+/g, ' ').slice(0, 48);
     }
 
+    /* The photo is read only while News is on screen (its tab or its page); every other screen carries no picture data. */
+    _newsVisible() {
+        try {
+            const d = this._drawn;
+            const top = d && d.stack && d.stack[d.stack.length - 1];
+            return !!d && (d.tab === 'news' || !!(top && top.name === 'news'));
+        } catch (e) { return false; }
+    }
+
     _newsModel() {
         const items = this._news.items();
         const it = items[Math.min(this._newsIndex, items.length - 1)];
         return { count: items.length, index: Math.min(this._newsIndex, Math.max(0, items.length - 1)), unseen: this._news.unseen(), busy: !!(this._feed && this._feed.status === 'checking'), error: this._feedError(),
-            item: it ? { id: it.id, title: it.title, text: it.text, date: it.date, src: this._news.photo(it), fresh: this._newsFresh.has(it.id) } : null };
+            item: it ? { id: it.id, title: it.title, text: it.text, date: it.date, src: this._newsVisible() ? this._news.photo(it) : '', fresh: this._newsFresh.has(it.id) } : null };
     }
 
     _version() {
