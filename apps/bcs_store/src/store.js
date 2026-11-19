@@ -75,6 +75,11 @@ const { News } = require('./bcs_news.js');
 const { Stats } = require('./bcs_stats.js');
 const { STATS_URL, FEED_URL, FEED_ENABLED } = require('./bcs_config.js');
 const FEED_ON = !!FEED_ENABLED || process.env.BCS_FEED_TEST === '1';
+/* The loop breaker: more than LOOP_MAX of the same one of these messages (same operation, same target) to the updater within LOOP_MS stops
+ * the feed and closes the Store. */
+const LOOP_OPS = ['source-add', 'source-remove', 'check', 'token-add', 'token-remove'];
+const LOOP_MAX = Number(process.env.BCS_LOOP_MAX) || 10;      // the env is for the tests only
+const LOOP_MS = 10000;
 const { spell } = require('./speller.js');
 const { Drawn, DEPTHS } = require('./store_drawn.js');
 const { typeKey, wifiOf, proxyOf } = require('./store_ui.js');
@@ -277,6 +282,8 @@ class Store extends OnlineApp {
         this._look = look.known(readFile(LOOK_FILE).trim()) ? readFile(LOOK_FILE).trim() : look.DEFAULT;
         this._proxyNote = null;         // why the last proxy change was refused
         this._feed = null;              // the BCS feed source's state: { id, status, error } (_shown)
+        this._sendTimes = [];            // when the last looping-prone messages to the updater went out (the loop breaker)
+        this._halted = false;
         this._feedOn = FEED_ON;
         this._news = new News({ dir: path.join(DATA_DIR, 'news') });     // Announcements (src/bcs_news.js)
         this._newsIndex = 0;            // the announcement on the page
@@ -395,6 +402,10 @@ class Store extends OnlineApp {
 
     _appInitialized() {
         logger.info(`store ${this.getAppId()} v${this._version()} starting`);
+        if (FEED_ON && this._tripped()) {
+            this._feedOn = false;      // the loop breaker went off in this version: the feed stays off
+            logger.warn('loop breaker went off before: the feed stays off');
+        }
         this._client.connect();
         this._startBcsFeeds();
         if (!this.rhmiApplication) {
@@ -458,13 +469,9 @@ class Store extends OnlineApp {
     }
 
     /* Ask the updater to read its sources (the feed with them); opening the page or the Store asks again after 15 s. */
-    _newsRefresh(force) {
-        const now = Date.now();
-        if (!this._connected || (!force && now - (this._newsAt || 0) < 15000)) {
-            return;
-        }
-        this._newsAt = now;
-        this._send({ op: 'check' });
+    /* Announcements are asked for once each time the Store is opened, and only while the car is online (_setVisible); the News tab
+     * and page never send anything themselves. */
+    _newsRefresh() {
     }
 
     /* Show announcement i (kept inside the list); one not seen before is remembered as new while this run lasts. */
@@ -480,6 +487,9 @@ class Store extends OnlineApp {
 
     /* Why the announcements are not here (shown when there are none): the feed source's own status. */
     _feedError() {
+        if (!this._feedOn) {
+            return '';      // the feed is off (or the loop breaker stopped it): nothing to load, nothing to report
+        }
         const f = this._feed;
         if (!this._connected) {
             return 'updater not running';
@@ -1051,8 +1061,52 @@ class Store extends OnlineApp {
     }
 
     _send(req) {
+        if (this._halted || !this._guard(req)) {
+            return false;
+        }
         this._lastOp = req.op;
         return this._client.send(req);
+    }
+
+    /* The loop breaker: false (and the Store closes) when the messages that could loop go out more than 10 times in 10 seconds. */
+    _guard(req) {
+        if (LOOP_OPS.indexOf(req.op) < 0) {
+            return true;
+        }
+        // the same message to the same target: a fresh install legitimately adds a dozen different sources in a row, which is not a loop
+        const key = `${req.op}:${req.repo || req.url || req.id || ''}`;
+        const now = Date.now();
+        this._sendTimes = this._sendTimes.filter((t) => now - t.at < LOOP_MS);
+        this._sendTimes.push({ at: now, key });
+        const same = this._sendTimes.filter((t) => t.key === key).length;
+        if (same <= (this._loopMax || LOOP_MAX)) {
+            return true;
+        }
+        this._trip(`${same} times ${key} in ${LOOP_MS / 1000} s`);
+        return false;
+    }
+
+    _trippedFile() { return path.join(this._dataDir || DATA_DIR, 'feed-tripped'); }
+
+    /* True when this version's loop breaker went off before: the feed stays off until the next version. */
+    _tripped() {
+        try {
+            return fs.readFileSync(this._trippedFile(), 'utf8').trim() === this._version();
+        } catch (e) { return false; }
+    }
+
+    _trip(why) {
+        if (this._halted) {
+            return;
+        }
+        this._halted = true;
+        this._feedOn = false;
+        logger.error(`loop breaker: ${why}; feed off, Store closing`);
+        try {
+            fs.mkdirSync(this._dataDir || DATA_DIR, { recursive: true });
+            fs.writeFileSync(this._trippedFile(), this._version());
+        } catch (e) { /* the flag is a nicety; the Store still closes */ }
+        this._handleShutdown('loop breaker');
     }
 
     _bind(name, handler) {
@@ -1439,15 +1493,14 @@ class Store extends OnlineApp {
      * head unit. Its address carries a random install id and the versions, so each time the updater reads it the BCS server learns that this
      * install is alive; its answer lists the announcements as components. The Store takes the announcements out of the state and hides the
      * source and its components from every screen. */
-    _feedUrl(st) {
+    _feedUrl() {
         if (!FEED_URL) {
             return '';
         }
         let id = '';
         try { id = this._stats.id(); } catch (e) { return ''; }
-        const hmi = (st && st.unit && st.unit.hmi) || '';
-        // wait until the updater says which head unit this is, so the address is final (one feed source, not two)
-        return /^ID[78]$/.test(hmi) ? `${FEED_URL}?id=${id}&v=${this._version()}&hmi=${hmi}` : '';
+        // one fixed address per install: only the id (no version), and none at all while the id could not be saved
+        return /^[0-9a-f-]{36}$/.test(id) ? `${FEED_URL}?id=${id}` : '';
     }
 
     _isFeed(src) {
@@ -1509,19 +1562,23 @@ class Store extends OnlineApp {
         if (!this._feedOn) {
             return this._purgeFeeds(st);
         }
-        const url = this._feedUrl(st);
+        const url = this._feedUrl();
         if (!url) {
             return false;
         }
+        // exactly one feed source: extras (an earlier version's, or a doubled add) are removed, once each; none is added while one exists
         const have = st.sources.filter((src) => this._isFeed(src));
-        const stale = have.find((src) => src.label !== url);
-        if (stale && !this._bcsSourceAttempted[`feeddrop:${stale.id}`]) {
-            this._bcsSourceAttempted[`feeddrop:${stale.id}`] = true;      // an older version's address: replaced once this run
-            this._privileged({ op: 'source-remove', id: stale.id });
+        const keep = have.find((src) => src.label === url) || have[0];
+        const extra = have.filter((src) => src !== keep && !this._bcsSourceAttempted[`feeddrop:${src.id}`]);
+        if (extra.length) {
+            extra.forEach((src) => {
+                this._bcsSourceAttempted[`feeddrop:${src.id}`] = true;
+                this._privileged({ op: 'source-remove', id: src.id });
+            });
             return true;
         }
-        if (!have.some((src) => src.label === url) && !this._bcsSourceAttempted[`feed:${url}`]) {
-            this._bcsSourceAttempted[`feed:${url}`] = true;
+        if (!have.length && !this._bcsSourceAttempted.feed) {
+            this._bcsSourceAttempted.feed = true;      // once per run, whatever happens
             this._privileged({ op: 'source-add', type: 'https', url });
             logger.info('BCS feed source requested');
             return true;
@@ -2069,8 +2126,8 @@ class Store extends OnlineApp {
         if (visible) {
             this._forgetWritten();
             this._render();
-            if (this._connected) {
-                // opening the Store is a good moment to look
+            if (this._connected && this._st && this._st.online) {
+                // opening the Store while the car is online is the moment to look (the announcements come with the sources)
                 this._send({ op: 'check' });
             }
             this._newsRefresh(false);

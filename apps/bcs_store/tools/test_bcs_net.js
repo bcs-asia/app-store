@@ -113,6 +113,16 @@ const srv = http.createServer((req, res) => {
     const dead = new Stats({ dir: path.join(tmp, 's2'), url: 'http://127.0.0.1:1/v1' });
     eq(await dead.ping(), false); eq(dead.last, false, 'an unreachable server is not an error');
 
+    {
+        // one fixed id: the same every time; none at all (never a second one) when it cannot be saved
+        const fixed = new Stats({ dir: path.join(tmp, 's5'), url: `${base}/v1` });
+        const a = fixed.id();
+        eq([/^[0-9a-f-]{36}$/.test(a), fixed.id(), new Stats({ dir: path.join(tmp, 's5'), url: `${base}/v1` }).id()], [true, a, a], 'the id is made once and the same ever after');
+        const blocked = path.join(tmp, 's6'); fs.writeFileSync(blocked, 'a file where the folder should be');
+        const none = new Stats({ dir: path.join(blocked, 'x'), url: `${base}/v1` });
+        eq([none.id(), none.id()], ['', ''], 'an id that cannot be saved is not used: no id, and never a different one each time');
+    }
+
     srv.close();
     console.log(`bcs_net: ${checks} checks pass`);
 })().catch((e) => { console.error(e); process.exit(1); });

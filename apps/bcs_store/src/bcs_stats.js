@@ -36,7 +36,12 @@ class Stats {
 
     available() { return !!this.url; }
 
+    /* The install id: made once, saved, and read back. If it cannot be saved there is no id ('' ), so nothing built on it (the feed address)
+     * can ever change: a second id is never made. Kept in memory once it is good. */
     id() {
+        if (this._id) {
+            return this._id;
+        }
         let id = this._read('install-id');
         if (!/^[0-9a-f-]{36}$/.test(id)) {
             // randomBytes, not randomUUID: the car's Node is old and has no randomUUID (it stopped the Store from starting in 3.3.2)
@@ -46,7 +51,11 @@ class Stats {
             const h = b.toString('hex');
             id = `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
             this._write('install-id', id);
+            if (this._read('install-id') !== id) {
+                return '';
+            }
         }
+        this._id = id;
         return id;
     }
 
