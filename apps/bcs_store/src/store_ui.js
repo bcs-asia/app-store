@@ -25,7 +25,7 @@ const look = require('./bcs_look.js');
  * What a press does rides on the values as `act`: on a button's opts, on
  * each nav, grid and list item, on each filter cell (acts). The acts:
  * { do: 'tab', tab }, { do: 'filter', filter }, { do: 'view', view: 'all' | 'installed' }, { do: 'open', page },
- * { do: 'back' }, { do: 'check' }, { do: 'install', id }, { do: 'update-all' },
+ * { do: 'back' }, { do: 'check' }, { do: 'check-updates' }, { do: 'install', id }, { do: 'update-all' },
  * { do: 'remove', id, tools? }, { do: 'restart' }, { do: 'safe-mode-off' },
  * { do: 'source-remove', id }, { do: 'account-remove', id }, { do: 'add-source' },
  * { do: 'add-token' }, { do: 'sign-in' }, { do: 'sign-in-cancel' }, { do: 'phone' },
@@ -319,6 +319,8 @@ function installedView(m) {
         subtitle: { text: [updates.length ? `${updates.length} ${updates.length === 1 ? 'update' : 'updates'}` : '', plural(apps.length, 'app'),
             plural(tools.length, 'tool')].filter(Boolean).join(' · ') },
         updateAll: updates.length ? button(tr("Update all ({0})", updates.length), { do: 'update-all' }, { vicon: 'arrowDown', style: 'primary', color: BLUE }) : hidden,
+        // one press asks the updater to check every source (updates and the announcements together); greyed while it runs
+        checkUpdates: m.connected ? button(m.checking ? tr("Checking") : tr("Check for updates"), { do: 'check-updates' }, { vicon: 'refresh', style: 'outline', color: BLUE, disabled: !!m.checking }) : hidden,
         apps: { items: apps.map(item), empty: "All up to date" },
         restartNow: restartNow(m, m.held ? m.held.restart : undefined),
         services: { items: tools.map(item), empty: "All up to date", rowH: 120 }

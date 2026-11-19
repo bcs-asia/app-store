@@ -89,7 +89,8 @@ function itemsOf(st, page) {
         if (c.gpu === 'sideNav') {
             const list = navItems(o);
             const ih = b.h / Math.max(1, list.length);
-            list.forEach((it, i) => items.push({ x: b.x + 8, y: b.y + i * ih + 8, w: b.w - 24, h: ih - 16, r: 16, label: it.label, act: it.act }));
+            // the whole cell of each tab is the button (a 2 px margin for the focus ring): the side menu was hard to hit with 8 and 16 px of dead space around it
+            list.forEach((it, i) => items.push({ x: b.x + 2, y: b.y + i * ih + 2, w: b.w - 4, h: ih - 4, r: 16, label: it.label, act: it.act }));
         } else if (c.gpu === 'vbutton') {
             if (o.act && !o.disabled) {
                 const round = o.style === 'round';
