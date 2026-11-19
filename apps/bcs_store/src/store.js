@@ -427,10 +427,18 @@ class Store extends OnlineApp {
     /* Announcements and, when the owner said yes, the usage check-in; neither may hold up or break the Store. */
     _startBcsFeeds() {
         const refresh = () => this._newsRefresh(true);
-        const first = setTimeout(refresh, 8000);
-        this._newsTimer = setInterval(refresh, NEWS_REFRESH_MS);
-        [first, this._newsTimer].forEach((t) => t.unref && t.unref());
-        this._stats.start();
+        try {
+            const first = setTimeout(refresh, 8000);
+            this._newsTimer = setInterval(refresh, NEWS_REFRESH_MS);
+            [first, this._newsTimer].forEach((t) => t.unref && t.unref());
+        } catch (e) {
+            logger.warn(`announcements not started: ${e.message}`);
+        }
+        try {
+            this._stats.start();
+        } catch (e) {
+            logger.warn(`statistics not started: ${e.message}`);     // never stops the Store from starting
+        }
     }
 
     /* Fetch the announcements now (at most one fetch at a time; opening the page or the Store asks again after 15 s). */

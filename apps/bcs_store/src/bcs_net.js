@@ -3,6 +3,7 @@
  * limit, at most three redirects, https only (http only to this computer, for the tests). BCS_OFFLINE=1 refuses every request. */
 const https = require('https');
 const http = require('http');
+const { URL } = require('url');      // not a global on the car's older Node
 
 const LOCAL = /^(127\.0\.0\.1|localhost|\[::1\])$/;
 
@@ -23,7 +24,9 @@ function request(url, opts) {
         if (o.body !== null) {
             headers['content-length'] = Buffer.byteLength(o.body);
         }
-        const req = lib.request(u, { method: o.method, headers, timeout: o.timeoutMs }, (res) => {
+        // an options object, not request(url, options): the car's older Node takes only one of the two
+        const req = lib.request({ protocol: u.protocol, hostname: u.hostname.replace(/^\[|\]$/g, ''), port: u.port || undefined,
+            path: `${u.pathname}${u.search}`, method: o.method, headers, timeout: o.timeoutMs }, (res) => {
             if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location && o.redirects > 0) {
                 res.resume();
                 return request(new URL(res.headers.location, u).toString(), Object.assign({}, o, { redirects: o.redirects - 1 })).then(resolve, reject);
