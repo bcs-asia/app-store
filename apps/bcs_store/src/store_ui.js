@@ -63,7 +63,8 @@ const PALETTE = [['#159dff', '#114c90'], ['#ff4b55', '#a8101c'], ['#ffc24d', '#c
     ['#b48cff', '#6a3fd0'], ['#36e0c0', '#118c78'], ['#5be38e', '#1f9a52'], ['#ff8a4c', '#c4501a']];
 // BCS Store's own words (Tools, Updates, System, Install now, Update now, No WiFi, ...) are English; the rest of the labels keep the
 // upstream translations (locales/).
-const TABS = ['store', 'tools', 'installed', 'usb', 'sources', 'settings'];
+// Sources is a page of Settings now (its own tab id keeps its pages together; the nav highlights Settings there)
+const TABS = ['store', 'tools', 'installed', 'usb', 'news', 'settings'];
 const FILTERS = ['all', 'app', 'tool'];
 
 const size = (b) => (!b ? '' : b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
@@ -238,8 +239,9 @@ function nav(m, sel) {
     const usbIds = (sources(m) || []).filter((s) => s.usb).map((s) => s.id);
     const usbNew = comps(m).filter((c) => usbIds.indexOf(c.source) >= 0 && (c.status === 'available' || c.status === 'update') &&
         !notForUnit(c) && !c.blocked && !startPending(c)).length;
+    const fresh = m.news ? m.news.unseen : 0;       // announcements not opened yet
     return { sel, items: [[tr("Apps"), 'grid', ''], ["Tools", 'wrench', ''], ["Updates", 'check', updates || ''], ['USB', 'usb', usbNew || ''],
-        [tr("Sources"), 'unlock', ''], [tr("Settings"), 'gear', '']]
+        ['News', 'display', fresh || ''], [tr("Settings"), 'gear', '']]
         .map(([label, vicon, badge], i) => ({ id: TABS[i], label, vicon, badge: String(badge), act: { do: 'tab', tab: TABS[i] } })) };
 }
 
@@ -353,6 +355,7 @@ function sourcesView(m) {
         note: { text: m.note || (restartFailed(m) || '') },
         subtitle: { text: srcs ? plural(srcs.length, 'source') : '' },
         repos: srcs ? { items: srcs.map(sourceRow), empty: tr("None") } : { items: [], empty: '' },
+        back: button('', { do: 'tab', tab: 'settings' }, { vicon: 'back', style: 'round', color: '#f4f7fb' }),
         addRepo: srcs ? button(tr("Add source"), { do: 'add-source' }, { vicon: 'plus', style: 'tinted', color: BLUE }) : hidden,
         refresh: m.connected ? button(m.st && m.st.catalog && m.st.catalog.checking ? "Refreshing" : "Refresh", { do: 'check' }, { vicon: 'refresh', style: 'tinted', color: BLUE }) : hidden
     };
@@ -373,6 +376,10 @@ function settingsView(m) {
     }
     if (toks) {
         row('accounts', tr("Accounts"), accountsState(toks), 'lock');
+    }
+    const srcs = sources(m);
+    if (srcs) {
+        row('sources', tr("Sources"), plural(srcs.length, 'source'), 'unlock', { act: { do: 'tab', tab: 'sources' } });
     }
     if (w) {
         row('prefer', tr("Preferred connection"), groupLabel(m.st.uplink.preferred || ''), 'route');
@@ -826,11 +833,29 @@ function themeView(m) {
     };
 }
 
+/* Announcements (the News tab): one at a time, its photo on the left; the arrows step through them. */
+function newsView(m) {
+    const n = m.news || { count: 0, index: 0, item: null };
+    const it = n.item;
+    const many = n.count > 1;
+    return {
+        title: { text: 'Announcements' },
+        status: { text: n.count ? `${n.index + 1} of ${n.count}` : 'No announcements yet', color: DIM },
+        newsPhoto: it ? { src: it.src || '', radius: 0, hidden: false } : { src: '', hidden: true },
+        newsNew: { text: it && it.fresh ? 'NEW' : '' },
+        newsDate: { text: it ? it.date : '' },
+        newsTitle: { text: it ? it.title : '' },
+        newsBody: { text: it ? it.text : '' },
+        prev: many ? button('', { do: 'news', step: -1 }, { vicon: 'back', style: 'round', color: '#f4f7fb' }) : hidden,
+        next: many ? button('', { do: 'news', step: 1 }, { vicon: 'chevron', style: 'round', color: '#f4f7fb' }) : hidden
+    };
+}
+
 /* The screen and its values for the page on top. */
 function view(m) {
     look.use(m.look);
     const page = m.stack[m.stack.length - 1] || { name: 'main' };
-    const tabSel = Math.max(0, TABS.indexOf(m.tab));
+    const tabSel = m.tab === 'sources' ? TABS.indexOf('settings') : Math.max(0, TABS.indexOf(m.tab));
     let screen = page.name === 'main' ? m.tab : page.name;
     let values;
     switch (screen) {
@@ -853,6 +878,7 @@ function view(m) {
     case 'prefer': values = preferView(m); break;
     case 'proxy': values = proxyView(m); break;
     case 'theme': values = themeView(m); break;
+    case 'news': values = newsView(m); break;
     default: screen = 'store'; values = storeView(m, 'app');
     }
     values.nav = nav(m, tabSel);

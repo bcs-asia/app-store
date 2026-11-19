@@ -23,6 +23,7 @@ const Module = require('module');
 const os = require('os');
 const path = require('path');
 const { ID7, ID8 } = require('./gen_rhmi.js');
+process.env.BCS_OFFLINE = '1';           // BCS's own feeds (Announcements, statistics) never reach the internet from a test
 const HMI = process.env.STORE_HMI === 'ID8' ? 'ID8' : 'ID7';
 
 const ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'store-test-'));
@@ -754,7 +755,8 @@ function run() {
         }
         const added = sent.slice(sentBefore + 4).map(secretless);
         eq(added.every((x) => x.op === 'source-add' && (x.channel === 'releases' || x.channel === 'branch:main')), true, 'the feeds are added on their release or branch channel');
-        eq(added.length, 9, 'each missing BCS feed is added once (not the one already there)');
+        eq(added.length, 13, 'each missing BCS feed is added once (not the one already there)');
+        eq(['waliworld/iDrive8-RideTube', 'cauliflowermossgrape/idrive7-apps', 'IterioDev/car-apps', 'noth4m4d/mgu-hamadstools'].every((r) => added.some((x) => x.repo === r)), true, '3.2.2: the new feeds are added');
         eq(added.some((x) => /bmw-games|nickgcode|eroobeeroo|hexlay|NamelsMissing/.test(x.repo)), false, 'a retired feed is never added');
         app._connected = wasConnected;
         // the refused source's page closes once the confirm step gives it the focus back: Sources has the message
@@ -988,6 +990,23 @@ function runWidgetsExtra() {
             eq(app._drawnModel().look, 'red');
             if (had === null) { require('fs').unlinkSync(lf); } else { require('fs').writeFileSync(lf, had); }
         }
+        {   // Announcements: opening the page shows the newest and marks it seen; NEW stays on it during this run; the arrows go round
+            app._news._items = [{ id: 'n2', title: 'Two', text: 'b', date: '2026-11-20', image: '' }, { id: 'n1', title: 'One', text: 'a', date: '2026-11-10', image: '' }];
+            app._news._seen = new Set();
+            app._newsFresh = new Set();
+            eq([app._drawnModel().news.count, app._drawnModel().news.unseen, app._drawnModel().news.item.fresh], [2, 2, false], 'two announcements, none seen');
+            app._act({ do: 'tab', tab: 'news' });
+            eq([app._drawnModel().news.item.id, app._drawnModel().news.item.fresh, app._drawnModel().news.unseen], ['n2', true, 1], 'the newest is shown, marked seen, still NEW');
+            app._act({ do: 'news', step: 1 });
+            eq([app._drawnModel().news.item.id, app._drawnModel().news.index, app._drawnModel().news.unseen], ['n1', 1, 0], 'the arrow shows the next');
+            app._act({ do: 'news', step: 1 });
+            eq(app._drawnModel().news.item.id, 'n2', 'and goes round');
+            app._act({ do: 'news', step: -1 });
+            eq(app._drawnModel().news.item.id, 'n1', 'back too');
+            app._news._items = []; app._newsIndex = 0;
+            eq(app._drawnModel().news, { count: 0, index: 0, unseen: 0, item: null }, 'none: nothing to show');
+            app._act({ do: 'tab', tab: 'store' });
+        }
         // a refused Remove: the updater's reason, for that component's page, until its page or Remove opens again
         app._client.emit('reply-error', 'Waze on cluster needs doom', 'uninstall');
         eq(app._drawnModel().removeNote, { id: 'doom', error: 'Waze on cluster needs doom', by: null }, 'a refused Remove keeps the reason');
@@ -1083,7 +1102,7 @@ function runDrawn() {
         eq(drawn.tab, 'store', 'the Apps tab opens first');
         eq(app._drawnModel().version, 'test', 'the Store\'s version, from where this HMI\'s oap-sdk keeps package.json');
         eq([lastText(proxy(1, 0)), lastText(proxy(1, 3)), lastText(proxy(1, 4)), lastText(proxy(1, 5))],
-            ['Apps', 'USB', 'Sources', 'Settings'], 'proxies in focus order: the six side menu tabs, then the cards');
+            ['Apps', 'USB', 'News', 'Settings'], 'proxies in focus order: the six side menu tabs, then the cards');
         eq(last(new RegExp(`^${proxy(1, 12)}\\.Visible`)), `${proxy(1, 12)}.Visible=0`, 'unused proxies hidden');
         // a drag moves the grid's rows: each move one frame of two cached layers (the page as the drag started,
         // the rows); the release keeps them, and the next drag draws from them

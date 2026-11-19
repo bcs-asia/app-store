@@ -96,10 +96,11 @@ function compact(W, H) {
     ]);
 
     const SET_H = 72;
-    const sources = screen('sources', 4, [
-        title('Sources'),
-        after('subtitle', X + 220, CW - 220 - 360),
-        after('note', X + 220, CW - 220, AMBER),
+    const sources = screen('sources', 5, [
+        back(),
+        title('Sources', M + 84),
+        after('subtitle', M + 84 + 220, CW - 220 - 360 - 84),
+        after('note', M + 84 + 220, CW - 220 - 84, AMBER),
         list('repos', X, LIST_Y - 6, CW, B - SET_H - 16 - LIST_Y + 6),
         button('addRepo', X, B - SET_H, Math.min(CW, 620), SET_H, 'Add source', 'tinted', 25, { vicon: 'plus', color: BLUE }),
         button('refresh', X + Math.min(CW, 620) + 16, B - SET_H, Math.min(CW - 636, 460), SET_H, '', 'tinted', 25, { vicon: 'refresh', color: BLUE })
@@ -263,6 +264,23 @@ function compact(W, H) {
         status('status', R - 520, 520),
         el('grid', 'appGrid', X - 8, GRID_Y, CW + 8, B - GRID_Y, { items: '', cols: 3, tileH: B - GRID_Y, cardStyle: 'billboard', empty: '' })
     ]);
+    // Announcements: the photo (16:9) on the left, NEW, date, title and text on the right, the arrows below
+    const PH = B - GRID_Y;
+    const NW = Math.min(Math.floor(PH * 16 / 9), Math.floor(CW * 0.58));
+    const NH = Math.floor(NW * 9 / 16);
+    const nx = X + NW + 28;
+    const nw = R - nx;
+    const news = screen('news', 4, [
+        title('', X),
+        status('status', R - 520, 520),
+        el('newsPhoto', 'image', X, GRID_Y, NW, NH, { src: '', radius: 0 }),
+        text('newsNew', nx, GRID_Y, nw, 40, '', 28, 'bold', BLUE),
+        text('newsDate', nx, GRID_Y + 40, nw, 34, '', 24, 'label', DIM),
+        text('newsTitle', nx, GRID_Y + 84, nw, 130, '', 38, 'bold', TEXT, { wrap: true }),
+        text('newsBody', nx, GRID_Y + 224, nw, B - GRID_Y - 224 - 96, '', 26, 'label', DIM, { wrap: true }),
+        el('prev', 'vbutton', nx, B - 76, 76, 76, { text: '', vicon: 'back', style: 'round', color: '#f4f7fb' }, 'event:prev'),
+        el('next', 'vbutton', nx + 96, B - 76, 76, 76, { text: '', vicon: 'chevron', style: 'round', color: '#f4f7fb' }, 'event:next')
+    ]);
     const proxyW = Math.min(1100, CW);
     const proxy = screen('proxy', 3, [
         back(),
@@ -271,7 +289,7 @@ function compact(W, H) {
         text('error', X, HEAD + 14 + 2 * LIST.rowH + 20, proxyW, 130, '', 26, 'label', AMBER, { wrap: true })
     ]);
     return { design: { w: W, h: H }, screens: [store, app, confirm, installed, usb, settings, sources, system, source, accounts, pick, login, phone, type,
-        wifi, prefer, proxy, theme] };
+        wifi, prefer, proxy, theme, news] };
 }
 
 module.exports = { compact };

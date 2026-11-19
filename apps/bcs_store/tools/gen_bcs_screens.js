@@ -50,7 +50,12 @@ card(find(usb, 'grid'));
 const sources = clone('settings', 'sources');
 sources.components = sources.components.filter((c) => ['nav', 'title', 'note', 'reposLabel', 'repos', 'addRepo'].indexOf(c.name) >= 0);
 find(sources, 'title').opts.text = 'Sources';
-sources.components.splice(2, 0, comp('subtitle', 'text', 480, 227, 1300, 43, { text: '', size: 34, font: 'label', align: 'left', color: 'dim' }));
+{   // a page of Settings: Back first, the title and its lines after it
+    const pb = JSON.parse(JSON.stringify(find(get('prefer'), 'back')));
+    sources.components.push(pb);
+    [['title', 610], ['note', 610]].forEach(([n, x]) => { find(sources, n).x = x; });
+}
+sources.components.splice(2, 0, comp('subtitle', 'text', 610, 227, 1300, 43, { text: '', size: 34, font: 'label', align: 'left', color: 'dim' }));
 drop(sources, 'reposLabel');
 place(find(sources, 'repos'), 460, 292, 2380, 440);
 place(find(sources, 'addRepo'), 480, 744, 1000, 96);
@@ -91,10 +96,24 @@ theme.components = theme.components.filter((c) => ['usbPhone', 'list'].indexOf(c
 find(theme, 'title').opts.text = '';
 theme.components.push(comp('grid', 'appGrid', 460, 292, 2380, 548, { items: [], cols: 3, tileH: 548, cardStyle: 'billboard', empty: '' }));
 
+// Announcements: the photo (16:9) on the left, NEW, date, title and text on the right, the arrows below
+const news = clone('prefer', 'news');
+news.components = news.components.filter((c) => ['usbPhone', 'list', 'back'].indexOf(c.name) < 0);    // a tab of its own: no Back
+find(news, 'title').opts.text = '';
+news.components.filter((c) => ['title', 'status', 'subtitle', 'note'].indexOf(c.name) >= 0).forEach((c) => { c.x = 480; });
+news.components.push(
+    comp('newsPhoto', 'image', 480, 292, 974, 548, { src: '', radius: 0 }),
+    comp('newsNew', 'text', 1498, 292, 1342, 56, { text: '', size: 42, font: 'bold', align: 'left', color: '#e4002b' }),
+    comp('newsDate', 'text', 1498, 352, 1342, 48, { text: '', size: 34, font: 'label', align: 'left', color: 'dim' }),
+    comp('newsTitle', 'text', 1498, 412, 1342, 190, { text: '', size: 62, font: 'bold', align: 'left', color: 'text', wrap: true }),
+    comp('newsBody', 'text', 1498, 612, 1342, 100, { text: '', size: 36, font: 'label', align: 'left', color: 'dim', wrap: true }),
+    comp('prev', 'vbutton', 1498, 744, 96, 96, { text: '', vicon: 'back', style: 'round', color: '#f4f7fb' }, 'event:prev'),
+    comp('next', 'vbutton', 1618, 744, 96, 96, { text: '', vicon: 'chevron', style: 'round', color: '#f4f7fb' }, 'event:next'));
+
 // Updates (Robert's installed lists) keeps its layout
 const screens = S.filter((s) => s.name !== 'sources' && s.name !== 'system');
 const at = screens.findIndex((s) => s.name === 'settings');
-screens.splice(at + 1, 0, sources, system, theme);
+screens.splice(at + 1, 0, sources, system, theme, news);
 
 // every screen: six tabs, the logo above the menu, the BCS blue
 screens.forEach((st) => {

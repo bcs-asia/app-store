@@ -1,0 +1,25 @@
+name: Announcements
+# Drop a photo (and an optional .txt with the title and text) into announcements/inbox/ on GitHub: this converts it to what the
+# head unit takes and adds it to announcements/news.json, which every BCS Store reads. See announcements/README.md.
+on:
+  push:
+    branches: [main]
+    paths: ['announcements/inbox/**']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install pillow
+      - run: python3 tools/announce.py
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A announcements
+          git diff --cached --quiet || (git commit -m "Announcements: add from inbox" && git push)
