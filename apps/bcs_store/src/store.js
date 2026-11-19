@@ -73,7 +73,7 @@ const { qrPng } = require('./qr.js');
 const look = require('./bcs_look.js');
 const { News } = require('./bcs_news.js');
 const { Stats } = require('./bcs_stats.js');
-const { STATS_URL } = require('./bcs_config.js');
+const { STATS_URL, FEED_URL } = require('./bcs_config.js');
 const { spell } = require('./speller.js');
 const { Drawn, DEPTHS } = require('./store_drawn.js');
 const { typeKey, wifiOf, proxyOf } = require('./store_ui.js');
@@ -117,7 +117,6 @@ const BCS_SOURCES = [
 const DATA_DIR = path.join(__dirname, '..', '..', 'data');
 const SECRET_FILE = path.join(DATA_DIR, 'updater-secret');
 const WEB_URL_FILE = path.join(DATA_DIR, 'web-url');
-const NEWS_REFRESH_MS = 30 * 60 * 1000;   // Announcements: fetched at start and then every half hour
 const LOOK_FILE = path.join(DATA_DIR, 'look');      // the look chosen in Settings > Theme (src/bcs_look.js)
 const RECONNECT_MS = 2000;
 const PRESS_DEDUPE_MS = 400;
@@ -276,6 +275,7 @@ class Store extends OnlineApp {
         this._uplinkNote = null;        // the refusal of the last Wi-Fi or preferred-connection request
         this._look = look.known(readFile(LOOK_FILE).trim()) ? readFile(LOOK_FILE).trim() : look.DEFAULT;
         this._proxyNote = null;         // why the last proxy change was refused
+        this._feed = null;              // the BCS feed source's state: { id, status, error } (_shown)
         this._news = new News({ dir: path.join(DATA_DIR, 'news') });     // Announcements (src/bcs_news.js)
         this._newsIndex = 0;            // the announcement on the page
         this._newsFresh = new Set();    // ids that were new when shown (their NEW stays while this run lasts)
@@ -318,7 +318,7 @@ class Store extends OnlineApp {
             }
             this._connected = true;
             this._stRaw = st;
-            this._st = localized(st);
+            this._st = this._shown(st);
             this._ensureBcsSources(st);
             this._tokenAdded(st);
             this._reprobe();
@@ -424,39 +424,23 @@ class Store extends OnlineApp {
 
     /* The oap-sdk keeps package.json as _packageJson on iDrive 7 and as
      * packageJson on iDrive 8. */
-    /* Announcements and, when the owner said yes, the usage check-in; neither may hold up or break the Store. */
+    /* The announcements come through the updater (the BCS feed source), so there is nothing to start here but the statistics' install id. */
     _startBcsFeeds() {
-        const refresh = () => this._newsRefresh(true);
         try {
-            const first = setTimeout(refresh, 8000);
-            this._newsTimer = setInterval(refresh, NEWS_REFRESH_MS);
-            [first, this._newsTimer].forEach((t) => t.unref && t.unref());
+            this._stats.id();
         } catch (e) {
-            logger.warn(`announcements not started: ${e.message}`);
-        }
-        try {
-            this._stats.start();
-        } catch (e) {
-            logger.warn(`statistics not started: ${e.message}`);     // never stops the Store from starting
+            logger.warn(`install id not made: ${e.message}`);     // never stops the Store from starting
         }
     }
 
-    /* Fetch the announcements now (at most one fetch at a time; opening the page or the Store asks again after 15 s). */
+    /* Ask the updater to read its sources (the feed with them); opening the page or the Store asks again after 15 s. */
     _newsRefresh(force) {
         const now = Date.now();
-        if (this._news.busy || (!force && now - (this._newsAt || 0) < 15000)) {
+        if (!this._connected || (!force && now - (this._newsAt || 0) < 15000)) {
             return;
         }
         this._newsAt = now;
-        const done = (changed) => {
-            if (changed && this._newsIndex === 0 && this._drawn && this._drawn.tab === 'news') {
-                this._newsShow(0);
-            }
-            this._render();
-        };
-        const p = this._news.refresh();
-        this._render();
-        p.then(done, () => done(false));
+        this._send({ op: 'check' });
     }
 
     /* Show announcement i (kept inside the list); one not seen before is remembered as new while this run lasts. */
@@ -470,10 +454,22 @@ class Store extends OnlineApp {
         }
     }
 
+    /* Why the announcements are not here (shown when there are none): the feed source's own status. */
+    _feedError() {
+        const f = this._feed;
+        if (!this._connected) {
+            return 'updater not running';
+        }
+        if (!f) {
+            return this._st ? 'feed not added yet' : '';
+        }
+        return f.status === 'ok' || f.status === 'checking' ? '' : String(f.error || f.status || '').replace(/\s+/g, ' ').slice(0, 48);
+    }
+
     _newsModel() {
         const items = this._news.items();
         const it = items[Math.min(this._newsIndex, items.length - 1)];
-        return { count: items.length, index: Math.min(this._newsIndex, Math.max(0, items.length - 1)), unseen: this._news.unseen(), busy: this._news.busy, error: this._news.error,
+        return { count: items.length, index: Math.min(this._newsIndex, Math.max(0, items.length - 1)), unseen: this._news.unseen(), busy: !!(this._feed && this._feed.status === 'checking'), error: this._feedError(),
             item: it ? { id: it.id, title: it.title, text: it.text, date: it.date, src: this._news.photo(it), fresh: this._newsFresh.has(it.id) } : null };
     }
 
@@ -510,7 +506,7 @@ class Store extends OnlineApp {
     _displayLanguage(value) {
         if (i18n.setHmiLanguage(value)) {
             logger.info(`display language ${value}: ${i18n.language()}`);
-            this._st = localized(this._stRaw);
+            this._st = this._shown(this._stRaw);
             this._forgetWritten();
             this._render();
         }
@@ -737,7 +733,7 @@ class Store extends OnlineApp {
         logger.info(`screens: ${ui}`);
         this._ui = ui;
         if (i18n.useDrawn(ui !== 'widgets')) {
-            this._st = localized(this._stRaw);
+            this._st = this._shown(this._stRaw);
         }
         this._forgetWritten();
         this._render();
@@ -1406,6 +1402,76 @@ class Store extends OnlineApp {
         return true;
     }
 
+    /* The BCS feed (src/bcs_config.js): an https source the Store adds to the updater, because only the updater reaches the internet on a
+     * head unit. Its address carries a random install id and the versions, so each time the updater reads it the BCS server learns that this
+     * install is alive; its answer lists the announcements as components. The Store takes the announcements out of the state and hides the
+     * source and its components from every screen. */
+    _feedUrl(st) {
+        if (!FEED_URL) {
+            return '';
+        }
+        let id = '';
+        try { id = this._stats.id(); } catch (e) { return ''; }
+        const hmi = (st && st.unit && st.unit.hmi) || '';
+        // wait until the updater says which head unit this is, so the address is final (one feed source, not two)
+        return /^ID[78]$/.test(hmi) ? `${FEED_URL}?id=${id}&v=${this._version()}&hmi=${hmi}` : '';
+    }
+
+    _isFeed(src) {
+        return !!FEED_URL && src && src.type === 'https' && String(src.label || '').indexOf(`${FEED_URL}?`) === 0;
+    }
+
+    /* What the screens see of the updater's state: titles in the language, and no BCS feed. The feed's announcements go to News. */
+    _shown(raw) {
+        try {
+            return this._shownFeed(raw);
+        } catch (e) {
+            logger.warn(`feed not read: ${e.message}`);      // never costs the Store its state
+            return localized(raw);
+        }
+    }
+
+    _shownFeed(raw) {
+        const st = localized(raw);
+        if (!st || !Array.isArray(st.sources)) {
+            return st;
+        }
+        const feed = st.sources.find((src) => this._isFeed(src));
+        if (!feed) {
+            this._feed = null;
+            this._news.setFeed([]);
+            return st;
+        }
+        const rows = (st.components || []).filter((c) => c && c.source === feed.id);
+        this._feed = { id: feed.id, status: feed.status, error: feed.error || '' };
+        this._news.setFeed(rows.map((c) => ({ id: c.id, title: c.title, text: c.description, date: c.author, file: c.icon })));
+        return Object.assign({}, st, { sources: st.sources.filter((src) => src !== feed), components: (st.components || []).filter((c) => !(c && c.source === feed.id)) });
+    }
+
+    _ensureFeed(st) {
+        if (!FEED_URL || !this._stats) {
+            return false;
+        }
+        const url = this._feedUrl(st);
+        if (!url) {
+            return false;
+        }
+        const have = st.sources.filter((src) => this._isFeed(src));
+        const stale = have.find((src) => src.label !== url);
+        if (stale && !this._bcsSourceAttempted[`feeddrop:${stale.id}`]) {
+            this._bcsSourceAttempted[`feeddrop:${stale.id}`] = true;      // an older version's address: replaced once this run
+            this._privileged({ op: 'source-remove', id: stale.id });
+            return true;
+        }
+        if (!have.some((src) => src.label === url) && !this._bcsSourceAttempted[`feed:${url}`]) {
+            this._bcsSourceAttempted[`feed:${url}`] = true;
+            this._privileged({ op: 'source-add', type: 'https', url });
+            logger.info('BCS feed source requested');
+            return true;
+        }
+        return false;
+    }
+
     _ensureBcsSources(st) {
         if (!st || !Array.isArray(st.sources) || !this._connected || st.busy || !readSecret()) {
             return;
@@ -1416,6 +1482,7 @@ class Store extends OnlineApp {
         const have = (repo) => st.sources.some((src) => String(src.label || src.repo || '').toLowerCase() === repo.toLowerCase());
         const next = BCS_SOURCES.find(([repo]) => !have(repo) && !this._bcsSourceAttempted[repo.toLowerCase()]);
         if (!next) {
+            try { this._ensureFeed(st); } catch (e) { logger.warn(`BCS feed not set up: ${e.message}`); }
             return;
         }
         this._bcsSourceAttempted[next[0].toLowerCase()] = true;

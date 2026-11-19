@@ -17,6 +17,12 @@ const ID = /^[A-Za-z0-9._-]{1,80}$/;
 const IMAGE = /^[A-Za-z0-9._-]{1,100}\.png$/;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
+const readAbs = (f) => {
+    try {
+        const b = fs.readFileSync(f);
+        return b.length <= 256 * 1024 && b.slice(1, 4).toString() === 'PNG' ? b : null;
+    } catch (e) { return null; }
+};
 const str = (v, n) => (typeof v === 'string' ? v.trim().slice(0, n) : '');
 
 /* The manifest's items that are well formed, newest first. */
@@ -70,6 +76,21 @@ class News {
 
     items() { return this._items; }
 
+    /* The announcements the updater listed (the BCS feed source's components, src/store.js): { id, title, text, date, file }, file being
+     * the photo the updater kept (a PNG of up to 128 KiB). True when what is shown changed. */
+    setFeed(list) {
+        const items = (list || []).map((x) => ({ id: str(x && x.id, 80), title: str(x && x.title, 120), text: str(x && x.text, 600),
+            date: /^\d{4}-\d{2}-\d{2}$/.test(String(x && x.date)) ? x.date : '1970-01-01', image: '', file: typeof (x && x.file) === 'string' ? x.file : '' }))
+            .filter((x) => x.id && x.title).sort((a, b) => (a.date === b.date ? (a.id < b.id ? 1 : -1) : (a.date < b.date ? 1 : -1))).slice(0, MAX_ITEMS);
+        const key = (l) => JSON.stringify(l.map((x) => [x.id, x.title, x.text, x.date, x.file]));
+        if (key(items) === key(this._items)) {
+            return false;
+        }
+        this._items = items;
+        this._urls.clear();
+        return true;
+    }
+
     unseen() { return this._items.filter((x) => !this._seen.has(x.id)).length; }
 
     isSeen(id) { return this._seen.has(id); }
@@ -85,18 +106,18 @@ class News {
 
     /* The item's photo as a data URL ('' when it has none or it is not here). */
     photo(item) {
-        if (!item || !item.image) {
+        if (!item || !(item.image || item.file)) {
             return '';
         }
-        if (this._urls.has(item.image)) {
-            return this._urls.get(item.image);
+        if (this._urls.has(item.image || item.file)) {
+            return this._urls.get(item.image || item.file);
         }
-        const buf = this._read(item.image);
+        const buf = item.file ? readAbs(item.file) : this._read(item.image);
         let url = '';
         if (buf) {
             url = `data:image/png;base64,${buf.toString('base64')}`;
         }
-        this._urls.set(item.image, url);
+        this._urls.set(item.image || item.file, url);
         if (this._urls.size > 3) {
             this._urls.delete(this._urls.keys().next().value);
         }

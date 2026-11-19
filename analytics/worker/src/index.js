@@ -2,6 +2,10 @@
  * owner switched sharing on), keeps one row per install and shows totals on a dashboard behind a token.
  *   POST /v1/ping    { v:1, id, ev:'open'|'ping', ver, hmi }   the Store, every five minutes while on
  *   POST /v1/optout  { v:1, id }                               the Store, when sharing is switched off: the row is deleted
+ *   GET  /v1/feed.json?id=&v=&hmi=                            the BCS feed: the updater of a car reads it as a catalog (the Store adds it as a
+ *                                                               hidden source: only the updater reaches the internet on a head unit). The request is
+ *                                                               the check-in; the answer lists the announcements as components.
+ *   GET  /v1/img/<file>.png                                    an announcement's photo (from the GitHub announcements/ folder)
  *   GET  /api/stats  Authorization: Bearer <DASH_TOKEN>        the numbers
  *   GET  /           the dashboard (asks for the token)
  * The address is shortened before it is kept (IPv4 a.b.c.0, IPv6 its first three groups); location is Cloudflare's
@@ -10,6 +14,9 @@ import { DASHBOARD } from './dashboard.js';
 
 const ONLINE_S = 10 * 60;          // online: heard from in the last ten minutes (two pings missed = gone)
 const THROTTLE_S = 30;             // a check-in sooner than this after the last one is ignored
+const RAW = 'https://raw.githubusercontent.com/bcs-asia/app-store/main/announcements/';
+const IMG = /^[A-Za-z0-9._-]{1,100}\.png$/;
+const NO_SHA = '0'.repeat(64);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 const json = (obj, status) => new Response(JSON.stringify(obj), { status: status || 200,
@@ -35,6 +42,39 @@ async function body(request) {
     const text = await request.text();
     if (text.length > 1024) { return null; }
     try { return JSON.parse(text); } catch (e) { return null; }
+}
+
+/* One check-in (the Store's POST /v1/ping, or the feed request): one row per install, a check-in within 30 s of the last one ignored. */
+async function record(env, request, id, ver, hmi, now) {
+    const cf = request.cf || {};
+    const v = /^\d{1,3}(\.\d{1,3}){0,3}$/.test(ver) ? ver : '';
+    const h = hmi === 'ID7' || hmi === 'ID8' ? hmi : '';
+    const ip = shorten(request.headers.get('cf-connecting-ip'));
+    await env.DB.prepare(`INSERT INTO installs (id, first_seen, last_seen, ver, hmi, country, region, city, ip, pings)
+        VALUES (?1, ?2, ?2, ?3, ?4, ?5, ?6, ?7, ?8, 1)
+        ON CONFLICT(id) DO UPDATE SET last_seen = ?2, ver = ?3, hmi = ?4, country = ?5, region = ?6, city = ?7, ip = ?8, pings = pings + 1
+        WHERE installs.last_seen <= ?2 - ?9`)
+        .bind(id, now, v, h, clean(cf.country, 2), clean(cf.region, 60), clean(cf.city, 60), ip, THROTTLE_S).run();
+}
+
+/* The announcements (announcements/news.json on GitHub) as the components of a catalog the updater reads (README.md of the updater:
+ * schema 2; an entry needs an artifact, which is never installed here: the Store hides these). The date goes in `author`, the photo is `icon`
+ * (a PNG of up to 128 KiB, announcements/<id>.png). */
+export function feedCatalog(news, origin) {
+    const list = news && Array.isArray(news.items) ? news.items : [];
+    const seen = new Set();
+    const components = [];
+    for (const x of list) {
+        const id = `bcsnews-${String((x && x.id) || '').toLowerCase().replace(/[^a-z0-9_-]+/g, '-')}`.slice(0, 64).replace(/-+$/, '');
+        const title = String((x && x.title) || '').replace(/\s+/g, ' ').trim().slice(0, 80);
+        if (!id || id === 'bcsnews' || !title || seen.has(id) || !/^\d{4}-\d{2}-\d{2}$/.test(String(x.date)) || components.length >= 30) { continue; }
+        seen.add(id);
+        const c = { id, kind: 'app', title, description: String(x.text || '').slice(0, 600), version: '1.0.0', author: x.date, optional: true,
+            mguHmi: ['ID7', 'ID8'], artifact: { name: `${id}@1.0.0.tgz`, size: 1, sha256: NO_SHA, url: `${origin}/v1/none.tgz` } };
+        if (IMG.test(String(x.image || ''))) { c.icon = `${origin}/v1/img/${x.image}`; }
+        components.push(c);
+    }
+    return { schema: 2, components };
 }
 
 export async function stats(db, now) {
@@ -68,16 +108,29 @@ export default {
         if (request.method === 'POST' && url.pathname === '/v1/ping') {
             const b = await body(request);
             if (!b || b.v !== 1 || !UUID.test(b.id) || (b.ev !== 'open' && b.ev !== 'ping')) { return json({ error: 'bad request' }, 400); }
-            const cf = request.cf || {};
-            const ver = /^\d{1,3}(\.\d{1,3}){0,3}$/.test(b.ver) ? b.ver : '';
-            const hmi = b.hmi === 'ID7' || b.hmi === 'ID8' ? b.hmi : '';
-            const ip = shorten(request.headers.get('cf-connecting-ip'));
-            await env.DB.prepare(`INSERT INTO installs (id, first_seen, last_seen, ver, hmi, country, region, city, ip, pings)
-                VALUES (?1, ?2, ?2, ?3, ?4, ?5, ?6, ?7, ?8, 1)
-                ON CONFLICT(id) DO UPDATE SET last_seen = ?2, ver = ?3, hmi = ?4, country = ?5, region = ?6, city = ?7, ip = ?8, pings = pings + 1
-                WHERE installs.last_seen <= ?2 - ?9`)
-                .bind(b.id, now, ver, hmi, clean(cf.country, 2), clean(cf.region, 60), clean(cf.city, 60), ip, THROTTLE_S).run();
+            await record(env, request, b.id, b.ver, b.hmi, now);
             return json({ ok: true });
+        }
+        const get = env.GET_RAW || ((u) => fetch(u, { cf: { cacheTtl: 300, cacheEverything: true } }));
+        if (request.method === 'GET' && url.pathname === '/v1/feed.json') {
+            const id = url.searchParams.get('id') || '';
+            if (UUID.test(id)) {
+                try { await record(env, request, id, url.searchParams.get('v'), url.searchParams.get('hmi'), now); } catch (e) { /* the feed answers anyway */ }
+            }
+            let news = null;
+            try {
+                const r = await get(`${RAW}news.json`);
+                news = r.ok ? JSON.parse(await r.text()) : null;
+            } catch (e) { news = null; }
+            return new Response(JSON.stringify(feedCatalog(news, url.origin)), { headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
+        }
+        const img = request.method === 'GET' && /^\/v1\/img\/([^/]+)$/.exec(url.pathname);
+        if (img && IMG.test(img[1])) {
+            try {
+                const r = await get(`${RAW}${img[1]}`);
+                if (r.ok) { return new Response(r.body, { headers: { 'content-type': 'image/png', 'cache-control': 'public, max-age=3600' } }); }
+            } catch (e) { /* not found below */ }
+            return json({ error: 'not found' }, 404);
         }
         if (request.method === 'POST' && url.pathname === '/v1/optout') {
             const b = await body(request);

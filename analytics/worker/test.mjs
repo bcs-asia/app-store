@@ -59,3 +59,37 @@ test('ping, throttle, totals, opt-out, auth', async () => {
     assert.equal(page.status, 200); assert.match(await page.text(), /BCS Store Live/);
     assert.equal((await call(env, 'GET', '/nope')).status, 404);
 });
+
+test('feed: check-in by the updater, announcements as a catalog, photos', async () => {
+    const env = { DB: d1(), DASH_TOKEN: 's3cret' };
+    const news = { items: [
+        { id: '2026-11-19-Sepang Track Day', title: 'BCS SEPANG TRACK DAY', text: 'Free entry.', date: '2026-11-19', image: '2026-11-19-sepang.png' },
+        { id: 'bad', title: '', text: '', date: '2026-11-19' }, { id: 'nodate', title: 'x', date: 'soon' }] };
+    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
+    const fetched = [];
+    env.GET_RAW = async (u) => { fetched.push(u); return u.endsWith('news.json') ? new Response(JSON.stringify(news)) : u.endsWith('.png') && u.includes('sepang') ? new Response(png) : new Response('no', { status: 404 }); };
+    const r = await call(env, 'GET', `/v1/feed.json?id=${ID}&v=3.3.4&hmi=ID7`, undefined, { 'cf-connecting-ip': '203.0.113.9' }, { country: 'MY', region: 'Selangor', city: 'Shah Alam' });
+    assert.equal(r.status, 200);
+    const cat = await r.json();
+    assert.equal(cat.schema, 2); assert.equal(cat.components.length, 1, 'only the well formed announcement');
+    const c = cat.components[0];
+    assert.match(c.id, /^[a-z0-9][a-z0-9_-]{0,63}$/); assert.equal(c.id, 'bcsnews-2026-11-19-sepang-track-day');
+    assert.deepEqual([c.title, c.description, c.author, c.version, c.kind, c.optional], ['BCS SEPANG TRACK DAY', 'Free entry.', '2026-11-19', '1.0.0', 'app', true]);
+    assert.equal(c.artifact.name, `${c.id}@1.0.0.tgz`); assert.match(c.artifact.sha256, /^[0-9a-f]{64}$/);
+    assert.equal(c.icon, 'https://x.example/v1/img/2026-11-19-sepang.png');
+    const row = env.DB.raw.prepare('SELECT * FROM installs').get();
+    assert.deepEqual([row.ver, row.hmi, row.country, row.city, row.ip], ['3.3.4', 'ID7', 'MY', 'Shah Alam', '203.0.113.0'], 'the feed request is the check-in');
+    // no id or a bad one: still a catalog, nothing recorded; GitHub down: an empty catalog (the check-in still counts)
+    assert.equal((await (await call(env, 'GET', '/v1/feed.json?id=nope')).json()).components.length, 1);
+    assert.equal(env.DB.raw.prepare('SELECT COUNT(*) AS n FROM installs').get().n, 1);
+    env.GET_RAW = async () => { throw new Error('down'); };
+    assert.deepEqual(await (await call(env, 'GET', `/v1/feed.json?id=11111111-2222-4333-8444-555555555555`)).json(), { schema: 2, components: [] });
+    assert.equal(env.DB.raw.prepare('SELECT COUNT(*) AS n FROM installs').get().n, 2);
+    // photos: only a plain png name
+    env.GET_RAW = async (u) => (u.includes('sepang') ? new Response(png) : new Response('no', { status: 404 }));
+    const img = await call(env, 'GET', '/v1/img/2026-11-19-sepang.png');
+    assert.equal(img.status, 200); assert.equal(img.headers.get('content-type'), 'image/png'); assert.equal((await img.arrayBuffer()).byteLength, 4);
+    assert.equal((await call(env, 'GET', '/v1/img/other.png')).status, 404);
+    assert.equal((await call(env, 'GET', '/v1/img/..%2Fnews.json')).status, 404);
+    assert.equal((await call(env, 'GET', '/v1/img/x.txt')).status, 404);
+});

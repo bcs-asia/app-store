@@ -1,15 +1,16 @@
 # Announcements
 
-What the BCS Store's **News** tab shows. Every Store 3.3.0 or later reads `news.json` from this folder
-(`raw.githubusercontent.com/bcs-asia/app-store/main/announcements/`) when it starts and every half hour, keeps what it fetched
-and shows a **NEW** tag and a count on the News tab until the announcement has been opened.
+What the BCS Store's **News** tab shows. Every Store 3.3.4 or later gets `news.json` from this folder
+(`raw.githubusercontent.com/bcs-asia/app-store/main/announcements/`) through the BCS feed on our server: the car's updater reads the feed
+whenever it checks its sources (when the Store opens, when the News page opens, and every six hours), and the Store shows a **NEW** tag and a
+count on the News tab until the announcement has been opened. The server keeps GitHub's answer for about five minutes.
 
 ## Add one (on github.com, no tools needed)
 
 1. Open the `announcements/inbox` folder, **Add file > Upload files**, and drop the photo (JPG, PNG or WebP, any size).
    - Optional: a text file with the same name (`my-photo.txt`): first line = the title, the rest = the text (up to 600 characters).
    - Optional: start the name with a date, `2026-12-01-my-photo.jpg`; without one, today's date is used.
-2. Commit to `main`. The **Announcements** workflow converts the photo (at most 960 x 540, 256 colours, under 650 KB), adds it to
+2. Commit to `main`. The **Announcements** workflow converts the photo (at most 960 x 540, up to 256 colours, under 120 KB), adds it to
    the top of `news.json`, removes the inbox files and commits. A minute later the cars can fetch it.
 
 ## Remove or change one

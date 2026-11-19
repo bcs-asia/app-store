@@ -4,7 +4,7 @@
   announcements/inbox/<name>.jpg|png|webp     the photo (any size)
   announcements/inbox/<name>.txt              optional: first line = title, the rest = text (up to 600 characters)
 
-Each photo becomes announcements/<id>.png (at most 960 x 540, 256 colours: what the head unit's decoder takes) and an entry at
+Each photo becomes announcements/<id>.png (at most 960 x 540, up to 256 colours, under 120 KB: the car's updater carries it from our server and takes a PNG of 128 KiB at most) and an entry at
 the top of announcements/news.json. A name that starts with YYYY-MM-DD- sets the date, else today's. The inbox files are removed.
 The GitHub workflow "Announcements" runs this on every push that adds to the inbox; it also runs by hand:  python3 tools/announce.py
 """
@@ -19,8 +19,9 @@ from PIL import Image, ImageOps
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 NEWS = os.path.join(ROOT, 'announcements')
 EXT = ('.jpg', '.jpeg', '.png', '.webp')
-MAX_BYTES = 650 * 1024            # the head unit refuses a larger photo
-SIZES = [(960, 540), (800, 450), (640, 360), (480, 270)]
+MAX_BYTES = 120 * 1024            # the updater keeps an icon PNG of 128 KiB at most, and the photo travels as one
+SIZES = [(960, 540), (800, 450), (640, 360), (560, 315), (480, 270), (400, 225), (320, 180)]
+COLOURS = [256, 128, 64, 32]
 
 
 def slug(s):
@@ -32,9 +33,10 @@ def convert(src, dst):
     for box in SIZES:
         small = im.copy()
         small.thumbnail(box, Image.LANCZOS)
-        small.quantize(256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.FLOYDSTEINBERG).save(dst, 'PNG', optimize=True)
-        if os.path.getsize(dst) <= MAX_BYTES:
-            return small.size
+        for colours in COLOURS:
+            small.quantize(colours, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.FLOYDSTEINBERG).save(dst, 'PNG', optimize=True)
+            if os.path.getsize(dst) <= MAX_BYTES:
+                return small.size
     return small.size
 
 

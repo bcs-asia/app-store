@@ -89,6 +89,13 @@ eq(f.items[7].act, { do: 'open', page: { name: 'app', id: 'bcs_store', source: '
     const g = frame(fixture.model({ tab: 'store' }, st), { textScale: 1, focus: 0, scroll: {} });
     eq(g.items.filter((i) => i.act && i.act.page && i.act.page.id === 'bcs_store').map((i) => i.act.page.source), ['bcs-asia'], 'BCS Store only from bcs-asia/app-store');
 }
+{
+    // a USB stick marked as a copy of bcs-asia/app-store offers BCS Store in the USB tab (its row's source is the stick)
+    const st = fixture.state();
+    st.components = st.components.map((c) => (c.id === 'bcs_store' ? Object.assign({}, c, { source: 'usb:STICK', version: '9.9.9', status: 'update' }) : c));
+    const g = frame(fixture.model({ tab: 'usb' }, st), { textScale: 1, focus: 0, scroll: {} });
+    eq(g.items.filter((i) => i.act && i.act.page && i.act.page.id === 'bcs_store').length, 1, 'USB: BCS Store from a stick is listed');
+}
 const subs = f.values.grid.items.concat(screen('store', { tab: 'tools' }).values.grid.items).map((t) => t.sub);
 ['Downloading 42 %', 'Update a1b2c3d', 'Waiting', 'Restart pending', 'Failed', 'Installed', '2.1.0 · 402 KB']
     .forEach((s) => ok(subs.indexOf(s) >= 0, `a tile says ${s}`));
