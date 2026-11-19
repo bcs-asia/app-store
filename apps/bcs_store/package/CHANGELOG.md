@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.2.2
+
+- New sources added by the Store when missing: waliworld/iDrive8-RideTube (BeeMTube2, YouTube for iDrive 8), cauliflowermossgrape/idrive7-apps (shift lights, dyno, G-Force, fault scanner and more) and IterioDev/car-apps (Seats, Ambient Light, Drive Recorder, Turn View, Car Data and more).
+
 ## 3.2.1
 
 - Performance Red is sharp: square cards, buttons, tags, rows and icons; a red corner flag and a fading red line on every card; a flat red band on the open tab.

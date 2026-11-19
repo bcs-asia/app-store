@@ -101,7 +101,11 @@ const BCS_SOURCES = [
     ['JustAnotherPU/moonride', 'releases'],
     ['JustAnotherPU/waze-hud', 'releases'],
     ['pllanaio/mgu-browser', 'releases'],
-    ['aidac/apps', 'branch:main']
+    ['aidac/apps', 'branch:main'],
+    // 3.2.2: BeeMTube2 for iDrive 8 (a fork of RideTube; releases), the best-known collection (MIT, car-tested) and IterioDev's apps (iDrive 8 and 7, car-tested; its tools have their own ids)
+    ['waliworld/iDrive8-RideTube', 'releases'],
+    ['cauliflowermossgrape/idrive7-apps', 'branch:main'],
+    ['IterioDev/car-apps', 'branch:main']
 ];
 /* The updater writes the privileged secret, and while the phone page is on
  * its access URL, into this app's data folder (owner this app's uid, 0400);
