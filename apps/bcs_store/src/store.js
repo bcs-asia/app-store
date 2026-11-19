@@ -1423,6 +1423,15 @@ class Store extends OnlineApp {
 
     /* What the screens see of the updater's state: titles in the language, and no BCS feed. The feed's announcements go to News. */
     _shown(raw) {
+        try {
+            return this._shownFeed(raw);
+        } catch (e) {
+            logger.warn(`feed not read: ${e.message}`);      // never costs the Store its state
+            return localized(raw);
+        }
+    }
+
+    _shownFeed(raw) {
         const st = localized(raw);
         if (!st || !Array.isArray(st.sources)) {
             return st;
