@@ -1,6 +1,6 @@
 {
   "name": "bcs_store",
-  "version": "3.4.1",
+  "version": "3.4.2",
   "description": "BCS Store: BMW MGU app and tool store by BCS Automotive Solutions (GPL-3.0-or-later; based on Robert Nisipeanu MGU Store v0.9.40)",
   "private": false,
   "main": "javascript/runner.js",

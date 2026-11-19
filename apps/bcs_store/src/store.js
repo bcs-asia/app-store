@@ -289,7 +289,8 @@ class Store extends OnlineApp {
         this._newsIndex = 0;            // the announcement on the page
         this._newsFresh = new Set();    // ids that were new when shown (their NEW stays while this run lasts)
         this._stats = new Stats({ dir: DATA_DIR, url: STATS_URL, version: () => this._version(),
-            hmi: () => (this._st && this._st.unit && this._st.unit.hmi) || '' });     // Usage statistics (src/bcs_stats.js)
+            hmi: () => (this._st && this._st.unit && this._st.unit.hmi) || '',
+            seed: () => readSecret() || readFile('/etc/machine-id').trim() });     // Usage statistics (src/bcs_stats.js)
         this._removeNote = null;        // the updater's refusal of the last Remove: { id, error, by }
         this._qr = { login: { key: null, file: null, chain: Promise.resolve() },
             phone: { key: null, file: null, chain: Promise.resolve() }, app: { key: null, file: null, chain: Promise.resolve() } };
@@ -404,6 +405,7 @@ class Store extends OnlineApp {
         logger.info(`store ${this.getAppId()} v${this._version()} starting`);
         if (FEED_ON && this._tripped()) {
             this._feedOn = false;      // the loop breaker went off in this version: the feed stays off
+            this._trippedNow = true;
             logger.warn('loop breaker went off before: the feed stays off');
         }
         this._client.connect();
@@ -488,16 +490,31 @@ class Store extends OnlineApp {
     /* Why the announcements are not here (shown when there are none): the feed source's own status. */
     _feedError() {
         if (!this._feedOn) {
-            return '';      // the feed is off (or the loop breaker stopped it): nothing to load, nothing to report
+            return this._halted || this._trippedNow ? 'stopped by the loop breaker' : '';      // off by setting: nothing to load, nothing to report
         }
         const f = this._feed;
         if (!this._connected) {
             return 'updater not running';
         }
         if (!f) {
-            return this._st ? 'feed not added yet' : '';
+            return this._st ? this._feedWhy() : '';
         }
         return f.status === 'ok' || f.status === 'checking' ? '' : String(f.error || f.status || '').replace(/\s+/g, ' ').slice(0, 48);
+    }
+
+    /* Why the feed source is not there yet: the same gates _ensureBcsSources and _ensureFeed go through, in their order. */
+    _feedWhy() {
+        const raw = this._stRaw;
+        if (!readSecret()) { return 'no updater key'; }
+        if (!raw || !Array.isArray(raw.sources)) { return 'waiting for the updater'; }
+        let id = '';
+        try { id = this._stats.id(); } catch (e) { id = ''; }
+        if (!id) { return 'no install id'; }
+        if (raw.busy) { return 'updater busy'; }
+        const have = (repo) => raw.sources.some((src) => String(src.label || src.repo || '').toLowerCase() === repo.toLowerCase());
+        if (BCS_SOURCES.some(([repo]) => !have(repo) && !this._bcsSourceAttempted[repo.toLowerCase()])) { return 'adding the other sources'; }
+        if (this._bcsSourceAttempted.feed) { return 'feed requested, waiting'; }
+        return 'feed not added yet';
     }
 
     /* The photo is read only while News is on screen (its tab or its page); every other screen carries no picture data. */
@@ -1100,6 +1117,7 @@ class Store extends OnlineApp {
             return;
         }
         this._halted = true;
+        this._trippedNow = true;
         this._feedOn = false;
         logger.error(`loop breaker: ${why}; feed off, Store closing`);
         try {

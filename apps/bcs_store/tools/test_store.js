@@ -828,9 +828,15 @@ function run() {
             const was = app._stats._write; app._stats._write = () => {};
             app._stats.dir = path.join(os.tmpdir(), `bcs_noid_${process.pid}`);
             app._bcsSourceAttempted.feed = false;
+            const seedWas = app._stats.seed; app._stats.seed = () => '';
             const n3 = sent.length;
             app._ensureFeed(gone);
-            eq(sent.slice(n3).filter((x) => x.op === 'source-add').length, 0, 'an install id that cannot be saved adds no feed (never a second id)');
+            eq(sent.slice(n3).filter((x) => x.op === 'source-add').length, 0, 'an id that cannot be saved and has nothing stable to come from adds no feed');
+            eq(app._feedWhy(), 'no install id', 'and the News page says so');
+            app._stats.seed = () => 'stable-seed'; app._stats._id = null;
+            const u1 = app._feedUrl(); app._stats._id = null; const u2 = app._feedUrl();
+            eq([/\?id=[0-9a-f-]{36}$/.test(u1), u1 === u2], [true, true], 'with something stable to come from, the same id comes out every time');
+            app._stats.seed = seedWas;
             app._stats._write = was;
         }
         app._shown({ busy: false, sources: [{ id: 'f1', type: 'https', label: feedUrl, status: 'error', error: 'http 503' }], components: [] });
