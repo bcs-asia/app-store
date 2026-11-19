@@ -38,7 +38,7 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}.wrap{overflow-x:auto}
 <div><h2>Countries</h2><div class="wrap"><table id="tc"></table></div></div>
 <div><h2>Store versions</h2><div class="wrap"><table id="tv"></table></div><h2>iDrive</h2><div class="wrap"><table id="th"></table></div></div>
 </div>
-<h2>Latest installs</h2><div class="wrap"><table id="tr"></table></div>
+<h2>Latest installs <button id="exp" style="float:right;font-size:13px">Export all (CSV)</button></h2><div class="wrap"><table id="tr"></table></div>
 <p class="empty">Every Store 3.3.0 or later that reaches the internet is counted once. Online = heard from in the last 10 minutes. Addresses are shortened.</p>
 </main>
 <script>
@@ -62,6 +62,11 @@ function load(){
  fetch('/api/stats',{headers:{authorization:'Bearer '+tok},cache:'no-store'}).then(function(r){
   if(r.status===401){sessionStorage.removeItem('bcs-token');$('main').hidden=true;$('login').hidden=false;$('err').textContent=tok?'Wrong token':'';tok='';return null}
   return r.json()}).then(function(d){if(d){$('login').hidden=true;$('main').hidden=false;draw(d)}}).catch(function(){$('stamp').textContent='Offline'})}
+$('exp').onclick=function(){
+ $('exp').disabled=true;
+ fetch('/api/export.csv',{headers:{authorization:'Bearer '+tok},cache:'no-store'}).then(function(r){if(!r.ok){throw 0}return r.blob()}).then(function(b){
+  var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='bcs-store-installs.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href)},4000)
+ }).catch(function(){$('stamp').textContent='Export failed'}).then(function(){$('exp').disabled=false})};
 $('go').onclick=function(){tok=$('tok').value.trim();sessionStorage.setItem('bcs-token',tok);load()};
 $('tok').onkeydown=function(e){if(e.key==='Enter'){$('go').onclick()}};
 if(tok){load()}else{$('login').hidden=false}

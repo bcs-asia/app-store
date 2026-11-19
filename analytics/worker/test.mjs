@@ -93,3 +93,19 @@ test('feed: check-in by the updater, announcements as a catalog, photos', async 
     assert.equal((await call(env, 'GET', '/v1/img/..%2Fnews.json')).status, 404);
     assert.equal((await call(env, 'GET', '/v1/img/x.txt')).status, 404);
 });
+
+test('export all: every install as CSV, token needed, formulas defused', async () => {
+    const env = { DB: d1(), DASH_TOKEN: 's3cret' };
+    for (let i = 0; i < 150; i++) {
+        const id = `0b0e7c52-4c3e-4f1d-9d38-${String(i).padStart(12, '0')}`;
+        await call(env, 'POST', '/v1/ping', { v: 1, id, ev: 'open', ver: '3.3.0', hmi: 'ID7' }, { 'cf-connecting-ip': '203.0.113.5' }, { country: 'MY', region: '=cmd', city: 'Kuala Lumpur' });
+    }
+    assert.equal((await call(env, 'GET', '/api/export.csv')).status, 401);
+    const r = await call(env, 'GET', '/api/export.csv', undefined, { authorization: 'Bearer s3cret' });
+    assert.equal(r.status, 200);
+    const lines = (await r.text()).trim().split('\r\n');
+    assert.equal(lines.length, 151, 'a header and all 150 installs (the dashboard lists 100)');
+    assert.match(lines[0], /^install_id,first_seen_utc/);
+    assert.match(lines[1], /^0b0e7c52-4c3e-4f1d-9d38-000000000000,/, 'the whole id');
+    assert.ok(lines[1].includes("'=cmd") || !lines[1].includes(',=cmd'), 'a formula-like cell is quoted');
+});
