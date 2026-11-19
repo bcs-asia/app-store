@@ -75,7 +75,8 @@ const { News } = require('./bcs_news.js');
 const { Stats } = require('./bcs_stats.js');
 const { STATS_URL, FEED_URL, FEED_ENABLED } = require('./bcs_config.js');
 const FEED_ON = !!FEED_ENABLED || process.env.BCS_FEED_TEST === '1';
-/* The loop breaker: more than LOOP_MAX of these messages to the updater within LOOP_MS stops the feed and closes the Store. */
+/* The loop breaker: more than LOOP_MAX of the same one of these messages (same operation, same target) to the updater within LOOP_MS stops
+ * the feed and closes the Store. */
 const LOOP_OPS = ['source-add', 'source-remove', 'check', 'token-add', 'token-remove'];
 const LOOP_MAX = Number(process.env.BCS_LOOP_MAX) || 10;      // the env is for the tests only
 const LOOP_MS = 10000;
@@ -486,6 +487,9 @@ class Store extends OnlineApp {
 
     /* Why the announcements are not here (shown when there are none): the feed source's own status. */
     _feedError() {
+        if (!this._feedOn) {
+            return '';      // the feed is off (or the loop breaker stopped it): nothing to load, nothing to report
+        }
         const f = this._feed;
         if (!this._connected) {
             return 'updater not running';
@@ -1069,13 +1073,16 @@ class Store extends OnlineApp {
         if (LOOP_OPS.indexOf(req.op) < 0) {
             return true;
         }
+        // the same message to the same target: a fresh install legitimately adds a dozen different sources in a row, which is not a loop
+        const key = `${req.op}:${req.repo || req.url || req.id || ''}`;
         const now = Date.now();
-        this._sendTimes = this._sendTimes.filter((t) => now - t < LOOP_MS);
-        this._sendTimes.push(now);
-        if (this._sendTimes.length <= (this._loopMax || LOOP_MAX)) {
+        this._sendTimes = this._sendTimes.filter((t) => now - t.at < LOOP_MS);
+        this._sendTimes.push({ at: now, key });
+        const same = this._sendTimes.filter((t) => t.key === key).length;
+        if (same <= (this._loopMax || LOOP_MAX)) {
             return true;
         }
-        this._trip(`${this._sendTimes.length} ${req.op}-type messages in ${LOOP_MS / 1000} s`);
+        this._trip(`${same} times ${key} in ${LOOP_MS / 1000} s`);
         return false;
     }
 

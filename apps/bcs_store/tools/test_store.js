@@ -1119,7 +1119,7 @@ function runWidgetsExtra() {
             app._version = () => '9.9.9';
             const n = sent.length;
             for (let i = 0; i < 10; i++) { app._send({ op: 'check' }); }
-            eq([sent.length - n, app._halted, closed], [10, false, ''], 'ten messages in ten seconds go out');
+            eq([sent.length - n, app._halted, closed], [10, false, ''], 'ten of the same message in ten seconds go out');
             app._send({ op: 'check' });
             eq([sent.length - n, app._halted, app._feedOn, closed], [10, true, false, 'loop breaker'], 'the eleventh is not sent: the feed is off and the Store closes');
             eq(fs.readFileSync(path.join(d, 'feed-tripped'), 'utf8'), '9.9.9', 'a flag keeps the feed off for this version');
@@ -1130,6 +1130,9 @@ function runWidgetsExtra() {
             eq(app._tripped(), false, 'a newer version starts fresh');
             app._send({ op: 'probe' });
             app._halted = false; app._sendTimes = [];
+            for (let i = 0; i < 40; i++) { app._send({ op: 'source-add', type: 'github', repo: `a/b${i}` }); }
+            eq(app._halted, false, 'a fresh install adding forty different sources in a row is not a loop');
+            app._sendTimes = [];
             for (let i = 0; i < 30; i++) { app._send({ op: 'hello' }); }
             eq(app._halted, false, 'messages that cannot loop are not counted');
             fs.unlinkSync(path.join(d, 'feed-tripped')); fs.rmdirSync(d);
