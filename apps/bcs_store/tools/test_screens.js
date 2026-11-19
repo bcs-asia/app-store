@@ -221,6 +221,14 @@ eq(frame(fixture.model({}, same), { textScale: 1, focus: 0, scroll: {} }).values
     ['DOOM (robertnisipeanu/mgu-store)', 'DOOM (robertnisipeanu/idrive-apps)', 'Quake']);
 // Updates lists only what has an update: nothing when all are installed and current, the three when each has one
 {
+    // the side menu's tabs: each one's touch area is its whole cell (3.4.4: 8 and 16 px of dead space made them hard to hit)
+    const f = frame(fixture.model({ tab: 'installed' }, same), { textScale: 1, focus: -1, scroll: {} });
+    const tabs = f.items.filter((it) => ['Apps', 'Tools', 'Updates', 'USB', 'News', 'Settings'].indexOf(it.label) >= 0);
+    ok(tabs.length === 6, 'six tabs');
+    const gaps = tabs.slice(1).map((it, i) => it.y - (tabs[i].y + tabs[i].h));
+    ok(gaps.every((g) => g <= 4.01), 'no dead space between the tabs');
+}
+{
     // Check for updates, under the Updates lists: pressable when idle, greyed and "Checking" while it runs, hidden when the updater is not there
     const b = (over) => frame(fixture.model(Object.assign({ tab: 'installed' }, over || {}), same), { textScale: 1, focus: -1, scroll: {} }).values.checkUpdates;
     eq([b().text, b().act, b().disabled], ['Check for updates', { do: 'check-updates' }, false], 'Updates: Check for updates');
