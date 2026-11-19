@@ -767,6 +767,17 @@ function run() {
         eq([shown.sources.map((x) => x.id), shown.components.map((x) => x.id)], [['c'], ['doom']], 'the feed and its components are hidden from the screens');
         eq(app._news.items().map((x) => [x.id, x.title, x.text, x.date]), [['bcsnews-a', 'Hello', 'Body', '2026-11-19']], 'its components are the announcements');
         eq([app._newsModel().count, app._feedError()], [1, ''], 'and the page has no error');
+        {
+            const png = path.join(os.tmpdir(), `bcs_lazy_${process.pid}.png`);
+            fs.writeFileSync(png, Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(64)]));
+            app._news.setFeed([{ id: 'p', title: 'T', text: 'x', date: '2026-11-19', file: png }]);
+            app._drawn.tab = 'store';
+            eq(app._newsModel().item.src, '', 'the photo is not read while News is not on screen');
+            app._drawn.tab = 'news';
+            eq(/^data:image\/png;base64,/.test(app._newsModel().item.src), true, 'it is read when News is on screen');
+            app._drawn.tab = 'store';
+            fs.unlinkSync(png);
+        }
         app._connected = true;
         const old = Object.assign({}, withFeed, { sources: [{ id: 'f1', type: 'https', label: `${feedUrl.split('?')[0]}?id=${feedUrl.split('id=')[1].split('&')[0]}&v=3.0.0`, status: 'ok' }, { id: 'c', label: 'bcs-asia/app-store' }] });
         const n0 = sent.length;
