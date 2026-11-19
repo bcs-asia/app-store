@@ -83,13 +83,14 @@ const target = (c) => (c.revision && c.version === c.installed ? c.revision : c.
 const rawComps = (m) => (m.connected && m.st && Array.isArray(m.st.components) ? m.st.components : []);
 /* The components the Store lists (store_view.js listed). */
 function comps(m) {
-    // BCS Store is offered only from the BCS-Asia repository, not from another source's copy of it (the retired bcs-develop)
+    // BCS Store is offered only from the BCS-Asia repository, not from another source's copy of it (the retired bcs-develop), or from a USB
+    // stick (a stick marked as a copy of the BCS-Asia repository is that repository's row, with the stick as its source)
     const own = (c) => {
         if (c.id !== 'bcs_store') {
             return true;
         }
         const src = (sources(m) || []).find((x) => x.id === c.source);
-        return !src || /^bcs-asia\/app-store$/i.test(String(src.label || src.repo || ''));
+        return !src || !!src.usb || /^bcs-asia\/app-store$/i.test(String(src.label || src.repo || ''));
     };
     return rawComps(m).filter(listed).filter(own);
 }

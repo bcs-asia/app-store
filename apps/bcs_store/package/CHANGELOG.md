@@ -4,6 +4,7 @@
 
 - Fix: News and the usage statistics could not reach the internet. On a head unit only the updater can (the Store app got `getaddrinfo ENOTFOUND raw.githubusercontent.com`). The Store now adds one hidden source to the updater, the BCS feed on our server: the updater reads it with its other sources, the announcements come back as its entries (text and photo), and the request is the usage check-in. The source and its entries are not shown anywhere else.
 - News: opening the page asks the updater to check; with no announcements it says why (for example Offline).
+- USB: a stick marked as a copy of the BCS-Asia repository (the sticks made for the releases) now shows BCS Store in the USB tab; before, the Store hid every copy of itself that did not come from GitHub.
 - Announcement photos are under 120 KB now (the updater keeps an icon of 128 KiB at most).
 
 ## 3.3.3
