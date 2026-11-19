@@ -429,11 +429,32 @@ class Store extends OnlineApp {
      * packageJson on iDrive 8. */
     /* The announcements come through the updater (the BCS feed source), so there is nothing to start here but the statistics' install id. */
     _startBcsFeeds() {
+        if (!this._feedOn) {
+            this._wipeFeedData();      // feed off: no install id is made, and what an earlier version kept is deleted
+            return;
+        }
         try {
             this._stats.id();
         } catch (e) {
             logger.warn(`install id not made: ${e.message}`);     // never stops the Store from starting
         }
+    }
+
+    /* Deletes the install id and the announcements (text and photos) this Store kept in its own data folder. */
+    _wipeFeedData() {
+        let n = 0;
+        const base = this._dataDir || DATA_DIR;
+        const rm = (file) => { try { fs.unlinkSync(file); n += 1; } catch (e) { /* not there */ } };
+        try {
+            rm(path.join(base, 'install-id'));
+            const dir = path.join(base, 'news');
+            fs.readdirSync(dir).forEach((name) => rm(path.join(dir, name)));
+            fs.rmdirSync(dir);
+        } catch (e) { /* no news folder */ }
+        if (n) {
+            logger.info(`BCS feed data deleted: ${n} file(s)`);
+        }
+        return n;
     }
 
     /* Ask the updater to read its sources (the feed with them); opening the page or the Store asks again after 15 s. */
