@@ -90,7 +90,7 @@ const SOCKET = '/dev/shm/mgu-updater/updater.sock';
 const APP_ID = 'bcs_store';
 // retired: bcs-develop's feeds, and community feeds that proved not to work on the cars (error or sign-in needed); removed from the updater when found
 const RETIRED_SOURCE = new RegExp('^(bcs-develop/|' + ['eroobeeroo/idrive7-apps', 'arefahmad/idrive7-apps', 'pinguinooo/idrive7-apps', 'nickgcode/idrive7-apps',
-    'aurelmarius/bmw-games', 'hexlay/idrive7-custom-apps', 'NamelsMissing/mgu-apps', 'isaakbruno2/carplay-map-cluster'].map((r) => r.replace(/[/-]/g, '\\$&') + '$').join('|') + ')', 'i');
+    'aurelmarius/bmw-games', 'hexlay/idrive7-custom-apps', 'NamelsMissing/mgu-apps', 'isaakbruno2/carplay-map-cluster', 'istt1899/x3'].map((r) => r.replace(/[/-]/g, '\\$&') + '$').join('|') + ')', 'i');
 // [repo, channel]: BCS's own source first, then the community feeds BCS Store adds when they are missing
 const BCS_SOURCES = [
     ['bcs-asia/app-store', 'releases'],
@@ -99,7 +99,6 @@ const BCS_SOURCES = [
     ['JustAnotherPU/mgu-apps', 'releases'],
     // community collections from the awesome-bmw-mgu list (releases channel: the updater shows a source with nothing published as unavailable)
     ['aurelmarius/bmw-apps', 'releases'],
-    ['istt1899/x3', 'releases'],
     ['JustAnotherPU/ridewatch', 'releases'],
     ['JustAnotherPU/moonride', 'releases'],
     ['JustAnotherPU/waze-hud', 'releases'],

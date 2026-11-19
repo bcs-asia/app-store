@@ -2,6 +2,7 @@
 
 ## 3.3.1
 
+- Source removed: istt1899/x3 (the Store takes it out of the updater when it finds it, and does not add it again).
 - News: the page fetches the announcements every time it is opened (and when the Store opens), not only at start and every half hour; it says Checking... while it does and, when it cannot load them, why (for example offline).
 
 ## 3.3.0

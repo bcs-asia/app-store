@@ -9,8 +9,8 @@
       "version": "3.3.1",
       "artifact": {
         "name": "bcs_store@3.3.1.tgz",
-        "size": 4723927,
-        "sha256": "2dde731cadb82e14a5a41e1e85d306a2864c601a33804d142b370172ccbf9509",
+        "size": 4723976,
+        "sha256": "92b0bc8e5aa232c00353e461c34b170ae8ac720555d682aa2162ca8519c635ef",
         "url": "https://github.com/bcs-asia/app-store/releases/download/catalog/bcs_store@3.3.1.tgz"
       },
       "build": "unit",
