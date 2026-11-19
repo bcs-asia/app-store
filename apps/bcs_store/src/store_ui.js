@@ -840,7 +840,7 @@ function newsView(m) {
     const many = n.count > 1;
     return {
         title: { text: 'Announcements' },
-        status: { text: n.count ? `${n.index + 1} of ${n.count}` : 'No announcements yet', color: DIM },
+        status: { text: n.count ? `${n.index + 1} of ${n.count}` : (n.busy ? 'Checking...' : (n.error ? `Cannot load: ${n.error}` : 'No announcements yet')), color: DIM },
         newsPhoto: it ? { src: it.src || '', radius: 0, hidden: false } : { src: '', hidden: true },
         newsNew: { text: it && it.fresh ? 'NEW' : '' },
         newsDate: { text: it ? it.date : '' },

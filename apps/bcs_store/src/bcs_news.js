@@ -44,6 +44,7 @@ class News {
         this._seen = new Set();
         this._urls = new Map();       // image file -> data URL (the two or three last shown)
         this.error = '';
+        this.busy = false;
         this.load();
     }
 
@@ -104,11 +105,20 @@ class News {
 
     /* Fetch the manifest and the photos it names that are not kept; resolves true when what is shown changed. */
     async refresh() {
+        this.busy = true;
+        try {
+            return await this._refresh();
+        } finally {
+            this.busy = false;
+        }
+    }
+
+    async _refresh() {
         let body;
         try {
             body = await this.get(`${this.base}news.json`, { maxBytes: 64 * 1024 });
         } catch (e) {
-            this.error = e.message;
+            this.error = String((e && e.message) || e || 'failed').slice(0, 60);
             return false;
         }
         const items = parse(body);

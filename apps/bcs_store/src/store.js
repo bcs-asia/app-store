@@ -427,11 +427,29 @@ class Store extends OnlineApp {
      * packageJson on iDrive 8. */
     /* Announcements and, when the owner said yes, the usage check-in; neither may hold up or break the Store. */
     _startBcsFeeds() {
-        const refresh = () => this._news.refresh().then((changed) => { if (changed) { this._render(); } }, () => {});
+        const refresh = () => this._newsRefresh(true);
         const first = setTimeout(refresh, 8000);
         this._newsTimer = setInterval(refresh, NEWS_REFRESH_MS);
         [first, this._newsTimer].forEach((t) => t.unref && t.unref());
         this._stats.start();
+    }
+
+    /* Fetch the announcements now (at most one fetch at a time; opening the page or the Store asks again after 15 s). */
+    _newsRefresh(force) {
+        const now = Date.now();
+        if (this._news.busy || (!force && now - (this._newsAt || 0) < 15000)) {
+            return;
+        }
+        this._newsAt = now;
+        const done = (changed) => {
+            if (changed && this._newsIndex === 0 && this._drawn && this._drawn.tab === 'news') {
+                this._newsShow(0);
+            }
+            this._render();
+        };
+        const p = this._news.refresh();
+        this._render();
+        p.then(done, () => done(false));
     }
 
     /* Show announcement i (kept inside the list); one not seen before is remembered as new while this run lasts. */
@@ -448,7 +466,7 @@ class Store extends OnlineApp {
     _newsModel() {
         const items = this._news.items();
         const it = items[Math.min(this._newsIndex, items.length - 1)];
-        return { count: items.length, index: Math.min(this._newsIndex, Math.max(0, items.length - 1)), unseen: this._news.unseen(),
+        return { count: items.length, index: Math.min(this._newsIndex, Math.max(0, items.length - 1)), unseen: this._news.unseen(), busy: this._news.busy, error: this._news.error,
             item: it ? { id: it.id, title: it.title, text: it.text, date: it.date, src: this._news.photo(it), fresh: this._newsFresh.has(it.id) } : null };
     }
 
@@ -777,6 +795,7 @@ class Store extends OnlineApp {
             this._drawn.setTab(act.tab);
             if (act.tab === 'news') {
                 this._newsShow(0);
+                this._newsRefresh(false);
             }
             break;
         case 'filter': this._drawn.setFilter(act.filter); break;
@@ -799,6 +818,7 @@ class Store extends OnlineApp {
         case 'open':
             if (act.page.name === 'news') {
                 this._newsShow(0);
+                this._newsRefresh(false);
             }
             if (act.page.name === 'source') {
                 this._sourceId = act.page.id;
@@ -1922,6 +1942,7 @@ class Store extends OnlineApp {
                 // opening the Store is a good moment to look
                 this._send({ op: 'check' });
             }
+            this._newsRefresh(false);
         }
         if (!this._initialized || !this._appStatusService) {
             return;
