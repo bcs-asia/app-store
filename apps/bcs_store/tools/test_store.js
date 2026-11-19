@@ -24,6 +24,7 @@ const os = require('os');
 const path = require('path');
 const { ID7, ID8 } = require('./gen_rhmi.js');
 process.env.BCS_FEED_TEST = '1';
+process.env.BCS_LOOP_MAX = '1000000';       // the loop breaker has its own test
 process.env.BCS_OFFLINE = '1';           // BCS's own feeds (Announcements, statistics) never reach the internet from a test
 const HMI = process.env.STORE_HMI === 'ID8' ? 'ID8' : 'ID7';
 
@@ -759,7 +760,7 @@ function run() {
         const added = addedAll.filter((x) => x.type !== 'https');
         // the BCS feed: one https source, its address carrying the install id and the versions, added once
         eq(feedAdds.length, 1, 'the BCS feed is added once');
-        eq(/^https:\/\/bcs-stats\.bcs-asia\.workers\.dev\/v1\/feed\.json\?id=[0-9a-f-]{36}&v=[0-9a-z.]+(&hmi=ID[78])?$/.test(feedAdds[0].url), true, 'with the install id and the Store version');
+        eq(/^https:\/\/bcs-stats\.bcs-asia\.workers\.dev\/v1\/feed\.json\?id=[0-9a-f-]{36}$/.test(feedAdds[0].url), true, 'with the install id only: one fixed address');
         const feedUrl = feedAdds[0].url;
         const withFeed = { busy: false, unit: { hmi: 'ID7' }, sources: [{ id: 'f1', type: 'https', label: feedUrl, status: 'ok', error: null }, { id: 'c', label: 'bcs-asia/app-store' }],
             components: [{ id: 'bcsnews-a', source: 'f1', title: 'Hello', description: 'Body', author: '2026-11-19', icon: null }, { id: 'doom', source: 'c', title: 'DOOM', author: '' }] };
@@ -806,10 +807,32 @@ function run() {
             fs.unlinkSync(png);
         }
         app._connected = true;
-        const old = Object.assign({}, withFeed, { sources: [{ id: 'f1', type: 'https', label: `${feedUrl.split('?')[0]}?id=${feedUrl.split('id=')[1].split('&')[0]}&v=3.0.0`, status: 'ok' }, { id: 'c', label: 'bcs-asia/app-store' }] });
-        const n0 = sent.length;
-        app._ensureFeed(old); app._ensureFeed(old);
-        eq(sent.slice(n0).map(secretless), [{ op: 'source-remove', id: 'f1' }], 'an older version\'s feed address is removed once (the next state adds the new one)');
+        {
+            // exactly one feed source: with an extra one (an old address, or a doubled add) the extra goes, once; with one there, none is added
+            const base = feedUrl.split('?')[0];
+            const dup = Object.assign({}, withFeed, { sources: [{ id: 'f1', type: 'https', label: feedUrl, status: 'ok' }, { id: 'f2', type: 'https', label: `${base}?id=${feedUrl.split('id=')[1]}&v=3.3.6&hmi=ID7`, status: 'ok' },
+                { id: 'f3', type: 'https', label: `${base}?id=other&v=3.3.6`, status: 'ok' }, { id: 'c', label: 'bcs-asia/app-store' }] });
+            const n0 = sent.length;
+            app._ensureFeed(dup); app._ensureFeed(dup);
+            eq(sent.slice(n0).map(secretless), [{ op: 'source-remove', id: 'f2' }, { op: 'source-remove', id: 'f3' }], 'extra feed sources are removed, once each, the one with the current address is kept');
+            const one = Object.assign({}, withFeed, { sources: [{ id: 'f1', type: 'https', label: feedUrl, status: 'ok' }, { id: 'c', label: 'bcs-asia/app-store' }] });
+            const n1 = sent.length;
+            app._ensureFeed(one);
+            eq(sent.length - n1, 0, 'with one feed source there, nothing is sent');
+            const gone = { busy: false, unit: { hmi: 'ID7' }, sources: [{ id: 'c', label: 'bcs-asia/app-store' }], components: [] };
+            app._bcsSourceAttempted.feed = false;
+            const n2 = sent.length;
+            app._ensureFeed(gone); app._ensureFeed(gone); app._ensureFeed(gone);
+            eq(sent.slice(n2).filter((x) => x.op === 'source-add').length, 1, 'with none there it is added once per run, however often the state comes');
+            app._stats._id = null;
+            const was = app._stats._write; app._stats._write = () => {};
+            app._stats.dir = path.join(os.tmpdir(), `bcs_noid_${process.pid}`);
+            app._bcsSourceAttempted.feed = false;
+            const n3 = sent.length;
+            app._ensureFeed(gone);
+            eq(sent.slice(n3).filter((x) => x.op === 'source-add').length, 0, 'an install id that cannot be saved adds no feed (never a second id)');
+            app._stats._write = was;
+        }
         app._shown({ busy: false, sources: [{ id: 'f1', type: 'https', label: feedUrl, status: 'error', error: 'http 503' }], components: [] });
         eq(app._feedError(), 'http 503', 'a failing feed says why');
         app._shown(ST);
@@ -1070,13 +1093,48 @@ function runWidgetsExtra() {
             app._connected = true;
             const nChecks = () => sent.filter((x) => x.op === 'check').length;
             const c0 = nChecks();
-            app._newsAt = 0;
             app._act({ do: 'tab', tab: 'news' });
-            eq(nChecks() - c0, 1, 'opening the page asks the updater to read its sources (the feed with them)');
             app._act({ do: 'tab', tab: 'news' });
-            eq(nChecks() - c0, 1, 'but not twice within 15 seconds');
+            eq(nChecks() - c0, 0, 'the News tab sends nothing itself');
+            // the Store opened while the car is online asks once; offline it does not
+            const wasSt = app._st, wasV = app._visible;
+            app._st = Object.assign({}, wasSt, { online: false }); app._visible = false;
+            app._setVisible(true);
+            eq(nChecks() - c0, 0, 'opened while the car is offline: no check');
+            app._setVisible(false);
+            app._st = Object.assign({}, wasSt, { online: true });
+            app._setVisible(true);
+            eq(nChecks() - c0, 1, 'opened while the car is online: one check');
+            app._st = wasSt; app._visible = wasV;
             app._connected = wasC;
             app._act({ do: 'tab', tab: 'store' });
+        }
+        {
+            // the loop breaker: more than 10 messages that could loop within 10 seconds stop the feed, leave a flag and close the Store
+            const d = fs.mkdtempSync(path.join(os.tmpdir(), 'bcs_trip_'));
+            const keep = { dataDir: app._dataDir, loopMax: app._loopMax, halted: app._halted, feedOn: app._feedOn, shut: app._handleShutdown, times: app._sendTimes, ver: app._version };
+            app._dataDir = d; app._loopMax = 10; app._halted = false; app._sendTimes = [];
+            let closed = '';
+            app._handleShutdown = (why) => { closed = why; };
+            app._version = () => '9.9.9';
+            const n = sent.length;
+            for (let i = 0; i < 10; i++) { app._send({ op: 'check' }); }
+            eq([sent.length - n, app._halted, closed], [10, false, ''], 'ten messages in ten seconds go out');
+            app._send({ op: 'check' });
+            eq([sent.length - n, app._halted, app._feedOn, closed], [10, true, false, 'loop breaker'], 'the eleventh is not sent: the feed is off and the Store closes');
+            eq(fs.readFileSync(path.join(d, 'feed-tripped'), 'utf8'), '9.9.9', 'a flag keeps the feed off for this version');
+            app._send({ op: 'source-add' });
+            eq(sent.length - n, 10, 'nothing more is sent once halted');
+            eq(app._tripped(), true, 'the flag is read again at the next start');
+            app._version = () => '9.9.10';
+            eq(app._tripped(), false, 'a newer version starts fresh');
+            app._send({ op: 'probe' });
+            app._halted = false; app._sendTimes = [];
+            for (let i = 0; i < 30; i++) { app._send({ op: 'hello' }); }
+            eq(app._halted, false, 'messages that cannot loop are not counted');
+            fs.unlinkSync(path.join(d, 'feed-tripped')); fs.rmdirSync(d);
+            app._dataDir = keep.dataDir; app._loopMax = keep.loopMax; app._halted = keep.halted; app._feedOn = keep.feedOn; app._handleShutdown = keep.shut; app._sendTimes = keep.times; app._version = keep.ver;
+            delete app._version;
         }
         // a refused Remove: the updater's reason, for that component's page, until its page or Remove opens again
         app._client.emit('reply-error', 'Waze on cluster needs doom', 'uninstall');
