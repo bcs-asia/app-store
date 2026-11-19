@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.4.5
+
+- News: more of the announcement text shows. The text starts higher (the gap under the title is gone), the text column is wider, the arrows moved up beside the "1 of 2" count so the text can use the column down to the bottom, and the layout is the same on iDrive 8.
+
 ## 3.4.4
 
 - The side menu is easier to hit: each tab's touch area is now its whole cell (before, 8 px at the sides and 16 px between the tabs did nothing when pressed).
