@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.3.5
+
+- Safety release: the BCS feed (News and the usage check-in) is switched off while a blank Store page seen on a car with 3.3.4 is traced. The Store removes the feed source from the updater, once, and adds nothing. News shows nothing until the feed is back; everything else is as in 3.3.4.
+
 ## 3.3.4
 
 - Fix: News and the usage statistics could not reach the internet. On a head unit only the updater can (the Store app got `getaddrinfo ENOTFOUND raw.githubusercontent.com`). The Store now adds one hidden source to the updater, the BCS feed on our server: the updater reads it with its other sources, the announcements come back as its entries (text and photo), and the request is the usage check-in. The source and its entries are not shown anywhere else.

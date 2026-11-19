@@ -23,6 +23,7 @@ const Module = require('module');
 const os = require('os');
 const path = require('path');
 const { ID7, ID8 } = require('./gen_rhmi.js');
+process.env.BCS_FEED_TEST = '1';
 process.env.BCS_OFFLINE = '1';           // BCS's own feeds (Announcements, statistics) never reach the internet from a test
 const HMI = process.env.STORE_HMI === 'ID8' ? 'ID8' : 'ID7';
 
