@@ -30,7 +30,7 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}.wrap{overflow-x:auto}
 <main id="main" hidden>
 <div class="cards">
 <div class="card live"><small>Online now</small><strong id="online">-</strong></div>
-<div class="card"><small>Installed (sharing)</small><strong id="installed">-</strong></div>
+<div class="card"><small>Installed</small><strong id="installed">-</strong></div>
 <div class="card"><small>Active 24 hours</small><strong id="d1">-</strong></div>
 <div class="card"><small>Active 7 days</small><strong id="d7">-</strong></div>
 </div>
@@ -39,7 +39,7 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}.wrap{overflow-x:auto}
 <div><h2>Store versions</h2><div class="wrap"><table id="tv"></table></div><h2>iDrive</h2><div class="wrap"><table id="th"></table></div></div>
 </div>
 <h2>Latest installs</h2><div class="wrap"><table id="tr"></table></div>
-<p class="empty">Only cars whose owner switched sharing on are counted. Online = heard from in the last 10 minutes. Addresses are shortened.</p>
+<p class="empty">Every Store 3.3.0 or later that reaches the internet is counted once. Online = heard from in the last 10 minutes. Addresses are shortened.</p>
 </main>
 <script>
 var tok=sessionStorage.getItem('bcs-token')||'';

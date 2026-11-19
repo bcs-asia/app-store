@@ -234,13 +234,14 @@ already restarting the unit, and with an updater older than 0.1.4.
 
 ## Announcements and usage statistics (BCS)
 
-- **Settings > Announcements**: one announcement at a time, its photo on the left, arrows to step through. Fetched from
-  `announcements/news.json` in the BCS GitHub (`src/bcs_news.js`) at start and every half hour, kept in the Store's data folder.
-  One not opened yet has a **NEW** tag; the Settings tab shows a count. Add one by dropping a photo (and an optional `.txt`: title,
-  then text) into `announcements/inbox/` on GitHub: a workflow converts it (`tools/announce.py`). See `announcements/README.md`.
-- **Settings > Usage statistics**: off until the owner says yes (`src/bcs_stats.js`). On, it sends a random install ID, the versions
-  and a ping every five minutes to the Worker in `analytics/` (`STATS_URL` in `src/bcs_config.js`; empty = not offered). The Worker adds
-  country, region and city from the connection and keeps a shortened address; Off deletes the record. `PRIVACY.md`.
+- **News tab** (where Sources was; Sources is now a row in Settings): one announcement at a time, its photo on the left, arrows to
+  step through. Fetched from `announcements/news.json` in the BCS GitHub (`src/bcs_news.js`) at start and every half hour, kept in the
+  Store's data folder. One not opened yet has a **NEW** tag and the tab shows a count. Add one by dropping a photo (and an optional
+  `.txt`: title, then text) into `announcements/inbox/` on GitHub: a workflow converts it (`tools/announce.py`). See `announcements/README.md`.
+- **Usage statistics**: no page and no question. When `STATS_URL` in `src/bcs_config.js` is set, the Store tells the Worker in
+  `analytics/` that it is alive (`src/bcs_stats.js`): a random install ID made at the first check-in, the Store and iDrive versions,
+  every five minutes. Nothing about the owner. The Worker adds country, region and city from the connection and keeps a shortened
+  address. Empty `STATS_URL` = nothing is sent. `PRIVACY.md`.
 
 ## Sources
 

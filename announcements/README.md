@@ -1,8 +1,8 @@
 # Announcements
 
-What the BCS Store's **Settings > Announcements** page shows. Every Store 3.3.0 or later reads `news.json` from this folder
+What the BCS Store's **News** tab shows. Every Store 3.3.0 or later reads `news.json` from this folder
 (`raw.githubusercontent.com/bcs-asia/app-store/main/announcements/`) when it starts and every half hour, keeps what it fetched
-and shows a **NEW** tag and a count on the Settings tab until the announcement has been opened.
+and shows a **NEW** tag and a count on the News tab until the announcement has been opened.
 
 ## Add one (on github.com, no tools needed)
 

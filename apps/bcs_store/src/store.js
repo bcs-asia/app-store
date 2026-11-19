@@ -764,14 +764,19 @@ class Store extends OnlineApp {
             webText: web && web.enabled ? readFile(WEB_URL_FILE) : '', accountsNote: this._accountsNote,
             pick: this._pick && { repo: this._pick.repo, probe: this._pick.probe, tokenNote: !!this._pick.tokenNote },
             setupNote: this._setupNote || null, uplinkNote: this._uplinkNote, proxyNote: this._proxyNote, removeNote: this._removeNote, language: i18n.language(), look: this._look,
-            news: this._newsModel(), stats: { available: this._stats.available(), state: this._stats.state(), last: this._stats.last } };
+            news: this._newsModel() };
     }
 
     /* A press on the drawn screens (src/store_ui.js acts). */
     _act(act) {
         logger.info(`press ${act.do}${act.id ? ` ${act.id}` : ''}`);
         switch (act.do) {
-        case 'tab': this._drawn.setTab(act.tab); break;
+        case 'tab':
+            this._drawn.setTab(act.tab);
+            if (act.tab === 'news') {
+                this._newsShow(0);
+            }
+            break;
         case 'filter': this._drawn.setFilter(act.filter); break;
         case 'view': this._drawn.setView(act.view); break;
         case 'look':
@@ -787,10 +792,6 @@ class Store extends OnlineApp {
             }
             break;
         case 'news': this._newsShow(this._newsIndex + (act.step | 0)); this._render(); break;
-        case 'stats':
-            this._stats.set(!!act.on).then(() => this._render());
-            this._render();
-            break;
         case 'back': this._back(); break;
         case 'check': this._send({ op: 'check' }); break;
         case 'open':

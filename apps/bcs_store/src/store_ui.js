@@ -63,7 +63,8 @@ const PALETTE = [['#159dff', '#114c90'], ['#ff4b55', '#a8101c'], ['#ffc24d', '#c
     ['#b48cff', '#6a3fd0'], ['#36e0c0', '#118c78'], ['#5be38e', '#1f9a52'], ['#ff8a4c', '#c4501a']];
 // BCS Store's own words (Tools, Updates, System, Install now, Update now, No WiFi, ...) are English; the rest of the labels keep the
 // upstream translations (locales/).
-const TABS = ['store', 'tools', 'installed', 'usb', 'sources', 'settings'];
+// Sources is a page of Settings now (its own tab id keeps its pages together; the nav highlights Settings there)
+const TABS = ['store', 'tools', 'installed', 'usb', 'news', 'settings'];
 const FILTERS = ['all', 'app', 'tool'];
 
 const size = (b) => (!b ? '' : b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
@@ -233,18 +234,14 @@ function tile(m, c, busy, name) {
     return t;
 }
 
-/* Usage statistics offered and not answered yet. */
-const statsAsk = (m) => !!(m.stats && m.stats.available && m.stats.state === 'unset');
-
 function nav(m, sel) {
     const updates = comps(m).filter((c) => c.status === 'update' && !notForUnit(c) && !c.blocked && !startPending(c)).length;
     const usbIds = (sources(m) || []).filter((s) => s.usb).map((s) => s.id);
     const usbNew = comps(m).filter((c) => usbIds.indexOf(c.source) >= 0 && (c.status === 'available' || c.status === 'update') &&
         !notForUnit(c) && !c.blocked && !startPending(c)).length;
-    // Settings: what is new there (announcements not seen, the usage question not answered)
-    const fresh = (m.news ? m.news.unseen : 0) + (statsAsk(m) ? 1 : 0);
+    const fresh = m.news ? m.news.unseen : 0;       // announcements not opened yet
     return { sel, items: [[tr("Apps"), 'grid', ''], ["Tools", 'wrench', ''], ["Updates", 'check', updates || ''], ['USB', 'usb', usbNew || ''],
-        [tr("Sources"), 'unlock', ''], [tr("Settings"), 'gear', fresh || '']]
+        ['News', 'display', fresh || ''], [tr("Settings"), 'gear', '']]
         .map(([label, vicon, badge], i) => ({ id: TABS[i], label, vicon, badge: String(badge), act: { do: 'tab', tab: TABS[i] } })) };
 }
 
@@ -358,6 +355,7 @@ function sourcesView(m) {
         note: { text: m.note || (restartFailed(m) || '') },
         subtitle: { text: srcs ? plural(srcs.length, 'source') : '' },
         repos: srcs ? { items: srcs.map(sourceRow), empty: tr("None") } : { items: [], empty: '' },
+        back: button('', { do: 'tab', tab: 'settings' }, { vicon: 'back', style: 'round', color: '#f4f7fb' }),
         addRepo: srcs ? button(tr("Add source"), { do: 'add-source' }, { vicon: 'plus', style: 'tinted', color: BLUE }) : hidden,
         refresh: m.connected ? button(m.st && m.st.catalog && m.st.catalog.checking ? "Refreshing" : "Refresh", { do: 'check' }, { vicon: 'refresh', style: 'tinted', color: BLUE }) : hidden
     };
@@ -379,6 +377,10 @@ function settingsView(m) {
     if (toks) {
         row('accounts', tr("Accounts"), accountsState(toks), 'lock');
     }
+    const srcs = sources(m);
+    if (srcs) {
+        row('sources', tr("Sources"), plural(srcs.length, 'source'), 'unlock', { act: { do: 'tab', tab: 'sources' } });
+    }
     if (w) {
         row('prefer', tr("Preferred connection"), groupLabel(m.st.uplink.preferred || ''), 'route');
     }
@@ -391,15 +393,6 @@ function settingsView(m) {
         row('phone', tr("Phone access"), phoneState(web), 'phone');
     }
     row('theme', 'Theme', look.LOOKS[look.known(m.look) ? m.look : look.DEFAULT].name, 'gauge');
-    if (m.news) {
-        const n = m.news.unseen;
-        row('news', 'Announcements', n ? `${n} new` : m.news.count ? 'Up to date' : 'None yet', 'display',
-            n ? { right: 'chip:NEW+chevron', subColor: BLUE } : {});
-    }
-    if (m.stats && m.stats.available) {
-        row('stats', 'Usage statistics', m.stats.state === 'on' ? 'On' : m.stats.state === 'off' ? 'Off' : 'Not set yet', 'stopwatch',
-            statsAsk(m) ? { right: 'chip:NEW+chevron', subColor: BLUE } : {});
-    }
     row('system', "System", m.version ? tr("Store {0}", m.version) : '', 'gear');
     const half = Math.ceil(rows.length / 2);
     return {
@@ -840,7 +833,7 @@ function themeView(m) {
     };
 }
 
-/* Announcements: one at a time, its photo on the left; the arrows step through them. */
+/* Announcements (the News tab): one at a time, its photo on the left; the arrows step through them. */
 function newsView(m) {
     const n = m.news || { count: 0, index: 0, item: null };
     const it = n.item;
@@ -858,23 +851,11 @@ function newsView(m) {
     };
 }
 
-/* Usage statistics: what is sent, and the choice. */
-function statsView(m) {
-    const s = m.stats || { state: 'unset' };
-    return {
-        title: { text: 'Usage statistics' },
-        status: { text: s.state === 'on' ? (s.last === 'failed' ? 'On, the server is not reachable' : 'On') : s.state === 'off' ? 'Off' : 'Not set yet', color: DIM },
-        statsText: { text: "Help BCS count the cars that use this Store. If you share, the Store sends a random install ID, its version, your iDrive version and your country, region and city (worked out from your internet address) with a shortened address. Never your name, VIN or accounts. Turn it off any time: the BCS server then forgets this install." },
-        statsOn: button('Share anonymous usage', { do: 'stats', on: true }, { vicon: 'check', style: s.state === 'on' ? 'primary' : 'outline', color: BLUE, size: 28 }),
-        statsOff: button("Don't share", { do: 'stats', on: false }, { vicon: 'lock', style: s.state === 'off' ? 'primary' : 'outline', color: BLUE, size: 28 })
-    };
-}
-
 /* The screen and its values for the page on top. */
 function view(m) {
     look.use(m.look);
     const page = m.stack[m.stack.length - 1] || { name: 'main' };
-    const tabSel = Math.max(0, TABS.indexOf(m.tab));
+    const tabSel = m.tab === 'sources' ? TABS.indexOf('settings') : Math.max(0, TABS.indexOf(m.tab));
     let screen = page.name === 'main' ? m.tab : page.name;
     let values;
     switch (screen) {
@@ -898,7 +879,6 @@ function view(m) {
     case 'proxy': values = proxyView(m); break;
     case 'theme': values = themeView(m); break;
     case 'news': values = newsView(m); break;
-    case 'stats': values = statsView(m); break;
     default: screen = 'store'; values = storeView(m, 'app');
     }
     values.nav = nav(m, tabSel);

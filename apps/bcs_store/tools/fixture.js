@@ -165,15 +165,13 @@ function screens() {
         ['proxy', { tab: 'settings', stack: main.concat([{ name: 'proxy' }]) }],
         ['theme', { tab: 'settings', stack: main.concat([{ name: 'theme' }]) }],
         // Announcements: a photo and text, the first time shown (NEW), one without a photo, none; the Settings row and tab with news
-        ['news', { tab: 'settings', stack: main.concat([{ name: 'news' }]), news: { count: 3, index: 0, unseen: 0, item: { id: 'a', title: 'New: Luxury Carbon theme',
+        ['news', { tab: 'news', stack: main, news: { count: 3, index: 0, unseen: 0, item: { id: 'a', title: 'New: Luxury Carbon theme',
             text: 'Choose it in Settings > Theme: carbon fibre, black glass cards and gold buttons. Update the Store to 3.3.0 to get it.', date: '2026-11-19',
             src: NEWS_PNG, fresh: true } } }],
-        ['news-plain', { tab: 'settings', stack: main.concat([{ name: 'news' }]), news: { count: 1, index: 0, unseen: 0, item: { id: 'b', title: 'Workshop hours',
+        ['news-plain', { tab: 'news', stack: main, news: { count: 1, index: 0, unseen: 0, item: { id: 'b', title: 'Workshop hours',
             text: '', date: '2026-11-10', src: '', fresh: false } } }],
-        ['news-empty', { tab: 'settings', stack: main.concat([{ name: 'news' }]) }],
-        ['settings-new', { tab: 'settings', stack: main, news: { count: 3, index: 0, unseen: 2, item: null }, stats: { available: true, state: 'unset', last: '' } }],
-        ['stats', { tab: 'settings', stack: main.concat([{ name: 'stats' }]), stats: { available: true, state: 'unset', last: '' } }],
-        ['stats-on', { tab: 'settings', stack: main.concat([{ name: 'stats' }]), stats: { available: true, state: 'on', last: 'ok' } }],
+        ['news-empty', { tab: 'news', stack: main }],
+        ['news-new', { tab: 'settings', stack: main, news: { count: 3, index: 0, unseen: 2, item: null } }],
         ['theme-blue', { tab: 'settings', stack: main.concat([{ name: 'theme' }]), look: 'blue' }],
         ['proxy-on', { tab: 'settings', stack: main.concat([{ name: 'proxy' }]) }, proxySt({ on: true, kind: 'socks5', address: '192.168.8.1:7891' })],
         ['proxy-error', { tab: 'settings', stack: main.concat([{ name: 'proxy' }]) },
@@ -221,7 +219,7 @@ function model(over, stOver) {
     return Object.assign({ st: stOver && stOver.type ? stOver : Object.assign(st, stOver || {}), connected: true, secret: true,
         version: '0.7.0', stack: [{ name: 'main' }], tab: 'store', filter: 'all', focus: -1, scroll: {}, note: '',
         login: { waiting: false, refusal: null }, webText: '', accountsNote: { text: '', error: false },
-        news: { count: 0, index: 0, unseen: 0, item: null }, stats: { available: false, state: 'unset', last: '' } }, over);
+        news: { count: 0, index: 0, unseen: 0, item: null } }, over);
 }
 
 module.exports = { state, screens, model, LONG_ERROR };

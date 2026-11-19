@@ -1100,7 +1100,7 @@ module.exports = {
      "name": "title",
      "rtype": "gpu",
      "gpu": "text",
-     "x": 480,
+     "x": 610,
      "y": 138,
      "w": 1200,
      "h": 90,
@@ -1116,7 +1116,7 @@ module.exports = {
      "name": "subtitle",
      "rtype": "gpu",
      "gpu": "text",
-     "x": 480,
+     "x": 610,
      "y": 227,
      "w": 1300,
      "h": 43,
@@ -1161,7 +1161,7 @@ module.exports = {
      "name": "note",
      "rtype": "gpu",
      "gpu": "text",
-     "x": 480,
+     "x": 610,
      "y": 227,
      "w": 1300,
      "h": 43,
@@ -1172,6 +1172,22 @@ module.exports = {
       "align": "left",
       "color": "#ffb020"
      }
+    },
+    {
+     "name": "back",
+     "rtype": "gpu",
+     "gpu": "vbutton",
+     "x": 480,
+     "y": 138,
+     "w": 96,
+     "h": 96,
+     "opts": {
+      "text": "",
+      "vicon": "back",
+      "style": "round",
+      "color": "#f4f7fb"
+     },
+     "onTap": "event:back"
     },
     {
      "name": "refresh",
@@ -1482,26 +1498,10 @@ module.exports = {
      }
     },
     {
-     "name": "back",
-     "rtype": "gpu",
-     "gpu": "vbutton",
-     "x": 480,
-     "y": 138,
-     "w": 96,
-     "h": 96,
-     "opts": {
-      "text": "",
-      "vicon": "back",
-      "style": "round",
-      "color": "#f4f7fb"
-     },
-     "onTap": "event:back"
-    },
-    {
      "name": "title",
      "rtype": "gpu",
      "gpu": "text",
-     "x": 610,
+     "x": 480,
      "y": 138,
      "w": 1600,
      "h": 90,
@@ -1517,7 +1517,7 @@ module.exports = {
      "name": "status",
      "rtype": "gpu",
      "gpu": "text",
-     "x": 610,
+     "x": 480,
      "y": 227,
      "w": 1600,
      "h": 43,
@@ -1639,137 +1639,6 @@ module.exports = {
       "color": "#f4f7fb"
      },
      "onTap": "event:next"
-    }
-   ]
-  },
-  {
-   "kind": "gpu",
-   "name": "stats",
-   "theme": "m_red",
-   "bg": "theme",
-   "components": [
-    {
-     "name": "headerLogo",
-     "rtype": "gpu",
-     "gpu": "image",
-     "x": 126,
-     "y": 38,
-     "w": 300,
-     "h": 64,
-     "opts": {
-      "src": LOGO,
-      "radius": 0
-     }
-    },
-    {
-     "name": "nav",
-     "rtype": "gpu",
-     "gpu": "sideNav",
-     "x": 126,
-     "y": 114,
-     "w": 300,
-     "h": 726,
-     "opts": {
-      "items": "Apps, grid\nTools, wrench\nUpdates, check\nUSB, usb\nSources, unlock\nSettings, gear",
-      "sel": 0
-     }
-    },
-    {
-     "name": "back",
-     "rtype": "gpu",
-     "gpu": "vbutton",
-     "x": 480,
-     "y": 138,
-     "w": 96,
-     "h": 96,
-     "opts": {
-      "text": "",
-      "vicon": "back",
-      "style": "round",
-      "color": "#f4f7fb"
-     },
-     "onTap": "event:back"
-    },
-    {
-     "name": "title",
-     "rtype": "gpu",
-     "gpu": "text",
-     "x": 610,
-     "y": 138,
-     "w": 1600,
-     "h": 90,
-     "opts": {
-      "text": "",
-      "size": 72,
-      "font": "bold",
-      "align": "left",
-      "color": "text"
-     }
-    },
-    {
-     "name": "status",
-     "rtype": "gpu",
-     "gpu": "text",
-     "x": 610,
-     "y": 227,
-     "w": 1600,
-     "h": 43,
-     "opts": {
-      "text": "",
-      "size": 34,
-      "font": "label",
-      "align": "left",
-      "color": "dim"
-     }
-    },
-    {
-     "name": "statsText",
-     "rtype": "gpu",
-     "gpu": "text",
-     "x": 610,
-     "y": 292,
-     "w": 1700,
-     "h": 330,
-     "opts": {
-      "text": "",
-      "size": 36,
-      "font": "label",
-      "align": "left",
-      "color": "dim",
-      "wrap": true
-     }
-    },
-    {
-     "name": "statsOn",
-     "rtype": "gpu",
-     "gpu": "vbutton",
-     "x": 610,
-     "y": 660,
-     "w": 760,
-     "h": 96,
-     "opts": {
-      "text": "",
-      "vicon": "check",
-      "style": "outline",
-      "size": 30
-     },
-     "onTap": "event:statsOn"
-    },
-    {
-     "name": "statsOff",
-     "rtype": "gpu",
-     "gpu": "vbutton",
-     "x": 1400,
-     "y": 660,
-     "w": 560,
-     "h": 96,
-     "opts": {
-      "text": "",
-      "vicon": "lock",
-      "style": "outline",
-      "size": 30
-     },
-     "onTap": "event:statsOff"
     }
    ]
   },

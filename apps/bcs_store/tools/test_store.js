@@ -995,7 +995,7 @@ function runWidgetsExtra() {
             app._news._seen = new Set();
             app._newsFresh = new Set();
             eq([app._drawnModel().news.count, app._drawnModel().news.unseen, app._drawnModel().news.item.fresh], [2, 2, false], 'two announcements, none seen');
-            app._act({ do: 'open', page: { name: 'news' } });
+            app._act({ do: 'tab', tab: 'news' });
             eq([app._drawnModel().news.item.id, app._drawnModel().news.item.fresh, app._drawnModel().news.unseen], ['n2', true, 1], 'the newest is shown, marked seen, still NEW');
             app._act({ do: 'news', step: 1 });
             eq([app._drawnModel().news.item.id, app._drawnModel().news.index, app._drawnModel().news.unseen], ['n1', 1, 0], 'the arrow shows the next');
@@ -1005,13 +1005,7 @@ function runWidgetsExtra() {
             eq(app._drawnModel().news.item.id, 'n1', 'back too');
             app._news._items = []; app._newsIndex = 0;
             eq(app._drawnModel().news, { count: 0, index: 0, unseen: 0, item: null }, 'none: nothing to show');
-            const sf = path.join(DATA, 'stats');   // Usage statistics: not offered without a server address, so nothing is switched on by accident
-            eq(app._drawnModel().stats, { available: false, state: 'unset', last: '' });
-            app._act({ do: 'stats', on: true });
-            eq(app._drawnModel().stats.state, 'on', 'the choice is kept');
-            app._act({ do: 'stats', on: false });
-            eq(app._drawnModel().stats.state, 'off');
-            try { require('fs').unlinkSync(sf); } catch (e) { /* none */ }
+            app._act({ do: 'tab', tab: 'store' });
         }
         // a refused Remove: the updater's reason, for that component's page, until its page or Remove opens again
         app._client.emit('reply-error', 'Waze on cluster needs doom', 'uninstall');
@@ -1108,7 +1102,7 @@ function runDrawn() {
         eq(drawn.tab, 'store', 'the Apps tab opens first');
         eq(app._drawnModel().version, 'test', 'the Store\'s version, from where this HMI\'s oap-sdk keeps package.json');
         eq([lastText(proxy(1, 0)), lastText(proxy(1, 3)), lastText(proxy(1, 4)), lastText(proxy(1, 5))],
-            ['Apps', 'USB', 'Sources', 'Settings'], 'proxies in focus order: the six side menu tabs, then the cards');
+            ['Apps', 'USB', 'News', 'Settings'], 'proxies in focus order: the six side menu tabs, then the cards');
         eq(last(new RegExp(`^${proxy(1, 12)}\\.Visible`)), `${proxy(1, 12)}.Visible=0`, 'unused proxies hidden');
         // a drag moves the grid's rows: each move one frame of two cached layers (the page as the drag started,
         // the rows); the release keeps them, and the next drag draws from them

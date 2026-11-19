@@ -83,26 +83,21 @@ const srv = http.createServer((req, res) => {
     await news.refresh();
     eq(fs.readdirSync(path.join(tmp, 'news')).sort(), ['news.json', 'seen.json'], 'photos of gone announcements removed');
 
-    // statistics: nothing without an address or consent; on: ping; off: forget
+    // statistics: nothing without a server address; with one, a check-in with only these fields, the same id each time
     const noUrl = new Stats({ dir: path.join(tmp, 's0'), url: '' });
-    eq(noUrl.available(), false); eq(await noUrl.set(true), false);
+    eq(noUrl.available(), false); eq(await noUrl.ping('open'), false); eq(posts.length, 0, 'no address, nothing sent');
     const st = new Stats({ dir: path.join(tmp, 's1'), url: `${base}/v1`, version: () => '3.3.0', hmi: () => 'ID7' });
-    eq(st.state(), 'unset'); eq(await st.ping('ping'), false, 'no ping before consent'); eq(posts.length, 0);
-    eq(await st.set(true), true);
-    eq(st.state(), 'on'); eq(posts.length >= 1, true);
+    eq(await st.ping('open'), true); eq(st.last, true);
     const p = posts[posts.length - 1];
     eq(p.url, '/v1/ping'); eq(Object.keys(p.body).sort(), ['ev', 'hmi', 'id', 'v', 'ver'], 'only these fields are sent');
-    eq(/^[0-9a-f-]{36}$/.test(p.body.id), true); eq([p.body.ver, p.body.hmi], ['3.3.0', 'ID7']);
+    eq(/^[0-9a-f-]{36}$/.test(p.body.id), true); eq([p.body.ev, p.body.ver, p.body.hmi], ['open', '3.3.0', 'ID7']);
     const id = p.body.id;
-    eq(await st.ping('ping'), true); eq(posts[posts.length - 1].body.id, id, 'the same id each time');
-    st.stop();
-    eq(await new Stats({ dir: path.join(tmp, 's1'), url: `${base}/v1` }).state(), 'on', 'kept across a restart');
-    eq(await st.set(false), true);
-    eq(posts[posts.length - 1], { url: '/v1/optout', body: { v: 1, id } }, 'off tells the server to forget');
-    eq(st.state(), 'off'); eq(fs.existsSync(path.join(tmp, 's1', 'install-id')), false, 'the id is deleted');
-    const n = posts.length; await st.ping('ping'); eq(posts.length, n, 'nothing after off');
+    eq(await st.ping(), true); eq(posts[posts.length - 1].body.id, id, 'the same id each time'); eq(posts[posts.length - 1].body.ev, 'ping');
+    eq(await new Stats({ dir: path.join(tmp, 's1'), url: `${base}/v1` }).id(), id, 'kept across a restart');
+    st.start(); await new Promise((r) => setTimeout(r, 50)); st.stop();
+    eq(posts[posts.length - 1].body.ev, 'open', 'start checks in at once');
     const dead = new Stats({ dir: path.join(tmp, 's2'), url: 'http://127.0.0.1:1/v1' });
-    eq(await dead.set(true), false); eq(dead.last, 'failed'); dead.stop();
+    eq(await dead.ping(), false); eq(dead.last, false, 'an unreachable server is not an error');
 
     srv.close();
     console.log(`bcs_net: ${checks} checks pass`);

@@ -72,7 +72,7 @@ Object.keys(UNITS).forEach((unit) => fixture.screens().forEach(([name, over, stO
 
 // the Apps tab: the six tabs, a card per app with its state, and Install now / Update now on those that can
 let f = screen('store');
-eq(f.labels.slice(0, 7), ['Apps', 'Tools', 'Updates', 'USB', 'Sources', 'Settings', 'Restart now']);
+eq(f.labels.slice(0, 7), ['Apps', 'Tools', 'Updates', 'USB', 'News', 'Settings', 'Restart now']);
 const cards = f.values.grid.items;
 eq(f.labels.length, 7 + cards.length + cards.filter((c) => c.btn).length, 'a card per app, and a button on the cards that can install');
 ok(cards.every((c) => c.kind === 'app') && cards.length > 0, 'the Apps tab has the apps only');
@@ -425,16 +425,15 @@ eq(text(f, 'subtitle'), 'USB STICK · 2 packages');
 
 // Sources: every source, Add source
 f = screen('sources');
-eq(f.labels.slice(6), ['robertnisipeanu/mgu-store', 'bcs-asia/app-store', 'cauliflower/idrive7-apps', 'IterioDev/car-apps', 'USB STICK', 'Add source', 'Refresh']);
+eq(f.labels.slice(6), ['Back', 'robertnisipeanu/mgu-store', 'bcs-asia/app-store', 'cauliflower/idrive7-apps', 'IterioDev/car-apps', 'USB STICK', 'Add source', 'Refresh']);
 eq(text(f, 'subtitle'), '5 sources');
 // Settings: a row per page (Wi-Fi, Accounts, Phone access, Preferred connection, Proxy, System), none without its feature
 f = screen('settings');
 const rowIds = (g) => g.values.accessLeft.items.concat(g.values.accessRight.items).map((i) => i.id);
-eq(rowIds(f), ['wifi', 'accounts', 'prefer', 'proxy', 'phone', 'theme', 'news', 'system'], 'Settings: the pages, in order, in two columns');
-eq(rowIds(screen('settings', {}, { uplink: null, web: null, proxy: null, tokens: null })), ['theme', 'news', 'system'], 'only Theme, Announcements and System without the uplink, the phone page, the proxy and accounts');
+eq(rowIds(f), ['wifi', 'accounts', 'sources', 'prefer', 'proxy', 'phone', 'theme', 'system'], 'Settings: the pages, in order, in two columns');
+eq(rowIds(screen('settings', {}, { uplink: null, web: null, proxy: null, tokens: null })), ['sources', 'theme', 'system'], 'only Sources, Theme and System without the uplink, the phone page, the proxy and accounts');
 eq(f.values.accessLeft.items.length, 4, 'four rows in the first column');
-eq(f.values.accessLeft.items.concat(f.values.accessRight.items).find((i) => i.id === 'news').sub, 'None yet', 'no announcements fetched yet');
-f.values.accessLeft.items.concat(f.values.accessRight.items).forEach((i) => eq(i.act.do, 'open', `${i.id} opens its page`));
+f.values.accessLeft.items.concat(f.values.accessRight.items).forEach((i) => eq(i.act.do, i.id === 'sources' ? 'tab' : 'open', `${i.id} opens its page`));
 // Theme: BCS Blue and Performance Red; the one in use is marked, the other a tap away
 f = screen('theme');
 eq([text(f, 'title'), own(f)], ['Theme', ['BCS Blue', 'Luxury Carbon', 'Back']]);
@@ -455,24 +454,18 @@ eq(screen('settings').values.accessRight.items.concat(screen('settings').values.
 f = screen('news');
 eq([text(f, 'title'), text(f, 'status'), text(f, 'newsNew'), text(f, 'newsDate'), text(f, 'newsTitle')], ['Announcements', '1 of 3', 'NEW', '2026-11-19', 'New: Luxury Carbon theme']);
 ok(/^data:image\/png/.test(f.values.newsPhoto.src) && !f.values.newsPhoto.hidden, 'the photo');
-eq(own(f)[0], 'Back', 'Back first');
+eq(f.labels.length, 8, 'a tab: the side menu and the two arrows, no Back');
 eq(f.values.prev.act, { do: 'news', step: -1 }); eq(f.values.next.act, { do: 'news', step: 1 });
 f = screen('news-plain');
 eq([text(f, 'status'), text(f, 'newsNew'), f.values.prev.hidden, f.values.next.hidden], ['1 of 1', '', true, true], 'one announcement: no arrows, not new again');
 f = screen('news-empty');
 eq([text(f, 'status'), f.values.newsPhoto.hidden, text(f, 'newsTitle')], ['No announcements yet', true, ''], 'nothing yet');
-f = screen('settings-new');
-const newsRow = f.values.accessLeft.items.concat(f.values.accessRight.items).filter((i) => i.id === 'news' || i.id === 'stats');
-eq(newsRow.map((i) => [i.id, i.sub, i.right]), [['news', '2 new', 'chip:NEW+chevron'], ['stats', 'Not set yet', 'chip:NEW+chevron']], 'the rows carry NEW');
-eq(f.values.nav.items[5].badge, '3', 'Settings counts the two announcements and the unanswered question');
-eq(screen('settings').values.nav.items[5].badge, '', 'no badge when nothing is new');
-// Usage statistics: the choice, what is sent
-f = screen('stats');
-eq([text(f, 'title'), text(f, 'status'), f.values.statsOn.style, f.values.statsOff.style], ['Usage statistics', 'Not set yet', 'outline', 'outline']);
-eq([f.values.statsOn.act, f.values.statsOff.act], [{ do: 'stats', on: true }, { do: 'stats', on: false }]);
-ok(/random install ID/.test(text(f, 'statsText')) && /Never your name, VIN or accounts/.test(text(f, 'statsText')), 'it says what is sent and what is not');
-f = screen('stats-on');
-eq([text(f, 'status'), f.values.statsOn.style, f.values.statsOff.style], ['On', 'primary', 'outline']);
+f = screen('news-new');
+eq(f.values.nav.items.map((n) => [n.id, n.label, n.badge]).slice(4), [['news', 'News', '2'], ['settings', 'Settings', '']], 'the News tab counts what was not opened');
+eq(screen('settings').values.nav.items[4].badge, '', 'no count when nothing is new');
+eq(f.values.nav.items.map((n) => n.id), ['store', 'tools', 'installed', 'usb', 'news', 'settings'], 'Sources is a page of Settings now');
+f = screen('sources');
+eq([f.values.back.act, f.values.nav.sel], [{ do: 'tab', tab: 'settings' }, 5], 'Sources: Back to Settings, Settings stays lit');
 // System: the unit, the versions, Check now, Restart head unit; who made this Store
 f = screen('system');
 eq(text(f, 'unit'), 'iDrive 7 · BMW MGU P18_23w44.2-1-3 mgu-high');
@@ -552,7 +545,7 @@ Object.keys(UNITS).forEach((unit) => {
 // Leave safe mode on Store: in the deploy tool's safe mode while nothing installs, after the side menu, in Restart now's place
 const SAFE = { safeMode: { at: '2026-11-09T10:00:00Z', reason: '4 starts' } };
 f = screen('store-safe-mode');
-eq([f.labels.slice(0, 7), f.items[6].act, text(f, 'subtitle')], [['Apps', 'Tools', 'Updates', 'USB', 'Sources', 'Settings', 'Leave safe mode'],
+eq([f.labels.slice(0, 7), f.items[6].act, text(f, 'subtitle')], [['Apps', 'Tools', 'Updates', 'USB', 'News', 'Settings', 'Leave safe mode'],
     { do: 'safe-mode-off' }, 'Safe mode'], 'Store in safe mode: the side menu, then Leave safe mode; the status line says so');
 eq(f.labels.indexOf('Restart now'), -1, 'Restart now gives it its place');
 eq(screen('store-safe-mode', {}, { busy: { id: 'doom', op: 'install', phase: 'download' } }).labels.indexOf('Leave safe mode'), -1,
@@ -665,10 +658,10 @@ ok(screen('settings', {}, { uplink: null }).labels.indexOf('Wi-Fi') < 0, 'no Wi-
 ok(screen('settings', {}, { uplink: { device: null, state: 'searching', error: null, preferred: '', wifi: null } }).labels.indexOf('Wi-Fi') < 0,
     'nor with an uplink without Wi-Fi (before 0.7.0, or not on auto)');
 // Preferred connection: Settings' row with the group tried first, below Accounts, and only with Wi-Fi (an uplink that takes prefer)
-eq([f.values.access.items[2].title, f.values.access.items[2].sub, f.items.find((i) => i.label === 'Preferred connection').act],
+eq([f.values.access.items[3].title, f.values.access.items[3].sub, f.items.find((i) => i.label === 'Preferred connection').act],
     ['Preferred connection', 'Wi-Fi', { do: 'open', page: { name: 'prefer' } }]);
 eq(['', 'wifi', 'usb', 'phone'].map((p) => screen('settings', {}, { uplink: Object.assign({}, fixture.state().uplink, { preferred: p }) })
-    .values.access.items[2].sub), ['Automatic', 'Wi-Fi', 'USB', 'Phone']);
+    .values.access.items[3].sub), ['Automatic', 'Wi-Fi', 'USB', 'Phone']);
 ok(['Preferred connection', 'Wi-Fi'].every((l) => screen('settings', {}, { uplink: { device: null, state: 'searching', error: null, preferred: '',
     wifi: null } }).labels.indexOf(l) < 0) && screen('settings', {}, { uplink: null }).labels.indexOf('Preferred connection') < 0,
 'no Preferred connection without the uplink, or with one that has no Wi-Fi (before 0.7.0, or not on auto)');
@@ -777,13 +770,13 @@ eq([text(f, 'state'), text(f, 'note'), f.values.networks.empty, f.values.scan.di
 
 // the proxy (an updater from 0.8.27): a row in Settings' access card; its page turns it on or off and sets its address
 f = screen('settings');
-eq(f.values.access.items.map((i) => [i.title, i.sub]), [['Wi-Fi', 'Online · Mario iPhone'], ['Accounts', '2 accounts'], ['Preferred connection', 'Wi-Fi'], ['Proxy', 'Off'],
-    ['Phone access', 'Off'], ['Theme', 'Performance Red'], ['Announcements', 'None yet'], ['System', 'Store 0.7.0']]);
+eq(f.values.access.items.map((i) => [i.title, i.sub]), [['Wi-Fi', 'Online · Mario iPhone'], ['Accounts', '2 accounts'], ['Sources', '5 sources'], ['Preferred connection', 'Wi-Fi'],
+    ['Proxy', 'Off'], ['Phone access', 'Off'], ['Theme', 'Performance Red'], ['System', 'Store 0.7.0']]);
 eq(f.items.find((i) => i.label === 'Proxy').act, { do: 'open', page: { name: 'proxy' } });
 ok(screen('settings', {}, { proxy: undefined }).labels.indexOf('Proxy') < 0, 'no Proxy row with an updater before 0.8.27');
-eq(screen('settings-proxy-on').values.access.items[3].sub, '192.168.8.1:7891');
+eq(screen('settings-proxy-on').values.access.items[4].sub, '192.168.8.1:7891');
 eq([screen('proxy-error').values.access, screen('settings', {}, { proxy: { on: true, kind: 'http', address: '10.0.0.1:3128', error: 'x' } })
-    .values.access.items[3].sub], [undefined, 'Error']);
+    .values.access.items[4].sub], [undefined, 'Error']);
 f = screen('proxy');
 eq([own(f), f.values.rows.items.map((i) => [i.title, i.sub, i.right]), text(f, 'error')],
     [['Proxy', 'Address', 'Back'], [['Proxy', '', 'toggle:off'], ['Address', 'None', 'chevron']], '']);

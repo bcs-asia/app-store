@@ -2,8 +2,8 @@
 
 ## 3.3.0
 
-- Settings > Announcements: a page of announcements with photos, fetched from the BCS Store's GitHub (the announcements/ folder; add one by dropping a photo in announcements/inbox). A NEW tag shows on the row and a count on the Settings tab until it has been opened. What was fetched is kept, so the page works offline.
-- Settings > Usage statistics (offered once the BCS server address is set in src/bcs_config.js): off until the owner says yes. Shares a random install ID, versions and, from the connection, country, region and city with a shortened address; Off deletes the record. PRIVACY.md says exactly what.
+- News tab (it takes the place of Sources, which is now a row in Settings): announcements with photos, fetched from the BCS Store's GitHub (the announcements/ folder; add one by dropping a photo in announcements/inbox). A NEW tag shows on one not opened yet and a count on the tab. What was fetched is kept, so the page works offline.
+- Usage statistics, always on once the BCS server address is set in src/bcs_config.js: the Store tells the server that it is alive (a random install ID, the Store and iDrive versions; the server works out country, region and city from the connection and keeps a shortened address). Nothing about the owner. PRIVACY.md says exactly what.
 
 ## 3.2.2
 
