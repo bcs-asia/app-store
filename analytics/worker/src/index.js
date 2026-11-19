@@ -7,6 +7,7 @@
  *                                                               the check-in; the answer lists the announcements as components.
  *   GET  /v1/img/<file>.png                                    an announcement's photo (from the GitHub announcements/ folder)
  *   GET  /api/stats  Authorization: Bearer <DASH_TOKEN>        the numbers
+ *   GET  /api/export.csv  Authorization: Bearer <DASH_TOKEN>   every install, one row each (the dashboard's Export all button)
  *   GET  /           the dashboard (asks for the token)
  * The address is shortened before it is kept (IPv4 a.b.c.0, IPv6 its first three groups); location is Cloudflare's
  * country, region and city for the connection. */
@@ -42,6 +43,16 @@ async function body(request) {
     const text = await request.text();
     if (text.length > 1024) { return null; }
     try { return JSON.parse(text); } catch (e) { return null; }
+}
+
+/* Every install as CSV (the dashboard lists only the latest 100). A cell that starts like a formula gets a quote in front, so a spreadsheet does not run it. */
+const csvCell = (v) => { let t = String(v == null ? '' : v); if (/^[=+\-@\t\r]/.test(t)) { t = `'${t}`; } return /[",\n\r]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t; };
+const iso = (t) => new Date(t * 1000).toISOString().replace('T', ' ').slice(0, 19);
+export async function exportCsv(db) {
+    const { results } = await db.prepare('SELECT id, first_seen, last_seen, ver, hmi, country, region, city, ip, pings FROM installs ORDER BY first_seen ASC').all();
+    const lines = [['install_id', 'first_seen_utc', 'last_seen_utc', 'store_version', 'idrive', 'country', 'region', 'city', 'address', 'check_ins'].join(',')];
+    (results || []).forEach((r) => lines.push([r.id, iso(r.first_seen), iso(r.last_seen), r.ver, r.hmi, r.country, r.region, r.city, r.ip, r.pings].map(csvCell).join(',')));
+    return `${lines.join('\r\n')}\r\n`;
 }
 
 /* One check-in (the Store's POST /v1/ping, or the feed request): one row per install, a check-in within 30 s of the last one ignored. */
@@ -104,6 +115,12 @@ export default {
             const auth = request.headers.get('authorization') || '';
             if (!env.DASH_TOKEN || !same(auth, `Bearer ${env.DASH_TOKEN}`)) { return json({ error: 'unauthorized' }, 401); }
             return json(await stats(env.DB, now));
+        }
+        if (request.method === 'GET' && url.pathname === '/api/export.csv') {
+            const auth = request.headers.get('authorization') || '';
+            if (!env.DASH_TOKEN || !same(auth, `Bearer ${env.DASH_TOKEN}`)) { return json({ error: 'unauthorized' }, 401); }
+            return new Response(await exportCsv(env.DB), { headers: { 'content-type': 'text/csv; charset=utf-8', 'cache-control': 'no-store',
+                'content-disposition': 'attachment; filename="bcs-store-installs.csv"' } });
         }
         if (request.method === 'POST' && url.pathname === '/v1/ping') {
             const b = await body(request);
