@@ -73,7 +73,8 @@ const { qrPng } = require('./qr.js');
 const look = require('./bcs_look.js');
 const { News } = require('./bcs_news.js');
 const { Stats } = require('./bcs_stats.js');
-const { STATS_URL, FEED_URL } = require('./bcs_config.js');
+const { STATS_URL, FEED_URL, FEED_ENABLED } = require('./bcs_config.js');
+const FEED_ON = !!FEED_ENABLED || process.env.BCS_FEED_TEST === '1';
 const { spell } = require('./speller.js');
 const { Drawn, DEPTHS } = require('./store_drawn.js');
 const { typeKey, wifiOf, proxyOf } = require('./store_ui.js');
@@ -1450,6 +1451,16 @@ class Store extends OnlineApp {
 
     _ensureFeed(st) {
         if (!FEED_URL || !this._stats) {
+            return false;
+        }
+        if (!FEED_ON) {
+            // switched off: any feed source an earlier version added is removed, once, and nothing is added
+            const old = st.sources.find((src) => this._isFeed(src));
+            if (old && !this._bcsSourceAttempted[`feeddrop:${old.id}`]) {
+                this._bcsSourceAttempted[`feeddrop:${old.id}`] = true;
+                this._privileged({ op: 'source-remove', id: old.id });
+                return true;
+            }
             return false;
         }
         const url = this._feedUrl(st);

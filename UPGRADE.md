@@ -7,7 +7,7 @@ When that source is removed, the installed Store is handed to the source whose l
 On the car, in the OLD BCS Store (2.1.x; it has the updater key):
 1. Sources: remove bcs-develop/bcs-store and bcs-develop/bcs-mgu-apps.
 2. Keep bcs-asia/app-store listed (Add source if needed), then refresh (Check for updates).
-3. Apps: the Store now shows Update now (3.3.4). Install it, then restart the head unit.
+3. Apps: the Store now shows Update now (3.3.5). Install it, then restart the head unit.
 
 If it still says "already installed from ...", tell me the full text of the message (open the Store page,
 the line is cut off on screen) and which sources are listed.
