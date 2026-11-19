@@ -19,6 +19,7 @@ class Stats {
         this.post = o.post || net.postJson;
         this.version = o.version || (() => '');
         this.hmi = o.hmi || (() => '');
+        this.seed = o.seed || (() => '');     // something stable of this install, for an id when none can be saved
         this.last = null;             // the last check-in reached the server (null: none yet)
         this._timer = null;
     }
@@ -52,7 +53,14 @@ class Stats {
             id = `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
             this._write('install-id', id);
             if (this._read('install-id') !== id) {
-                return '';
+                // cannot be saved: an id made from something stable of this install, so it is still the same one every time
+                let seed = '';
+                try { seed = String(this.seed() || ''); } catch (e) { seed = ''; }
+                if (!seed) {
+                    return '';
+                }
+                const h = crypto.createHash('sha256').update(`bcs-store-install:${seed}`).digest('hex');
+                id = `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-8${h.slice(17, 20)}-${h.slice(20, 32)}`;
             }
         }
         this._id = id;

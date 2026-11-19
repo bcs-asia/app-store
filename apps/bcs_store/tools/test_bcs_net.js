@@ -120,7 +120,10 @@ const srv = http.createServer((req, res) => {
         eq([/^[0-9a-f-]{36}$/.test(a), fixed.id(), new Stats({ dir: path.join(tmp, 's5'), url: `${base}/v1` }).id()], [true, a, a], 'the id is made once and the same ever after');
         const blocked = path.join(tmp, 's6'); fs.writeFileSync(blocked, 'a file where the folder should be');
         const none = new Stats({ dir: path.join(blocked, 'x'), url: `${base}/v1` });
-        eq([none.id(), none.id()], ['', ''], 'an id that cannot be saved is not used: no id, and never a different one each time');
+        eq([none.id(), none.id()], ['', ''], 'an id that cannot be saved and has nothing stable to come from: no id, and never a different one each time');
+        const seeded = new Stats({ dir: path.join(blocked, 'y'), url: `${base}/v1`, seed: () => 'abc' });
+        const s1 = seeded.id();
+        eq([/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-8[0-9a-f]{3}-[0-9a-f]{12}$/.test(s1), new Stats({ dir: path.join(blocked, 'z'), url: `${base}/v1`, seed: () => 'abc' }).id()], [true, s1], 'an id that cannot be saved comes from something stable instead: the same one every time');
     }
 
     srv.close();
