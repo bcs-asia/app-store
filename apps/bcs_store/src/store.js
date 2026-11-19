@@ -108,7 +108,9 @@ const BCS_SOURCES = [
     // 3.2.2: BeeMTube2 for iDrive 8 (a fork of RideTube; releases), the best-known collection (MIT, car-tested) and IterioDev's apps (iDrive 8 and 7, car-tested; its tools have their own ids)
     ['waliworld/iDrive8-RideTube', 'releases'],
     ['cauliflowermossgrape/idrive7-apps', 'branch:main'],
-    ['IterioDev/car-apps', 'branch:main']
+    ['IterioDev/car-apps', 'branch:main'],
+    // AirPlay screen mirroring (parked) and Waze Cards on the cluster, iDrive 7 (releases)
+    ['noth4m4d/mgu-hamadstools', 'releases']
 ];
 /* The updater writes the privileged secret, and while the phone page is on
  * its access URL, into this app's data folder (owner this app's uid, 0400);

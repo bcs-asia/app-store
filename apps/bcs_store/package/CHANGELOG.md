@@ -2,6 +2,8 @@
 
 ## 3.3.0
 
+- New source added when missing: noth4m4d/mgu-hamadstools (AirPlay screen mirroring while parked, and Waze Cards on the instrument cluster; iDrive 7).
+
 - News tab (it takes the place of Sources, which is now a row in Settings): announcements with photos, fetched from the BCS Store's GitHub (the announcements/ folder; add one by dropping a photo in announcements/inbox). A NEW tag shows on one not opened yet and a count on the tab. What was fetched is kept, so the page works offline.
 - Usage statistics, always on once the BCS server address is set in src/bcs_config.js: the Store tells the server that it is alive (a random install ID, the Store and iDrive versions; the server works out country, region and city from the connection and keeps a shortened address). Nothing about the owner. PRIVACY.md says exactly what.
 
