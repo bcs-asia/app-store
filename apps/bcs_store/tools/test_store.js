@@ -1145,6 +1145,28 @@ function runWidgetsExtra() {
             app._dataDir = keep.dataDir; app._loopMax = keep.loopMax; app._halted = keep.halted; app._feedOn = keep.feedOn; app._handleShutdown = keep.shut; app._sendTimes = keep.times; app._version = keep.ver;
             delete app._version;
         }
+        {
+            // Check for updates (the Updates page): one check per press, greyed while it runs, a second press does nothing
+            const wasC = app._connected, wasSt = app._st, wasAt = app._checkLockUntil;
+            app._connected = true; app._checkLockUntil = 0;
+            app._st = Object.assign({}, wasSt, { catalog: { checking: false } });
+            const n = sent.filter((x) => x.op === 'check').length;
+            const btn = () => app._drawnModel().checking;
+            eq(btn(), false, 'idle: the button can be pressed');
+            app._act({ do: 'check-updates' });
+            app._act({ do: 'check-updates' });
+            app._act({ do: 'check-updates' });
+            eq(sent.filter((x) => x.op === 'check').length - n, 1, 'three presses send one check');
+            eq(btn(), true, 'and the button is greyed while it runs');
+            app._st = Object.assign({}, wasSt, { catalog: { checking: true } });
+            app._checkLockUntil = 0;
+            eq(btn(), true, 'also while the updater says it is checking');
+            app._act({ do: 'check-updates' });
+            eq(sent.filter((x) => x.op === 'check').length - n, 1, 'no press goes through then');
+            app._st = Object.assign({}, wasSt, { catalog: { checking: false } });
+            eq(btn(), false, 'done: it can be pressed again');
+            app._connected = wasC; app._st = wasSt; app._checkLockUntil = wasAt; clearTimeout(app._checkLockTimer);
+        }
         // a refused Remove: the updater's reason, for that component's page, until its page or Remove opens again
         app._client.emit('reply-error', 'Waze on cluster needs doom', 'uninstall');
         eq(app._drawnModel().removeNote, { id: 'doom', error: 'Waze on cluster needs doom', by: null }, 'a refused Remove keeps the reason');

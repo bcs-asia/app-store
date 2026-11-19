@@ -80,6 +80,7 @@ const FEED_ON = !!FEED_ENABLED || process.env.BCS_FEED_TEST === '1';
 const LOOP_OPS = ['source-add', 'source-remove', 'check', 'token-add', 'token-remove'];
 const LOOP_MAX = Number(process.env.BCS_LOOP_MAX) || 10;      // the env is for the tests only
 const LOOP_MS = 10000;
+const CHECK_LOCK_MS = 8000;       // Check for updates stays greyed at least this long after a press (the updater may take a moment to say it is checking)
 const { spell } = require('./speller.js');
 const { Drawn, DEPTHS } = require('./store_drawn.js');
 const { typeKey, wifiOf, proxyOf } = require('./store_ui.js');
@@ -473,6 +474,27 @@ class Store extends OnlineApp {
     /* Ask the updater to read its sources (the feed with them); opening the page or the Store asks again after 15 s. */
     /* Announcements are asked for once each time the Store is opened, and only while the car is online (_setVisible); the News tab
      * and page never send anything themselves. */
+    /* The Updates page's Check for updates: one check of every source (the feed, so the announcements, with them). Pressing it while one
+     * runs, or within a few seconds of the last press, does nothing; the button is greyed for that time (checking in the model). */
+    _checking() {
+        const cat = this._st && this._st.catalog;
+        return !!(cat && cat.checking) || Date.now() < (this._checkLockUntil || 0);
+    }
+
+    _checkUpdates() {
+        if (!this._connected || this._checking()) {
+            return;
+        }
+        this._checkLockUntil = Date.now() + CHECK_LOCK_MS;
+        this._send({ op: 'check' });
+        clearTimeout(this._checkLockTimer);
+        this._checkLockTimer = setTimeout(() => { this._checkLockUntil = 0; this._render(); }, CHECK_LOCK_MS + 100);
+        if (this._checkLockTimer.unref) {
+            this._checkLockTimer.unref();
+        }
+        this._render();
+    }
+
     _newsRefresh() {
     }
 
@@ -847,7 +869,7 @@ class Store extends OnlineApp {
             webText: web && web.enabled ? readFile(WEB_URL_FILE) : '', accountsNote: this._accountsNote,
             pick: this._pick && { repo: this._pick.repo, probe: this._pick.probe, tokenNote: !!this._pick.tokenNote },
             setupNote: this._setupNote || null, uplinkNote: this._uplinkNote, proxyNote: this._proxyNote, removeNote: this._removeNote, language: i18n.language(), look: this._look,
-            news: this._newsModel() };
+            news: this._newsModel(), checking: this._checking() };
     }
 
     /* A press on the drawn screens (src/store_ui.js acts). */
@@ -878,6 +900,7 @@ class Store extends OnlineApp {
         case 'news': this._newsShow(this._newsIndex + (act.step | 0)); this._render(); break;
         case 'back': this._back(); break;
         case 'check': this._send({ op: 'check' }); break;
+        case 'check-updates': this._checkUpdates(); break;
         case 'open':
             if (act.page.name === 'news') {
                 this._newsShow(0);
@@ -2166,6 +2189,7 @@ class Store extends OnlineApp {
         }
         logger.info(`store shutting down (${reason})`);
         clearTimeout(this._hideTimer);
+        clearTimeout(this._checkLockTimer);
         clearTimeout(this._tokenAdding && this._tokenAdding.timer);
         this._endPick();
         this._pollWebUrl(false);

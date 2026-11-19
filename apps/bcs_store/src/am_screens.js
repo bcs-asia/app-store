@@ -812,7 +812,7 @@ module.exports = {
      "x": 480,
      "y": 336,
      "w": 1280,
-     "h": 480,
+     "h": 392,
      "opts": {
       "items": "",
       "rowH": 120,
@@ -842,11 +842,27 @@ module.exports = {
      "x": 1840,
      "y": 336,
      "w": 1000,
-     "h": 480,
+     "h": 392,
      "opts": {
       "items": "",
       "rowH": 150
      }
+    },
+    {
+     "name": "checkUpdates",
+     "rtype": "gpu",
+     "gpu": "vbutton",
+     "x": 480,
+     "y": 744,
+     "w": 640,
+     "h": 96,
+     "opts": {
+      "text": "Check for updates",
+      "vicon": "refresh",
+      "style": "outline",
+      "size": 30
+     },
+     "onTap": "event:checkUpdates"
     }
    ]
   },

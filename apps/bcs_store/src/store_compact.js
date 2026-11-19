@@ -90,9 +90,11 @@ function compact(W, H) {
         button('updateAll', R - HB_W, M, HB_W, HB_H, '', 'primary', 25, { vicon: 'arrowDown', color: BLUE }),
         restartNow(R - HB_W, { updateAll: [-HB_W - 16, 0], subtitle: [0, -HB_W - 16] }),
         label('appsLabel', X, HEAD + 8, 'APPS'),
-        list('apps', X, LIST_Y, colW, B - LIST_Y, { empty: 'No apps installed' }),
+        list('apps', X, LIST_Y, colW, B - BTN_H - 16 - LIST_Y, { empty: 'No apps installed' }),
         label('svcLabel', X + colW + 24, HEAD + 8, 'HEAD-UNIT TOOLS'),
-        list('services', X + colW + 24, LIST_Y, colW, B - LIST_Y)
+        list('services', X + colW + 24, LIST_Y, colW, B - BTN_H - 16 - LIST_Y),
+        // Check for updates (once, greyed while it runs)
+        button('checkUpdates', X, B - BTN_H, Math.min(CW, 560), BTN_H, 'Check for updates', 'outline', 25, { vicon: 'refresh' })
     ]);
 
     const SET_H = 72;

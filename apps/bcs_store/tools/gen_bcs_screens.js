@@ -110,7 +110,10 @@ news.components.push(
     comp('prev', 'vbutton', 1498, 744, 96, 96, { text: '', vicon: 'back', style: 'round', color: '#f4f7fb' }, 'event:prev'),
     comp('next', 'vbutton', 1618, 744, 96, 96, { text: '', vicon: 'chevron', style: 'round', color: '#f4f7fb' }, 'event:next'));
 
-// Updates (Robert's installed lists) keeps its layout
+// Updates (Robert's installed lists) keeps its layout, with Check for updates under the lists (3.4.3)
+const updatesScreen = S.find((s) => s.name === 'installed');
+['apps', 'services'].forEach((n) => { find(updatesScreen, n).h = 392; });
+updatesScreen.components.push(comp('checkUpdates', 'vbutton', 480, 744, 640, 96, { text: 'Check for updates', vicon: 'refresh', style: 'outline', size: 30 }, 'event:checkUpdates'));
 const screens = S.filter((s) => s.name !== 'sources' && s.name !== 'system');
 const at = screens.findIndex((s) => s.name === 'settings');
 screens.splice(at + 1, 0, sources, system, theme, news);

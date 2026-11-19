@@ -220,6 +220,12 @@ const same = Object.assign({}, two, { sources: [{ id: 'idrive7-apps', label: 'ro
 eq(frame(fixture.model({}, same), { textScale: 1, focus: 0, scroll: {} }).values.grid.items.map((t) => t.title),
     ['DOOM (robertnisipeanu/mgu-store)', 'DOOM (robertnisipeanu/idrive-apps)', 'Quake']);
 // Updates lists only what has an update: nothing when all are installed and current, the three when each has one
+{
+    // Check for updates, under the Updates lists: pressable when idle, greyed and "Checking" while it runs, hidden when the updater is not there
+    const b = (over) => frame(fixture.model(Object.assign({ tab: 'installed' }, over || {}), same), { textScale: 1, focus: -1, scroll: {} }).values.checkUpdates;
+    eq([b().text, b().act, b().disabled], ['Check for updates', { do: 'check-updates' }, false], 'Updates: Check for updates');
+    eq([b({ checking: true }).text, b({ checking: true }).disabled], ['Checking', true], 'greyed and Checking while it runs');
+}
 eq(frame(fixture.model({ tab: 'installed' }, same), { textScale: 1, focus: 0, scroll: {} }).values.apps.items.map((t) => t.sub), []);
 eq(frame(fixture.model({ tab: 'installed' }, Object.assign({}, same, { components: same.components.map((c) => Object.assign({}, c, { status: 'update', version: '1.1.0' })) })),
     { textScale: 1, focus: 0, scroll: {} }).values.apps.items.length, 3);
