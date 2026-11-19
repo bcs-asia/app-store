@@ -779,6 +779,19 @@ function run() {
             const n1 = sent.length;
             app._ensureFeed(offSt);
             eq(sent.slice(n1).filter((x) => x.op === 'source-add').length, 0, 'and none is added');
+            {
+                // feed off: the install id and the news folder an earlier version kept are deleted
+                const d = fs.mkdtempSync(path.join(os.tmpdir(), 'bcs_wipe_'));
+                fs.mkdirSync(path.join(d, 'news'));
+                fs.writeFileSync(path.join(d, 'install-id'), 'x');
+                fs.writeFileSync(path.join(d, 'news', 'a.png'), 'x');
+                fs.writeFileSync(path.join(d, 'keep.txt'), 'x');
+                app._dataDir = d;
+                eq(app._wipeFeedData(), 2, 'feed off: the install id and the news files are deleted');
+                eq(fs.readdirSync(d), ['keep.txt'], 'and the rest of the data folder is kept');
+                app._dataDir = null;
+                fs.unlinkSync(path.join(d, 'keep.txt')); fs.rmdirSync(d);
+            }
             app._feedOn = true;
         }
         {
