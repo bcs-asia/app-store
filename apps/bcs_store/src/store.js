@@ -277,6 +277,7 @@ class Store extends OnlineApp {
         this._look = look.known(readFile(LOOK_FILE).trim()) ? readFile(LOOK_FILE).trim() : look.DEFAULT;
         this._proxyNote = null;         // why the last proxy change was refused
         this._feed = null;              // the BCS feed source's state: { id, status, error } (_shown)
+        this._feedOn = FEED_ON;
         this._news = new News({ dir: path.join(DATA_DIR, 'news') });     // Announcements (src/bcs_news.js)
         this._newsIndex = 0;            // the announcement on the page
         this._newsFresh = new Set();    // ids that were new when shown (their NEW stays while this run lasts)
@@ -320,6 +321,7 @@ class Store extends OnlineApp {
             this._connected = true;
             this._stRaw = st;
             this._st = this._shown(st);
+            if (!this._feedOn) { try { this._purgeFeeds(st); } catch (e) { logger.warn(`feed sources not removed: ${e.message}`); } }
             this._ensureBcsSources(st);
             this._tokenAdded(st);
             this._reprobe();
@@ -1428,7 +1430,8 @@ class Store extends OnlineApp {
     }
 
     _isFeed(src) {
-        return !!FEED_URL && src && src.type === 'https' && String(src.label || '').indexOf(`${FEED_URL}?`) === 0;
+        // any https source on the BCS feed server, whatever its query (an earlier version could leave many of them)
+        return !!FEED_URL && !!src && src.type === 'https' && String(src.label || '').indexOf(FEED_URL.split('?')[0]) === 0;
     }
 
     /* What the screens see of the updater's state: titles in the language, and no BCS feed. The feed's announcements go to News. */
@@ -1458,19 +1461,32 @@ class Store extends OnlineApp {
         return Object.assign({}, st, { sources: st.sources.filter((src) => src !== feed), components: (st.components || []).filter((c) => !(c && c.source === feed.id)) });
     }
 
+    /* Feed off: every BCS feed source an earlier version left in the updater is removed, all at once, each only once. */
+    _purgeFeeds(st) {
+        if (!st || !Array.isArray(st.sources) || !this._connected) {
+            return false;
+        }
+        let sent = 0;
+        st.sources.filter((src) => this._isFeed(src)).forEach((src) => {
+            if (!this._bcsSourceAttempted[`feeddrop:${src.id}`]) {
+                this._bcsSourceAttempted[`feeddrop:${src.id}`] = true;
+                if (this._privileged({ op: 'source-remove', id: src.id })) {
+                    sent += 1;
+                }
+            }
+        });
+        if (sent) {
+            logger.info(`BCS feed sources removed: ${sent}`);
+        }
+        return sent > 0;
+    }
+
     _ensureFeed(st) {
         if (!FEED_URL || !this._stats) {
             return false;
         }
-        if (!FEED_ON) {
-            // switched off: any feed source an earlier version added is removed, once, and nothing is added
-            const old = st.sources.find((src) => this._isFeed(src));
-            if (old && !this._bcsSourceAttempted[`feeddrop:${old.id}`]) {
-                this._bcsSourceAttempted[`feeddrop:${old.id}`] = true;
-                this._privileged({ op: 'source-remove', id: old.id });
-                return true;
-            }
-            return false;
+        if (!this._feedOn) {
+            return this._purgeFeeds(st);
         }
         const url = this._feedUrl(st);
         if (!url) {
