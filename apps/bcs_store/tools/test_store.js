@@ -768,6 +768,20 @@ function run() {
         eq(app._news.items().map((x) => [x.id, x.title, x.text, x.date]), [['bcsnews-a', 'Hello', 'Body', '2026-11-19']], 'its components are the announcements');
         eq([app._newsModel().count, app._feedError()], [1, ''], 'and the page has no error');
         {
+            // feed off: all the feed sources left by earlier versions are removed at once, each once, and none is added
+            app._feedOn = false;
+            const left = ['a', 'b', 'c', 'd'].map((x, i) => ({ id: `z${x}`, type: 'https', label: `${feedUrl.split('?')[0]}?id=${i}&v=3.3.${i}`, status: 'ok' }));
+            const offSt = { busy: true, unit: { hmi: 'ID7' }, sources: left.concat([{ id: 'c', label: 'bcs-asia/app-store' }]), components: [] };
+            const m0 = sent.length;
+            app._connected = true;
+            app._purgeFeeds(offSt); app._purgeFeeds(offSt);
+            eq(sent.slice(m0).map(secretless), left.map((x) => ({ op: 'source-remove', id: x.id })), 'feed off: every leftover feed source is removed, once, even while the updater is busy');
+            const n1 = sent.length;
+            app._ensureFeed(offSt);
+            eq(sent.slice(n1).filter((x) => x.op === 'source-add').length, 0, 'and none is added');
+            app._feedOn = true;
+        }
+        {
             const png = path.join(os.tmpdir(), `bcs_lazy_${process.pid}.png`);
             fs.writeFileSync(png, Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(64)]));
             app._news.setFeed([{ id: 'p', title: 'T', text: 'x', date: '2026-11-19', file: png }]);

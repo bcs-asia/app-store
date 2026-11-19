@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.3.62
+
+- Clean-up: every BCS feed source an earlier version left in the updater is now removed, all at once and even while the updater is busy (3.3.61 removed them one by one as the updater sent its state). Nothing is added back. Everything else is as in 3.3.61.
+
 ## 3.3.61
 
 - The BCS feed is switched off for good in this build (News and the usage check-in). On the cars it made the head unit hang or lag. The Store removes the feed source from the updater, once, and adds nothing. Everything else is as in 3.3.6.
