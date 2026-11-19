@@ -96,6 +96,20 @@ const srv = http.createServer((req, res) => {
     eq(await new Stats({ dir: path.join(tmp, 's1'), url: `${base}/v1` }).id(), id, 'kept across a restart');
     st.start(); await new Promise((r) => setTimeout(r, 50)); st.stop();
     eq(posts[posts.length - 1].body.ev, 'open', 'start checks in at once');
+    // the car's Node is old: no crypto.randomUUID (3.3.2 died there and the Store never finished starting)
+    const crypto = require('crypto');
+    const had = crypto.randomUUID;
+    crypto.randomUUID = undefined;
+    try {
+        const old = new Stats({ dir: path.join(tmp, 's3'), url: `${base}/v1` });
+        const oid = old.id();
+        eq(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(oid), true, 'an id without randomUUID');
+        eq(await old.ping('open'), true, 'and a check-in without it');
+        const broken = new Stats({ dir: path.join(tmp, 's4'), url: `${base}/v1` });
+        broken.id = () => { throw new Error('boom'); };
+        eq(await broken.ping('open'), false, 'a failing id is not thrown at the Store');
+        broken.start(); broken.stop();
+    } finally { crypto.randomUUID = had; }
     const dead = new Stats({ dir: path.join(tmp, 's2'), url: 'http://127.0.0.1:1/v1' });
     eq(await dead.ping(), false); eq(dead.last, false, 'an unreachable server is not an error');
 

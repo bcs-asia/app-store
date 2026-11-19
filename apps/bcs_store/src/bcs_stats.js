@@ -39,7 +39,12 @@ class Stats {
     id() {
         let id = this._read('install-id');
         if (!/^[0-9a-f-]{36}$/.test(id)) {
-            id = crypto.randomUUID();
+            // randomBytes, not randomUUID: the car's Node is old and has no randomUUID (it stopped the Store from starting in 3.3.2)
+            const b = crypto.randomBytes(16);
+            b[6] = (b[6] & 0x0f) | 0x40;
+            b[8] = (b[8] & 0x3f) | 0x80;
+            const h = b.toString('hex');
+            id = `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
             this._write('install-id', id);
         }
         return id;
@@ -49,8 +54,13 @@ class Stats {
         if (!this.available()) {
             return Promise.resolve(false);
         }
-        return this.post(`${this.url}/ping`, { v: 1, id: this.id(), ev: ev || 'ping', ver: this.version(), hmi: this.hmi() })
-            .then((r) => { this.last = r.status === 200; return this.last; }, () => { this.last = false; return false; });
+        try {
+            return this.post(`${this.url}/ping`, { v: 1, id: this.id(), ev: ev || 'ping', ver: this.version(), hmi: this.hmi() })
+                .then((r) => { this.last = r.status === 200; return this.last; }, () => { this.last = false; return false; });
+        } catch (e) {
+            this.last = false;      // statistics must never stop the Store
+            return Promise.resolve(false);
+        }
     }
 
     /* Once now and every five minutes. */

@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.3.3
+
+- Fix: 3.3.2 stayed on "loading" on the car. The usage statistics asked for a random ID with a function the car's older Node does not have (crypto.randomUUID), which stopped the Store from starting. The ID is now made with randomBytes, and a statistics or announcements error can no longer stop the Store from starting.
+- Fix: the announcements and statistics network calls now use only what the car's older Node has (the URL class and the request(options) form).
+
 ## 3.3.2
 
 - Usage statistics are on: the Store now reports to the BCS statistics server (bcs-stats.bcs-asia.workers.dev). See PRIVACY.md.
