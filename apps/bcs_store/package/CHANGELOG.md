@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.3.0
+
+- Settings > Announcements: a page of announcements with photos, fetched from the BCS Store's GitHub (the announcements/ folder; add one by dropping a photo in announcements/inbox). A NEW tag shows on the row and a count on the Settings tab until it has been opened. What was fetched is kept, so the page works offline.
+- Settings > Usage statistics (offered once the BCS server address is set in src/bcs_config.js): off until the owner says yes. Shares a random install ID, versions and, from the connection, country, region and city with a shortened address; Off deletes the record. PRIVACY.md says exactly what.
+
 ## 3.2.2
 
 - New sources added by the Store when missing: waliworld/iDrive8-RideTube (BeeMTube2, YouTube for iDrive 8), cauliflowermossgrape/idrive7-apps (shift lights, dyno, G-Force, fault scanner and more) and IterioDev/car-apps (Seats, Ambient Light, Drive Recorder, Turn View, Car Data and more).

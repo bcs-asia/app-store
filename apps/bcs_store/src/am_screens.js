@@ -1451,6 +1451,330 @@ module.exports = {
   },
   {
    "kind": "gpu",
+   "name": "news",
+   "theme": "m_red",
+   "bg": "theme",
+   "components": [
+    {
+     "name": "headerLogo",
+     "rtype": "gpu",
+     "gpu": "image",
+     "x": 126,
+     "y": 38,
+     "w": 300,
+     "h": 64,
+     "opts": {
+      "src": LOGO,
+      "radius": 0
+     }
+    },
+    {
+     "name": "nav",
+     "rtype": "gpu",
+     "gpu": "sideNav",
+     "x": 126,
+     "y": 114,
+     "w": 300,
+     "h": 726,
+     "opts": {
+      "items": "Apps, grid\nTools, wrench\nUpdates, check\nUSB, usb\nSources, unlock\nSettings, gear",
+      "sel": 0
+     }
+    },
+    {
+     "name": "back",
+     "rtype": "gpu",
+     "gpu": "vbutton",
+     "x": 480,
+     "y": 138,
+     "w": 96,
+     "h": 96,
+     "opts": {
+      "text": "",
+      "vicon": "back",
+      "style": "round",
+      "color": "#f4f7fb"
+     },
+     "onTap": "event:back"
+    },
+    {
+     "name": "title",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 610,
+     "y": 138,
+     "w": 1600,
+     "h": 90,
+     "opts": {
+      "text": "",
+      "size": 72,
+      "font": "bold",
+      "align": "left",
+      "color": "text"
+     }
+    },
+    {
+     "name": "status",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 610,
+     "y": 227,
+     "w": 1600,
+     "h": 43,
+     "opts": {
+      "text": "",
+      "size": 34,
+      "font": "label",
+      "align": "left",
+      "color": "dim"
+     }
+    },
+    {
+     "name": "newsPhoto",
+     "rtype": "gpu",
+     "gpu": "image",
+     "x": 480,
+     "y": 292,
+     "w": 974,
+     "h": 548,
+     "opts": {
+      "src": "",
+      "radius": 0
+     }
+    },
+    {
+     "name": "newsNew",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 1498,
+     "y": 292,
+     "w": 1342,
+     "h": 56,
+     "opts": {
+      "text": "",
+      "size": 42,
+      "font": "bold",
+      "align": "left",
+      "color": "#e4002b"
+     }
+    },
+    {
+     "name": "newsDate",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 1498,
+     "y": 352,
+     "w": 1342,
+     "h": 48,
+     "opts": {
+      "text": "",
+      "size": 34,
+      "font": "label",
+      "align": "left",
+      "color": "dim"
+     }
+    },
+    {
+     "name": "newsTitle",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 1498,
+     "y": 412,
+     "w": 1342,
+     "h": 190,
+     "opts": {
+      "text": "",
+      "size": 62,
+      "font": "bold",
+      "align": "left",
+      "color": "text",
+      "wrap": true
+     }
+    },
+    {
+     "name": "newsBody",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 1498,
+     "y": 612,
+     "w": 1342,
+     "h": 100,
+     "opts": {
+      "text": "",
+      "size": 36,
+      "font": "label",
+      "align": "left",
+      "color": "dim",
+      "wrap": true
+     }
+    },
+    {
+     "name": "prev",
+     "rtype": "gpu",
+     "gpu": "vbutton",
+     "x": 1498,
+     "y": 744,
+     "w": 96,
+     "h": 96,
+     "opts": {
+      "text": "",
+      "vicon": "back",
+      "style": "round",
+      "color": "#f4f7fb"
+     },
+     "onTap": "event:prev"
+    },
+    {
+     "name": "next",
+     "rtype": "gpu",
+     "gpu": "vbutton",
+     "x": 1618,
+     "y": 744,
+     "w": 96,
+     "h": 96,
+     "opts": {
+      "text": "",
+      "vicon": "chevron",
+      "style": "round",
+      "color": "#f4f7fb"
+     },
+     "onTap": "event:next"
+    }
+   ]
+  },
+  {
+   "kind": "gpu",
+   "name": "stats",
+   "theme": "m_red",
+   "bg": "theme",
+   "components": [
+    {
+     "name": "headerLogo",
+     "rtype": "gpu",
+     "gpu": "image",
+     "x": 126,
+     "y": 38,
+     "w": 300,
+     "h": 64,
+     "opts": {
+      "src": LOGO,
+      "radius": 0
+     }
+    },
+    {
+     "name": "nav",
+     "rtype": "gpu",
+     "gpu": "sideNav",
+     "x": 126,
+     "y": 114,
+     "w": 300,
+     "h": 726,
+     "opts": {
+      "items": "Apps, grid\nTools, wrench\nUpdates, check\nUSB, usb\nSources, unlock\nSettings, gear",
+      "sel": 0
+     }
+    },
+    {
+     "name": "back",
+     "rtype": "gpu",
+     "gpu": "vbutton",
+     "x": 480,
+     "y": 138,
+     "w": 96,
+     "h": 96,
+     "opts": {
+      "text": "",
+      "vicon": "back",
+      "style": "round",
+      "color": "#f4f7fb"
+     },
+     "onTap": "event:back"
+    },
+    {
+     "name": "title",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 610,
+     "y": 138,
+     "w": 1600,
+     "h": 90,
+     "opts": {
+      "text": "",
+      "size": 72,
+      "font": "bold",
+      "align": "left",
+      "color": "text"
+     }
+    },
+    {
+     "name": "status",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 610,
+     "y": 227,
+     "w": 1600,
+     "h": 43,
+     "opts": {
+      "text": "",
+      "size": 34,
+      "font": "label",
+      "align": "left",
+      "color": "dim"
+     }
+    },
+    {
+     "name": "statsText",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 610,
+     "y": 292,
+     "w": 1700,
+     "h": 330,
+     "opts": {
+      "text": "",
+      "size": 36,
+      "font": "label",
+      "align": "left",
+      "color": "dim",
+      "wrap": true
+     }
+    },
+    {
+     "name": "statsOn",
+     "rtype": "gpu",
+     "gpu": "vbutton",
+     "x": 610,
+     "y": 660,
+     "w": 760,
+     "h": 96,
+     "opts": {
+      "text": "",
+      "vicon": "check",
+      "style": "outline",
+      "size": 30
+     },
+     "onTap": "event:statsOn"
+    },
+    {
+     "name": "statsOff",
+     "rtype": "gpu",
+     "gpu": "vbutton",
+     "x": 1400,
+     "y": 660,
+     "w": 560,
+     "h": 96,
+     "opts": {
+      "text": "",
+      "vicon": "lock",
+      "style": "outline",
+      "size": 30
+     },
+     "onTap": "event:statsOff"
+    }
+   ]
+  },
+  {
+   "kind": "gpu",
    "name": "source",
    "theme": "m_red",
    "bg": "theme",

@@ -1,4 +1,4 @@
-# BCS Store (bcs_store) 3.2.2
+# BCS Store (bcs_store) 3.3.0
 
 BCS Automotive Solutions' Store for the BMW MGU head unit, based on [MGU Store](https://github.com/robertnisipeanu/mgu-store) by Robert Nisipeanu (GPL-3.0-or-later). The text below is the upstream Store's README (0.9.26); BCS Store's own screens are listed in package/CHANGELOG.md (2.2.1). `tools/gen_bcs_screens.js` writes src/am_screens.js from tools/upstream/.
 
@@ -232,6 +232,16 @@ is possible. The row is hidden
 while an install runs or waits, while the updater is unreachable or
 already restarting the unit, and with an updater older than 0.1.4.
 
+## Announcements and usage statistics (BCS)
+
+- **Settings > Announcements**: one announcement at a time, its photo on the left, arrows to step through. Fetched from
+  `announcements/news.json` in the BCS GitHub (`src/bcs_news.js`) at start and every half hour, kept in the Store's data folder.
+  One not opened yet has a **NEW** tag; the Settings tab shows a count. Add one by dropping a photo (and an optional `.txt`: title,
+  then text) into `announcements/inbox/` on GitHub: a workflow converts it (`tools/announce.py`). See `announcements/README.md`.
+- **Settings > Usage statistics**: off until the owner says yes (`src/bcs_stats.js`). On, it sends a random install ID, the versions
+  and a ping every five minutes to the Worker in `analytics/` (`STATS_URL` in `src/bcs_config.js`; empty = not offered). The Worker adds
+  country, region and city from the connection and keeps a shortened address; Off deletes the record. `PRIVACY.md`.
+
 ## Sources
 
 **Sources** has a status line (a source typed wrong, the updater's refusal
@@ -431,6 +441,7 @@ tools/bake_inter.py        the Latin, Greek, Cyrillic and Vietnamese atlases (Pi
 tools/bake_cjk.py          the Noto Sans SC, TC, JP and KR atlases (Pillow, google/fonts' TTFs, SHA-256 checked)
 tools/gen_screens.py       src/am_screens.js from App Manager 2's screens.json
 tools/fixture.js           an updater state with one of everything, and the drawn screens over it
+tools/test_bcs_net.js      Announcements and Usage statistics against a server on this computer
 tools/test_view.js         the texts for every row, source, account, sign-in and phone state
 tools/test_rhmi.js         both HMIs' RHMI files, host states and proxies, the names src/store.js binds
 tools/test_qr.js           the QR pictures (decoded back with zbarimg when installed)

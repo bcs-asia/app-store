@@ -233,13 +233,18 @@ function tile(m, c, busy, name) {
     return t;
 }
 
+/* Usage statistics offered and not answered yet. */
+const statsAsk = (m) => !!(m.stats && m.stats.available && m.stats.state === 'unset');
+
 function nav(m, sel) {
     const updates = comps(m).filter((c) => c.status === 'update' && !notForUnit(c) && !c.blocked && !startPending(c)).length;
     const usbIds = (sources(m) || []).filter((s) => s.usb).map((s) => s.id);
     const usbNew = comps(m).filter((c) => usbIds.indexOf(c.source) >= 0 && (c.status === 'available' || c.status === 'update') &&
         !notForUnit(c) && !c.blocked && !startPending(c)).length;
+    // Settings: what is new there (announcements not seen, the usage question not answered)
+    const fresh = (m.news ? m.news.unseen : 0) + (statsAsk(m) ? 1 : 0);
     return { sel, items: [[tr("Apps"), 'grid', ''], ["Tools", 'wrench', ''], ["Updates", 'check', updates || ''], ['USB', 'usb', usbNew || ''],
-        [tr("Sources"), 'unlock', ''], [tr("Settings"), 'gear', '']]
+        [tr("Sources"), 'unlock', ''], [tr("Settings"), 'gear', fresh || '']]
         .map(([label, vicon, badge], i) => ({ id: TABS[i], label, vicon, badge: String(badge), act: { do: 'tab', tab: TABS[i] } })) };
 }
 
@@ -386,6 +391,15 @@ function settingsView(m) {
         row('phone', tr("Phone access"), phoneState(web), 'phone');
     }
     row('theme', 'Theme', look.LOOKS[look.known(m.look) ? m.look : look.DEFAULT].name, 'gauge');
+    if (m.news) {
+        const n = m.news.unseen;
+        row('news', 'Announcements', n ? `${n} new` : m.news.count ? 'Up to date' : 'None yet', 'display',
+            n ? { right: 'chip:NEW+chevron', subColor: BLUE } : {});
+    }
+    if (m.stats && m.stats.available) {
+        row('stats', 'Usage statistics', m.stats.state === 'on' ? 'On' : m.stats.state === 'off' ? 'Off' : 'Not set yet', 'stopwatch',
+            statsAsk(m) ? { right: 'chip:NEW+chevron', subColor: BLUE } : {});
+    }
     row('system', "System", m.version ? tr("Store {0}", m.version) : '', 'gear');
     const half = Math.ceil(rows.length / 2);
     return {
@@ -826,6 +840,36 @@ function themeView(m) {
     };
 }
 
+/* Announcements: one at a time, its photo on the left; the arrows step through them. */
+function newsView(m) {
+    const n = m.news || { count: 0, index: 0, item: null };
+    const it = n.item;
+    const many = n.count > 1;
+    return {
+        title: { text: 'Announcements' },
+        status: { text: n.count ? `${n.index + 1} of ${n.count}` : 'No announcements yet', color: DIM },
+        newsPhoto: it ? { src: it.src || '', radius: 0, hidden: false } : { src: '', hidden: true },
+        newsNew: { text: it && it.fresh ? 'NEW' : '' },
+        newsDate: { text: it ? it.date : '' },
+        newsTitle: { text: it ? it.title : '' },
+        newsBody: { text: it ? it.text : '' },
+        prev: many ? button('', { do: 'news', step: -1 }, { vicon: 'back', style: 'round', color: '#f4f7fb' }) : hidden,
+        next: many ? button('', { do: 'news', step: 1 }, { vicon: 'chevron', style: 'round', color: '#f4f7fb' }) : hidden
+    };
+}
+
+/* Usage statistics: what is sent, and the choice. */
+function statsView(m) {
+    const s = m.stats || { state: 'unset' };
+    return {
+        title: { text: 'Usage statistics' },
+        status: { text: s.state === 'on' ? (s.last === 'failed' ? 'On, the server is not reachable' : 'On') : s.state === 'off' ? 'Off' : 'Not set yet', color: DIM },
+        statsText: { text: "Help BCS count the cars that use this Store. If you share, the Store sends a random install ID, its version, your iDrive version and your country, region and city (worked out from your internet address) with a shortened address. Never your name, VIN or accounts. Turn it off any time: the BCS server then forgets this install." },
+        statsOn: button('Share anonymous usage', { do: 'stats', on: true }, { vicon: 'check', style: s.state === 'on' ? 'primary' : 'outline', color: BLUE, size: 28 }),
+        statsOff: button("Don't share", { do: 'stats', on: false }, { vicon: 'lock', style: s.state === 'off' ? 'primary' : 'outline', color: BLUE, size: 28 })
+    };
+}
+
 /* The screen and its values for the page on top. */
 function view(m) {
     look.use(m.look);
@@ -853,6 +897,8 @@ function view(m) {
     case 'prefer': values = preferView(m); break;
     case 'proxy': values = proxyView(m); break;
     case 'theme': values = themeView(m); break;
+    case 'news': values = newsView(m); break;
+    case 'stats': values = statsView(m); break;
     default: screen = 'store'; values = storeView(m, 'app');
     }
     values.nav = nav(m, tabSel);

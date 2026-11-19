@@ -23,6 +23,7 @@ const Module = require('module');
 const os = require('os');
 const path = require('path');
 const { ID7, ID8 } = require('./gen_rhmi.js');
+process.env.BCS_OFFLINE = '1';           // BCS's own feeds (Announcements, statistics) never reach the internet from a test
 const HMI = process.env.STORE_HMI === 'ID8' ? 'ID8' : 'ID7';
 
 const ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'store-test-'));
@@ -988,6 +989,29 @@ function runWidgetsExtra() {
             app._act({ do: 'look', id: 'red' });
             eq(app._drawnModel().look, 'red');
             if (had === null) { require('fs').unlinkSync(lf); } else { require('fs').writeFileSync(lf, had); }
+        }
+        {   // Announcements: opening the page shows the newest and marks it seen; NEW stays on it during this run; the arrows go round
+            app._news._items = [{ id: 'n2', title: 'Two', text: 'b', date: '2026-11-20', image: '' }, { id: 'n1', title: 'One', text: 'a', date: '2026-11-10', image: '' }];
+            app._news._seen = new Set();
+            app._newsFresh = new Set();
+            eq([app._drawnModel().news.count, app._drawnModel().news.unseen, app._drawnModel().news.item.fresh], [2, 2, false], 'two announcements, none seen');
+            app._act({ do: 'open', page: { name: 'news' } });
+            eq([app._drawnModel().news.item.id, app._drawnModel().news.item.fresh, app._drawnModel().news.unseen], ['n2', true, 1], 'the newest is shown, marked seen, still NEW');
+            app._act({ do: 'news', step: 1 });
+            eq([app._drawnModel().news.item.id, app._drawnModel().news.index, app._drawnModel().news.unseen], ['n1', 1, 0], 'the arrow shows the next');
+            app._act({ do: 'news', step: 1 });
+            eq(app._drawnModel().news.item.id, 'n2', 'and goes round');
+            app._act({ do: 'news', step: -1 });
+            eq(app._drawnModel().news.item.id, 'n1', 'back too');
+            app._news._items = []; app._newsIndex = 0;
+            eq(app._drawnModel().news, { count: 0, index: 0, unseen: 0, item: null }, 'none: nothing to show');
+            const sf = path.join(DATA, 'stats');   // Usage statistics: not offered without a server address, so nothing is switched on by accident
+            eq(app._drawnModel().stats, { available: false, state: 'unset', last: '' });
+            app._act({ do: 'stats', on: true });
+            eq(app._drawnModel().stats.state, 'on', 'the choice is kept');
+            app._act({ do: 'stats', on: false });
+            eq(app._drawnModel().stats.state, 'off');
+            try { require('fs').unlinkSync(sf); } catch (e) { /* none */ }
         }
         // a refused Remove: the updater's reason, for that component's page, until its page or Remove opens again
         app._client.emit('reply-error', 'Waze on cluster needs doom', 'uninstall');

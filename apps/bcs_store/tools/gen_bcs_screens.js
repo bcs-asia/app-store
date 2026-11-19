@@ -91,10 +91,32 @@ theme.components = theme.components.filter((c) => ['usbPhone', 'list'].indexOf(c
 find(theme, 'title').opts.text = '';
 theme.components.push(comp('grid', 'appGrid', 460, 292, 2380, 548, { items: [], cols: 3, tileH: 548, cardStyle: 'billboard', empty: '' }));
 
+// Announcements: the photo (16:9) on the left, NEW, date, title and text on the right, the arrows below
+const news = clone('prefer', 'news');
+news.components = news.components.filter((c) => ['usbPhone', 'list'].indexOf(c.name) < 0);
+find(news, 'title').opts.text = '';
+news.components.push(
+    comp('newsPhoto', 'image', 480, 292, 974, 548, { src: '', radius: 0 }),
+    comp('newsNew', 'text', 1498, 292, 1342, 56, { text: '', size: 42, font: 'bold', align: 'left', color: '#e4002b' }),
+    comp('newsDate', 'text', 1498, 352, 1342, 48, { text: '', size: 34, font: 'label', align: 'left', color: 'dim' }),
+    comp('newsTitle', 'text', 1498, 412, 1342, 190, { text: '', size: 62, font: 'bold', align: 'left', color: 'text', wrap: true }),
+    comp('newsBody', 'text', 1498, 612, 1342, 100, { text: '', size: 36, font: 'label', align: 'left', color: 'dim', wrap: true }),
+    comp('prev', 'vbutton', 1498, 744, 96, 96, { text: '', vicon: 'back', style: 'round', color: '#f4f7fb' }, 'event:prev'),
+    comp('next', 'vbutton', 1618, 744, 96, 96, { text: '', vicon: 'chevron', style: 'round', color: '#f4f7fb' }, 'event:next'));
+
+// Usage statistics: what is sent, and the two choices
+const stats = clone('prefer', 'stats');
+stats.components = stats.components.filter((c) => ['usbPhone', 'list'].indexOf(c.name) < 0);
+find(stats, 'title').opts.text = '';
+stats.components.push(
+    comp('statsText', 'text', 610, 292, 1700, 330, { text: '', size: 36, font: 'label', align: 'left', color: 'dim', wrap: true }),
+    comp('statsOn', 'vbutton', 610, 660, 760, 96, { text: '', vicon: 'check', style: 'outline', size: 30 }, 'event:statsOn'),
+    comp('statsOff', 'vbutton', 1400, 660, 560, 96, { text: '', vicon: 'lock', style: 'outline', size: 30 }, 'event:statsOff'));
+
 // Updates (Robert's installed lists) keeps its layout
 const screens = S.filter((s) => s.name !== 'sources' && s.name !== 'system');
 const at = screens.findIndex((s) => s.name === 'settings');
-screens.splice(at + 1, 0, sources, system, theme);
+screens.splice(at + 1, 0, sources, system, theme, news, stats);
 
 // every screen: six tabs, the logo above the menu, the BCS blue
 screens.forEach((st) => {

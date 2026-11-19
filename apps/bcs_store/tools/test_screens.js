@@ -430,9 +430,10 @@ eq(text(f, 'subtitle'), '5 sources');
 // Settings: a row per page (Wi-Fi, Accounts, Phone access, Preferred connection, Proxy, System), none without its feature
 f = screen('settings');
 const rowIds = (g) => g.values.accessLeft.items.concat(g.values.accessRight.items).map((i) => i.id);
-eq(rowIds(f), ['wifi', 'accounts', 'prefer', 'proxy', 'phone', 'theme', 'system'], 'Settings: the pages, in order, in two columns');
-eq(rowIds(screen('settings', {}, { uplink: null, web: null, proxy: null, tokens: null })), ['theme', 'system'], 'only Theme and System without the uplink, the phone page, the proxy and accounts');
+eq(rowIds(f), ['wifi', 'accounts', 'prefer', 'proxy', 'phone', 'theme', 'news', 'system'], 'Settings: the pages, in order, in two columns');
+eq(rowIds(screen('settings', {}, { uplink: null, web: null, proxy: null, tokens: null })), ['theme', 'news', 'system'], 'only Theme, Announcements and System without the uplink, the phone page, the proxy and accounts');
 eq(f.values.accessLeft.items.length, 4, 'four rows in the first column');
+eq(f.values.accessLeft.items.concat(f.values.accessRight.items).find((i) => i.id === 'news').sub, 'None yet', 'no announcements fetched yet');
 f.values.accessLeft.items.concat(f.values.accessRight.items).forEach((i) => eq(i.act.do, 'open', `${i.id} opens its page`));
 // Theme: BCS Blue and Performance Red; the one in use is marked, the other a tap away
 f = screen('theme');
@@ -450,6 +451,28 @@ eq(screen('settings').values.accessRight.items.concat(screen('settings').values.
     eq(stOf('carbon').components.length, stOf('red').components.length, 'the backdrop is on in both photo looks'); look.use('carbon'); eq(look.accent('#e4002b'), '#d4b36a'); look.use('red');
     look.use('blue'); eq(look.accent('#e4002b'), '#00bfff'); look.use('red'); eq(look.accent('#e4002b'), '#e4002b');
 }
+// Announcements: one at a time, NEW on the first showing, arrows only with more than one; Settings and its tab say what is new
+f = screen('news');
+eq([text(f, 'title'), text(f, 'status'), text(f, 'newsNew'), text(f, 'newsDate'), text(f, 'newsTitle')], ['Announcements', '1 of 3', 'NEW', '2026-11-19', 'New: Luxury Carbon theme']);
+ok(/^data:image\/png/.test(f.values.newsPhoto.src) && !f.values.newsPhoto.hidden, 'the photo');
+eq(own(f)[0], 'Back', 'Back first');
+eq(f.values.prev.act, { do: 'news', step: -1 }); eq(f.values.next.act, { do: 'news', step: 1 });
+f = screen('news-plain');
+eq([text(f, 'status'), text(f, 'newsNew'), f.values.prev.hidden, f.values.next.hidden], ['1 of 1', '', true, true], 'one announcement: no arrows, not new again');
+f = screen('news-empty');
+eq([text(f, 'status'), f.values.newsPhoto.hidden, text(f, 'newsTitle')], ['No announcements yet', true, ''], 'nothing yet');
+f = screen('settings-new');
+const newsRow = f.values.accessLeft.items.concat(f.values.accessRight.items).filter((i) => i.id === 'news' || i.id === 'stats');
+eq(newsRow.map((i) => [i.id, i.sub, i.right]), [['news', '2 new', 'chip:NEW+chevron'], ['stats', 'Not set yet', 'chip:NEW+chevron']], 'the rows carry NEW');
+eq(f.values.nav.items[5].badge, '3', 'Settings counts the two announcements and the unanswered question');
+eq(screen('settings').values.nav.items[5].badge, '', 'no badge when nothing is new');
+// Usage statistics: the choice, what is sent
+f = screen('stats');
+eq([text(f, 'title'), text(f, 'status'), f.values.statsOn.style, f.values.statsOff.style], ['Usage statistics', 'Not set yet', 'outline', 'outline']);
+eq([f.values.statsOn.act, f.values.statsOff.act], [{ do: 'stats', on: true }, { do: 'stats', on: false }]);
+ok(/random install ID/.test(text(f, 'statsText')) && /Never your name, VIN or accounts/.test(text(f, 'statsText')), 'it says what is sent and what is not');
+f = screen('stats-on');
+eq([text(f, 'status'), f.values.statsOn.style, f.values.statsOff.style], ['On', 'primary', 'outline']);
 // System: the unit, the versions, Check now, Restart head unit; who made this Store
 f = screen('system');
 eq(text(f, 'unit'), 'iDrive 7 · BMW MGU P18_23w44.2-1-3 mgu-high');
@@ -755,7 +778,7 @@ eq([text(f, 'state'), text(f, 'note'), f.values.networks.empty, f.values.scan.di
 // the proxy (an updater from 0.8.27): a row in Settings' access card; its page turns it on or off and sets its address
 f = screen('settings');
 eq(f.values.access.items.map((i) => [i.title, i.sub]), [['Wi-Fi', 'Online · Mario iPhone'], ['Accounts', '2 accounts'], ['Preferred connection', 'Wi-Fi'], ['Proxy', 'Off'],
-    ['Phone access', 'Off'], ['Theme', 'Performance Red'], ['System', 'Store 0.7.0']]);
+    ['Phone access', 'Off'], ['Theme', 'Performance Red'], ['Announcements', 'None yet'], ['System', 'Store 0.7.0']]);
 eq(f.items.find((i) => i.label === 'Proxy').act, { do: 'open', page: { name: 'proxy' } });
 ok(screen('settings', {}, { proxy: undefined }).labels.indexOf('Proxy') < 0, 'no Proxy row with an updater before 0.8.27');
 eq(screen('settings-proxy-on').values.access.items[3].sub, '192.168.8.1:7891');

@@ -71,6 +71,9 @@ const { UpdaterClient } = require('./client.js');
 const i18n = require('./i18n.js');
 const { qrPng } = require('./qr.js');
 const look = require('./bcs_look.js');
+const { News } = require('./bcs_news.js');
+const { Stats } = require('./bcs_stats.js');
+const { STATS_URL } = require('./bcs_config.js');
 const { spell } = require('./speller.js');
 const { Drawn, DEPTHS } = require('./store_drawn.js');
 const { typeKey, wifiOf, proxyOf } = require('./store_ui.js');
@@ -113,6 +116,7 @@ const BCS_SOURCES = [
 const DATA_DIR = path.join(__dirname, '..', '..', 'data');
 const SECRET_FILE = path.join(DATA_DIR, 'updater-secret');
 const WEB_URL_FILE = path.join(DATA_DIR, 'web-url');
+const NEWS_REFRESH_MS = 30 * 60 * 1000;   // Announcements: fetched at start and then every half hour
 const LOOK_FILE = path.join(DATA_DIR, 'look');      // the look chosen in Settings > Theme (src/bcs_look.js)
 const RECONNECT_MS = 2000;
 const PRESS_DEDUPE_MS = 400;
@@ -271,6 +275,11 @@ class Store extends OnlineApp {
         this._uplinkNote = null;        // the refusal of the last Wi-Fi or preferred-connection request
         this._look = look.known(readFile(LOOK_FILE).trim()) ? readFile(LOOK_FILE).trim() : look.DEFAULT;
         this._proxyNote = null;         // why the last proxy change was refused
+        this._news = new News({ dir: path.join(DATA_DIR, 'news') });     // Announcements (src/bcs_news.js)
+        this._newsIndex = 0;            // the announcement on the page
+        this._newsFresh = new Set();    // ids that were new when shown (their NEW stays while this run lasts)
+        this._stats = new Stats({ dir: DATA_DIR, url: STATS_URL, version: () => this._version(),
+            hmi: () => (this._st && this._st.unit && this._st.unit.hmi) || '' });     // Usage statistics (src/bcs_stats.js)
         this._removeNote = null;        // the updater's refusal of the last Remove: { id, error, by }
         this._qr = { login: { key: null, file: null, chain: Promise.resolve() },
             phone: { key: null, file: null, chain: Promise.resolve() }, app: { key: null, file: null, chain: Promise.resolve() } };
@@ -383,6 +392,7 @@ class Store extends OnlineApp {
     _appInitialized() {
         logger.info(`store ${this.getAppId()} v${this._version()} starting`);
         this._client.connect();
+        this._startBcsFeeds();
         if (!this.rhmiApplication) {
             logger.info('no RhmiApplication for this start reason; initializing without a screen');
             return this.initialized();
@@ -413,6 +423,33 @@ class Store extends OnlineApp {
 
     /* The oap-sdk keeps package.json as _packageJson on iDrive 7 and as
      * packageJson on iDrive 8. */
+    /* Announcements and, when the owner said yes, the usage check-in; neither may hold up or break the Store. */
+    _startBcsFeeds() {
+        const refresh = () => this._news.refresh().then((changed) => { if (changed) { this._render(); } }, () => {});
+        const first = setTimeout(refresh, 8000);
+        this._newsTimer = setInterval(refresh, NEWS_REFRESH_MS);
+        [first, this._newsTimer].forEach((t) => t.unref && t.unref());
+        this._stats.start();
+    }
+
+    /* Show announcement i (kept inside the list); one not seen before is remembered as new while this run lasts. */
+    _newsShow(i) {
+        const items = this._news.items();
+        this._newsIndex = items.length ? ((i % items.length) + items.length) % items.length : 0;
+        const it = items[this._newsIndex];
+        if (it && !this._news.isSeen(it.id)) {
+            this._newsFresh.add(it.id);
+            this._news.markSeen(it.id);
+        }
+    }
+
+    _newsModel() {
+        const items = this._news.items();
+        const it = items[Math.min(this._newsIndex, items.length - 1)];
+        return { count: items.length, index: Math.min(this._newsIndex, Math.max(0, items.length - 1)), unseen: this._news.unseen(),
+            item: it ? { id: it.id, title: it.title, text: it.text, date: it.date, src: this._news.photo(it), fresh: this._newsFresh.has(it.id) } : null };
+    }
+
     _version() {
         const pkg = this._packageJson || this.packageJson;
         return pkg && pkg.version;
@@ -650,6 +687,8 @@ class Store extends OnlineApp {
             } else {
                 this._visibleStates.delete(name);
                 clearTimeout(this._hideTimer);
+        clearInterval(this._newsTimer);
+        this._stats.stop();
                 this._hideTimer = setTimeout(() => {
                     if (this._visibleStates.size === 0) {
                         this._setVisible(false);
@@ -724,7 +763,8 @@ class Store extends OnlineApp {
             version: this._version(), note: this._sourcesNote, login: this._login,
             webText: web && web.enabled ? readFile(WEB_URL_FILE) : '', accountsNote: this._accountsNote,
             pick: this._pick && { repo: this._pick.repo, probe: this._pick.probe, tokenNote: !!this._pick.tokenNote },
-            setupNote: this._setupNote || null, uplinkNote: this._uplinkNote, proxyNote: this._proxyNote, removeNote: this._removeNote, language: i18n.language(), look: this._look };
+            setupNote: this._setupNote || null, uplinkNote: this._uplinkNote, proxyNote: this._proxyNote, removeNote: this._removeNote, language: i18n.language(), look: this._look,
+            news: this._newsModel(), stats: { available: this._stats.available(), state: this._stats.state(), last: this._stats.last } };
     }
 
     /* A press on the drawn screens (src/store_ui.js acts). */
@@ -746,9 +786,17 @@ class Store extends OnlineApp {
                 this._render();
             }
             break;
+        case 'news': this._newsShow(this._newsIndex + (act.step | 0)); this._render(); break;
+        case 'stats':
+            this._stats.set(!!act.on).then(() => this._render());
+            this._render();
+            break;
         case 'back': this._back(); break;
         case 'check': this._send({ op: 'check' }); break;
         case 'open':
+            if (act.page.name === 'news') {
+                this._newsShow(0);
+            }
             if (act.page.name === 'source') {
                 this._sourceId = act.page.id;
                 this._removingSource = null;
