@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.4.8
+
+- One more source, added when missing: Vizualyse/idrive-apps (Cast to cluster: a phone stream on the instrument cluster or the HUD; iDrive 7; a tech demo tested on a bench unit; Releases).
+
 ## 3.4.7
 
 - Three more sources, added when missing: robertnisipeanu/idrive-apps (cluster-render and the Waze cluster tools; Releases), ALMSTRA/idv7lol (cluster theme editor; iDrive 7; Releases) and eroobeeroo/idrive7-cluster-info (cluster layouts and vehicle information; iDrive 7; built from the main branch). 3.4.6 added mlurker/bmw-idrive7-apps and dwz365365/id7f.

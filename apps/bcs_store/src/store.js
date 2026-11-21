@@ -123,7 +123,9 @@ const BCS_SOURCES = [
     // 3.4.7: Robert's cluster-render and Waze cluster (the renderer the cluster tools need; releases), ALMSTRA's cluster theme editor (iDrive 7; releases) and eroobeeroo's cluster info layouts (iDrive 7; built from the main branch)
     ['robertnisipeanu/idrive-apps', 'releases'],
     ['ALMSTRA/idv7lol', 'releases'],
-    ['eroobeeroo/idrive7-cluster-info', 'branch:main']
+    ['eroobeeroo/idrive7-cluster-info', 'branch:main'],
+    // 3.4.8: Vizualyse's Cast to cluster (phone stream on the cluster or HUD; iDrive 7; tech demo; releases)
+    ['Vizualyse/idrive-apps', 'releases']
 ];
 /* The updater writes the privileged secret, and while the phone page is on
  * its access URL, into this app's data folder (owner this app's uid, 0400);
