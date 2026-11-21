@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.4.6
+
+- Two new sources, added when missing: mlurker/bmw-idrive7-apps (HUD turn and blind spot signals; iDrive 7) and dwz365365/id7f (a cluster map app; iDrive 7, experimental: parked testing only). Both are on the Releases channel.
+
 ## 3.4.5
 
 - News: more of the announcement text shows. The text starts higher (the gap under the title is gone), the text column is wider, the arrows moved up beside the "1 of 2" count so the text can use the column down to the bottom, and the layout is the same on iDrive 8.

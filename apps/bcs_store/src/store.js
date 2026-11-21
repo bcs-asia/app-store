@@ -116,7 +116,10 @@ const BCS_SOURCES = [
     ['cauliflowermossgrape/idrive7-apps', 'branch:main'],
     ['IterioDev/car-apps', 'branch:main'],
     // AirPlay screen mirroring (parked) and Waze Cards on the cluster, iDrive 7 (releases)
-    ['noth4m4d/mgu-hamadstools', 'releases']
+    ['noth4m4d/mgu-hamadstools', 'releases'],
+    // 3.4.6: mlurker's HUD signals tool (iDrive 7) and dwz365365's cluster map app (iDrive 7, experimental); both publish a releases catalog
+    ['mlurker/bmw-idrive7-apps', 'releases'],
+    ['dwz365365/id7f', 'releases']
 ];
 /* The updater writes the privileged secret, and while the phone page is on
  * its access URL, into this app's data folder (owner this app's uid, 0400);
