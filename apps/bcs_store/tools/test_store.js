@@ -752,6 +752,8 @@ function run() {
         eq(sent.map(secretless).slice(sentBefore, sentBefore + 4), [{ op: 'source-remove', id: 'a' }, { op: 'source-remove', id: 'b' },
             { op: 'source-remove', id: 'r1' }, { op: 'source-remove', id: 'r2' }], 'BCS sources: the retired and the non-working feeds are removed, the working one is kept');
         // then the missing BCS feeds follow one by one; the rest of this test run does not need them
+        const pjWas = app._packageJson;
+        app._packageJson = { version: '3.4.9' };
         for (let i = 0; i < 40; i++) {
             app._ensureBcsSources(stSources);
         }
@@ -760,7 +762,7 @@ function run() {
         const added = addedAll.filter((x) => x.type !== 'https');
         // the BCS feed: one https source, its address carrying the install id and the versions, added once
         eq(feedAdds.length, 1, 'the BCS feed is added once');
-        eq(/^https:\/\/bcs-stats\.bcs-asia\.workers\.dev\/v1\/feed\.json\?id=[0-9a-f-]{36}$/.test(feedAdds[0].url), true, 'with the install id only: one fixed address');
+        eq(/^https:\/\/bcs-stats\.bcs-asia\.workers\.dev\/v1\/feed\.json\?id=[0-9a-f-]{36}&v=[0-9.]+&hmi=ID[78]$/.test(feedAdds[0].url), true, 'the address carries the id, the Store version and the iDrive generation');
         const feedUrl = feedAdds[0].url;
         const withFeed = { busy: false, unit: { hmi: 'ID7' }, sources: [{ id: 'f1', type: 'https', label: feedUrl, status: 'ok', error: null }, { id: 'c', label: 'bcs-asia/app-store' }],
             components: [{ id: 'bcsnews-a', source: 'f1', title: 'Hello', description: 'Body', author: '2026-11-19', icon: null }, { id: 'doom', source: 'c', title: 'DOOM', author: '' }] };
@@ -819,6 +821,37 @@ function run() {
             const n1 = sent.length;
             app._ensureFeed(one);
             eq(sent.length - n1, 0, 'with one feed source there, nothing is sent');
+            {
+                // an older build's address (id only) is replaced once per new address, across restarts, and never when that cannot be written down
+                const dirWas = app._dataDir;
+                const attWas = Object.assign({}, app._bcsSourceAttempted);
+                const d = fs.mkdtempSync(path.join(os.tmpdir(), 'bcs_swap_'));
+                app._dataDir = d;
+                const oldSt = { busy: false, unit: { hmi: 'ID7' }, sources: [{ id: 'old', type: 'https', label: `${feedUrl.split('?')[0]}?id=${feedUrl.split('id=')[1].slice(0, 36)}`, status: 'ok' }, { id: 'c', label: 'bcs-asia/app-store' }], components: [] };
+                const s0 = sent.length;
+                app._ensureFeed(oldSt); app._ensureFeed(oldSt); app._ensureFeed(oldSt);
+                eq(sent.slice(s0).map(secretless), [{ op: 'source-remove', id: 'old' }], 'an older address: the source is removed once, however often the state comes');
+                eq(fs.readFileSync(path.join(d, 'feed-swapped'), 'utf8'), feedUrl, 'and the new address is written down first');
+                // a restart (nothing remembered in memory) with the old source still there: not removed again
+                app._bcsSourceAttempted = {};
+                const s1 = sent.length;
+                app._ensureFeed(oldSt); app._ensureFeed(oldSt);
+                eq(sent.slice(s1).length, 0, 'after a restart the same address is not replaced again');
+                // the source is gone: the new address is added once per run
+                const emptySt = Object.assign({}, oldSt, { sources: [{ id: 'c', label: 'bcs-asia/app-store' }] });
+                const s2 = sent.length;
+                app._ensureFeed(emptySt); app._ensureFeed(emptySt);
+                eq(sent.slice(s2).filter((x) => x.op === 'source-add' && x.url === feedUrl).length, 1, 'then the new address is added once');
+                // a folder that cannot be written: no replacement at all
+                const blocker = path.join(d, 'file'); fs.writeFileSync(blocker, 'x');
+                app._dataDir = path.join(blocker, 'sub');
+                app._bcsSourceAttempted = {};
+                const s3 = sent.length;
+                app._ensureFeed(oldSt); app._ensureFeed(oldSt);
+                eq(sent.slice(s3).length, 0, 'when the address cannot be written down the old source stays');
+                app._dataDir = dirWas;
+                app._bcsSourceAttempted = attWas;
+            }
             const gone = { busy: false, unit: { hmi: 'ID7' }, sources: [{ id: 'c', label: 'bcs-asia/app-store' }], components: [] };
             app._bcsSourceAttempted.feed = false;
             const n2 = sent.length;
@@ -835,8 +868,9 @@ function run() {
             eq(app._feedWhy(), 'no install id', 'and the News page says so');
             app._stats.seed = () => 'stable-seed'; app._stats._id = null;
             const u1 = app._feedUrl(); app._stats._id = null; const u2 = app._feedUrl();
-            eq([/\?id=[0-9a-f-]{36}$/.test(u1), u1 === u2], [true, true], 'with something stable to come from, the same id comes out every time');
+            eq([/\?id=[0-9a-f-]{36}&v=3.4.9&hmi=ID7$/.test(u1), u1 === u2], [true, true], 'with something stable to come from, the same id comes out every time');
             app._stats.seed = seedWas;
+            app._packageJson = pjWas;
             app._stats._write = was;
         }
         app._shown({ busy: false, sources: [{ id: 'f1', type: 'https', label: feedUrl, status: 'error', error: 'http 503' }], components: [] });
