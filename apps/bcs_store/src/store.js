@@ -1549,8 +1549,32 @@ class Store extends OnlineApp {
         }
         let id = '';
         try { id = this._stats.id(); } catch (e) { return ''; }
-        // one fixed address per install: only the id (no version), and none at all while the id could not be saved
-        return /^[0-9a-f-]{36}$/.test(id) ? `${FEED_URL}?id=${id}` : '';
+        if (!/^[0-9a-f-]{36}$/.test(id)) {
+            return '';      // no address at all while the id could not be saved
+        }
+        // the id, the Store's version and the iDrive generation: all three are fixed for a given install of a given build (the generation
+        // comes from the RHMI the Store loaded, not from the updater's state, so it cannot change under a running Store), so the address
+        // changes only when the Store itself is updated
+        const ver = String(this._version() || '');
+        const hmi = this._hmi === 'ID8' ? 'ID8' : 'ID7';
+        return `${FEED_URL}?id=${id}${/^[0-9][0-9A-Za-z.-]{0,15}$/.test(ver) ? `&v=${ver}` : ''}&hmi=${hmi}`;
+    }
+
+    _swapFile() { return path.join(this._dataDir || DATA_DIR, 'feed-swapped'); }
+
+    /* The feed source is replaced at most once per address, across restarts: the address we want is written down BEFORE the old source is
+     * removed, and a write that cannot be read back means no replacement at all (a unit that cannot save it could repeat it at every start). */
+    _swapAllowed(url) {
+        try {
+            if (fs.readFileSync(this._swapFile(), 'utf8').trim() === url) {
+                return false;
+            }
+        } catch (e) { /* none yet */ }
+        try {
+            fs.mkdirSync(this._dataDir || DATA_DIR, { recursive: true });
+            fs.writeFileSync(this._swapFile(), url);
+            return fs.readFileSync(this._swapFile(), 'utf8').trim() === url;
+        } catch (e) { return false; }
     }
 
     _isFeed(src) {
@@ -1625,6 +1649,13 @@ class Store extends OnlineApp {
                 this._bcsSourceAttempted[`feeddrop:${src.id}`] = true;
                 this._privileged({ op: 'source-remove', id: src.id });
             });
+            return true;
+        }
+        // one feed source with an older address (a build before this one): replaced once, then added again below on the next state
+        if (have.length === 1 && keep.label !== url && !this._bcsSourceAttempted[`feeddrop:${keep.id}`] && this._swapAllowed(url)) {
+            this._bcsSourceAttempted[`feeddrop:${keep.id}`] = true;
+            this._privileged({ op: 'source-remove', id: keep.id });
+            logger.info('BCS feed source replaced (new Store version)');
             return true;
         }
         if (!have.length && !this._bcsSourceAttempted.feed) {
