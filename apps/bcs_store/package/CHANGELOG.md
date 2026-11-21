@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.4.7
+
+- Three more sources, added when missing: robertnisipeanu/idrive-apps (cluster-render and the Waze cluster tools; Releases), ALMSTRA/idv7lol (cluster theme editor; iDrive 7; Releases) and eroobeeroo/idrive7-cluster-info (cluster layouts and vehicle information; iDrive 7; built from the main branch). 3.4.6 added mlurker/bmw-idrive7-apps and dwz365365/id7f.
+
 ## 3.4.6
 
 - Two new sources, added when missing: mlurker/bmw-idrive7-apps (HUD turn and blind spot signals; iDrive 7) and dwz365365/id7f (a cluster map app; iDrive 7, experimental: parked testing only). Both are on the Releases channel.
