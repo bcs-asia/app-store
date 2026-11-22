@@ -1,4 +1,4 @@
-# BCS Store (bcs_store) 3.4.9
+# BCS Store (bcs_store) 3.4.11
 
 BCS Automotive Solutions' Store for the BMW MGU head unit, based on [MGU Store](https://github.com/robertnisipeanu/mgu-store) by Robert Nisipeanu (GPL-3.0-or-later). The text below is the upstream Store's README (0.9.26); BCS Store's own screens are listed in package/CHANGELOG.md (2.2.1). `tools/gen_bcs_screens.js` writes src/am_screens.js from tools/upstream/.
 

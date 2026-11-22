@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.4.11
+
+- One more source, added when missing: jsbaughman/apps (a copy of the bimmer-lab apps: Cluster Themes and HUD Widgets; iDrive 7; built from the main branch). It uses the same app ids as bimmer-lab/apps, so an app installed from one of the two is updated only from that one.
+
+## 3.4.10
+
+- One more source, added when missing: sas46/idrive7_dpf_app (a diesel particulate filter regeneration monitor; iDrive 7; built from the main branch).
+
 ## 3.4.9
 
 - Statistics: the Store version and the iDrive generation (ID7 or ID8) are back in the feed address, so the dashboard shows them again. The address is fixed for a given install of a given build: the id, the version and the generation (taken from the RHMI the Store loaded, not from the updater). When the Store itself is updated, the old feed source is replaced once: the new address is written down first, the replacement happens at most once per address even across restarts, and it does not happen at all when the address cannot be saved. The loop breaker still guards every source add and remove.
