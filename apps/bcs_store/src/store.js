@@ -125,7 +125,9 @@ const BCS_SOURCES = [
     ['ALMSTRA/idv7lol', 'releases'],
     ['eroobeeroo/idrive7-cluster-info', 'branch:main'],
     // 3.4.8: Vizualyse's Cast to cluster (phone stream on the cluster or HUD; iDrive 7; tech demo; releases)
-    ['Vizualyse/idrive-apps', 'releases']
+    ['Vizualyse/idrive-apps', 'releases'],
+    // 3.4.10: sas46's DPF regeneration monitor (iDrive 7; built from the main branch, no release catalog)
+    ['sas46/idrive7_dpf_app', 'branch:main']
 ];
 /* The updater writes the privileged secret, and while the phone page is on
  * its access URL, into this app's data folder (owner this app's uid, 0400);
