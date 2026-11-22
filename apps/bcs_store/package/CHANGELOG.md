@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.4.11
+
+- One more source, added when missing: jsbaughman/apps (a copy of the bimmer-lab apps: Cluster Themes and HUD Widgets; iDrive 7; built from the main branch). It uses the same app ids as bimmer-lab/apps, so an app installed from one of the two is updated only from that one.
+
 ## 3.4.10
 
 - One more source, added when missing: sas46/idrive7_dpf_app (a diesel particulate filter regeneration monitor; iDrive 7; built from the main branch).
