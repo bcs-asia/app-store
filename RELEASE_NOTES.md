@@ -1,6 +1,8 @@
-# BCS Store 3.4.12
+# BCS Store 3.4.13
 
-- One more source, added automatically when missing: `waliworld/MGU-Styles2` (Releases channel). It could not be read when it was added, so it shows as unavailable until the repository is public with a catalog.
-- Nothing else changed. Everything from 3.4.6 to 3.4.11 (new sources, the Store version and iDrive back in the stats feed) is already in 3.4.11.
+- Two new sources, added automatically when missing:
+  - `waliworld/Beem-Net`: a web browser for iDrive 7 and 8 (beta; Releases channel)
+  - `waliworld/MGU-Styles2` (3.4.12): not readable when it was added, so it shows as unavailable until it is public with a catalog
+- Nothing else changed. Everything up to 3.4.11 is already published.
 
-Update from the USB stick or over the air: the Store shows Update now (3.4.12). Install it, then restart the head unit.
+Update from the USB stick or over the air: the Store shows Update now (3.4.13). Install it, then restart the head unit.
