@@ -1,5 +1,6 @@
-# BCS Store 3.4.19
+# BCS Store 3.4.20
 
-- **BCS BLUE - Christmas:** the backdrop is now the BCS Christmas photo (the M8 in the snow, the chalet lights), behind the Apps, Tools and USB cards.
-- **Icon:** the Store's icon on the home screen wears a Santa hat. (The car may keep showing the old icon until the head unit restarts.)
-- Includes 3.4.14 to 3.4.18.
+- **New source:** eroobeeroo/idrive7-cluster-info is now added with the first sources (it was waiting in the scroll-to-load group).
+- **Menu:** the picture and word are centred in the open tab (Performance Red and Luxury Carbon).
+- The Christmas look was left out: BCS Blue, the backdrops, the logo and the icon are as in 3.4.17.
+- Includes 3.4.14 to 3.4.17: faster lists, 12 tiles at a time with a ring, a bounce at the list end, the News arrows at the bottom, smaller pictures.

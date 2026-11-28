@@ -1,13 +1,8 @@
 # Changelog
 
-## 3.4.19
+## 3.4.20
 
-- BCS BLUE - Christmas: the backdrop is now the BCS Christmas photo (the M8 in the snow, the chalet lights).
-- The Store's icon on the home screen wears a Santa hat.
-
-## 3.4.18
-
-- **BCS BLUE - Christmas:** BCS Blue is now "BCS BLUE - Christmas": a snowy chalet backdrop behind the Apps, Tools and USB cards, and a Santa hat on the BCS logo. It is the default look for cars that have not picked one; a look already chosen stays. Performance Red and Luxury Carbon are unchanged.
+- One more source loaded with the first ones: eroobeeroo/idrive7-cluster-info.
 - The menu's picture and word are centred in the open tab (Performance Red and Luxury Carbon).
 
 ## 3.4.17

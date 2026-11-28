@@ -13,7 +13,7 @@ const W = require('./am_widgets.js');
 const { t: tr } = require('./i18n.js');
 const look = require('./bcs_look.js');
 const kit = require('./kit_record.js');
-const { BG, CARBON, XMAS, RATIO: BG_RATIO } = require('./bcs_bg.js');
+const { BG, CARBON, RATIO: BG_RATIO } = require('./bcs_bg.js');
 
 const GREEN = '#35d07f', BLUE = '#e4002b', AMBER = '#ffb020';
 const C = (t, c, d) => (c ? t[c] || c : d);
@@ -113,8 +113,6 @@ function themeThumb(cv, id, x, y, w, h) {
             if (img) cv.image(img, x + nw, y + h - ih, w - nw, ih, 0);
         } else {
             cv.card(x, y, w, h, 0, [[0, '#0d3a5c'], [1, '#06182a']]);
-            const xi = W.picture(XMAS), xh = Math.min(h, (w - nw) / BG_RATIO);
-            if (xi) cv.image(xi, x + nw, y + h - xh, w - nw, xh, 0);
         }
         // side menu: the open tab (a flat red band / a round blue disc) over three more
         cv.fillRect(x, y, nw, h, red ? withAlpha('#050505', 0.94) : withAlpha('#07192b', 0.9));

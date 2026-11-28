@@ -2,7 +2,7 @@
 /**
  * BCS Store's looks, the choice on Settings > Theme:
  *
- *   blue  BCS BLUE - Christmas  the cyan-blue look on the kit's tricolour theme, soft round cards, the snowy chalet backdrop and a Santa hat on the logo (3.4.18; the default)
+ *   blue  BCS Blue         the cyan-blue look on the kit's tricolour theme, soft round cards
  *   red   Performance Red  the black and red sport look: square cards with a red corner flag, a flat red tab, the M4 GT3 backdrop
  *   carbon Luxury Carbon   black carbon fibre with a light sweep, gold buttons and thin gold frames
  *
@@ -13,12 +13,12 @@
 const kit = require('./kit_record.js');
 const RED = '#e4002b';
 const LOOKS = {
-    blue: { id: 'blue', name: 'BCS BLUE - Christmas', theme: 'm_tricolour', accent: '#00bfff', sport: false, sharp: false, photo: 'xmas', hat: true },
+    blue: { id: 'blue', name: 'BCS Blue', theme: 'm_tricolour', accent: '#00bfff', sport: false, sharp: false },
     carbon: { id: 'carbon', name: 'Luxury Carbon', theme: 'm_carbon', accent: '#d4b36a', sport: true, sharp: true, lux: true, photo: 'carbon' },
     red: { id: 'red', name: 'Performance Red', theme: 'm_red', accent: RED, sport: true, sharp: true, photo: 'red' }
 };
 const ORDER = ['blue', 'red', 'carbon'];
-const DEFAULT = 'blue';
+const DEFAULT = 'red';
 let current = LOOKS[DEFAULT];
 
 const known = (id) => Object.prototype.hasOwnProperty.call(LOOKS, id);

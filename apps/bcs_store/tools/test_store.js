@@ -879,13 +879,13 @@ function run() {
         app._shown(ST);
         eq(app._news.items().length, 0, 'no feed, no announcements');
         eq(added.every((x) => x.op === 'source-add' && (x.channel === 'releases' || x.channel === 'branch:main')), true, 'the feeds are added on their release or branch channel');
-        eq(added.length, 12, '3.4.14: each missing core BCS feed is added once (not the one already there); the extra ones wait');
-        eq(added.some((x) => /mlurker|dwz365365|Vizualyse|sas46|jsbaughman|Beem-Net|ALMSTRA|eroobeeroo|robertnisipeanu\/idrive-apps/.test(x.repo)), false, 'no extra source is added by itself');
+        eq(added.length, 13, '3.4.14: each missing core BCS feed is added once (not the one already there); the extra ones wait');
+        eq(added.some((x) => /mlurker|dwz365365|Vizualyse|sas46|jsbaughman|Beem-Net|ALMSTRA|robertnisipeanu\/idrive-apps/.test(x.repo)), false, 'no extra source is added by itself');
         {
             // the waiting sources load a batch at a time, when the list is scrolled to its end or the tile is pressed
             app._stRaw = stSources;
             const mm = app._moreModel();
-            eq([mm.pending, mm.loading], [9, false], 'nine sources wait, nothing loads');
+            eq([mm.pending, mm.loading], [8, false], 'eight sources wait, nothing loads');
             const sui = require('../src/store_ui.js');
             const vm = (more, view) => sui.view({ st: Object.assign({ components: [], catalog: { checking: false }, online: true, busy: null }, stSources), connected: true, secret: true, version: 'x', look: 'red', stack: [{ name: 'main' }], tab: 'store', filter: 'all',
                 view, held: null, more, news: { count: 0, unseen: 0, index: 0, item: null, error: '', busy: false }, checking: false, language: 'en' }).values.grid;
@@ -913,7 +913,7 @@ function run() {
                 app._spinStop(); app._moreUntil = 0;
             }
             eq(app._morePending(stSources), 0, 'a few more presses load them all, each once');
-            eq(sent.filter((x) => x.op === 'source-add' && /mlurker|dwz365365|Vizualyse|sas46|jsbaughman|Beem-Net|ALMSTRA|eroobeeroo|robertnisipeanu\/idrive-apps/.test(x.repo || '')).length, 9, 'nine extra sources, each asked for once');
+            eq(sent.filter((x) => x.op === 'source-add' && /mlurker|dwz365365|Vizualyse|sas46|jsbaughman|Beem-Net|ALMSTRA|robertnisipeanu\/idrive-apps/.test(x.repo || '')).length, 8, 'eight extra sources, each asked for once');
             app._spinStop();
         }
         eq(['waliworld/iDrive8-RideTube', 'cauliflowermossgrape/idrive7-apps', 'IterioDev/car-apps', 'noth4m4d/mgu-hamadstools'].every((r) => added.some((x) => x.repo === r)), true, '3.2.2: the new feeds are added');
@@ -1139,9 +1139,9 @@ function runWidgetsExtra() {
         eq(sent.map(secretless), [{ op: 'uninstall', id: 'doom', tools: ['mgu-renderd'] }], 'as the drawn Remove all does');
         {   // Settings > Theme: the look is kept and drawn
             const lf = path.join(DATA, 'look'), had = require('fs').existsSync(lf) ? require('fs').readFileSync(lf, 'utf8') : null;
-            eq(app._drawnModel().look, 'blue', 'BCS BLUE - Christmas by default');
-            app._act({ do: 'look', id: 'red' });
-            eq([app._drawnModel().look, require('fs').readFileSync(lf, 'utf8')], ['red', 'red'], 'the look chosen is kept');
+            eq(app._drawnModel().look, 'red', 'Performance Red by default');
+            app._act({ do: 'look', id: 'blue' });
+            eq([app._drawnModel().look, require('fs').readFileSync(lf, 'utf8')], ['blue', 'blue'], 'the look chosen is kept');
             app._act({ do: 'look', id: 'carbon' });
             eq(app._drawnModel().look, 'carbon', 'Luxury Carbon');
             app._act({ do: 'look', id: 'nope' });
