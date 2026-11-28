@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.4.20
+
+- One more source loaded with the first ones: eroobeeroo/idrive7-cluster-info.
+- The menu's picture and word are centred in the open tab (Performance Red and Luxury Carbon).
+
 ## 3.4.17
 
 - Smaller backdrop pictures (800 px wide, fewer shades; both about 55% smaller). They are drawn stretched behind the cards, so they are a little softer.

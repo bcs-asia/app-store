@@ -6,12 +6,12 @@
       "kind": "app",
       "title": "Store",
       "description": "BCS Automotive Solutions: apps and head-unit tools for the BMW MGU, from BCS and community sources",
-      "version": "3.4.17",
+      "version": "3.4.20",
       "artifact": {
-        "name": "bcs_store@3.4.17.tgz",
-        "size": 4575225,
-        "sha256": "9973426d91abd3cb50e94f471903089e43770b7bbcaa1e8384bf30ba916c64bf",
-        "url": "https://github.com/bcs-asia/app-store/releases/download/v3.4.17/bcs_store@3.4.17.tgz"
+        "name": "bcs_store@3.4.20.tgz",
+        "size": 4575372,
+        "sha256": "4a781a798fe0c64dc282ef36d61951adee76685f77e37d5adaa85ba065fee4e1",
+        "url": "https://github.com/bcs-asia/app-store/releases/download/v3.4.20/bcs_store@3.4.20.tgz"
       },
       "build": "unit",
       "requires": {

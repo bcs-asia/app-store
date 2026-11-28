@@ -116,13 +116,14 @@ const BCS_SOURCES = [
     ['IterioDev/car-apps', 'branch:main'],
     // AirPlay screen mirroring (parked) and Waze Cards on the cluster, iDrive 7 (releases)
     ['noth4m4d/mgu-hamadstools', 'releases'],
+    // 3.4.20: eroobeeroo's cluster info app (iDrive 7; built from the main branch), added with the first sources
+    ['eroobeeroo/idrive7-cluster-info', 'branch:main'],
     // 3.4.6: mlurker's HUD signals tool (iDrive 7) and dwz365365's cluster map app (iDrive 7, experimental); both publish a releases catalog
     ['mlurker/bmw-idrive7-apps', 'releases'],
     ['dwz365365/id7f', 'releases'],
     // 3.4.7: Robert's cluster-render and Waze cluster (the renderer the cluster tools need; releases), ALMSTRA's cluster theme editor (iDrive 7; releases) and eroobeeroo's cluster info layouts (iDrive 7; built from the main branch)
     ['robertnisipeanu/idrive-apps', 'releases'],
     ['ALMSTRA/idv7lol', 'releases'],
-    ['eroobeeroo/idrive7-cluster-info', 'branch:main'],
     // 3.4.8: Vizualyse's Cast to cluster (phone stream on the cluster or HUD; iDrive 7; tech demo; releases)
     ['Vizualyse/idrive-apps', 'releases'],
     // 3.4.10: sas46's DPF regeneration monitor (iDrive 7; built from the main branch, no release catalog)
@@ -135,7 +136,7 @@ const BCS_SOURCES = [
 ];
 // The first CORE_SOURCES are added at once; the rest wait until the list is scrolled to its end (a spinner), MORE_BATCH at a time: every source
 // is one more the updater reads at each check, and a car that adds a dozen at once is slow
-const CORE_SOURCES = 14;
+const CORE_SOURCES = 15;
 const MORE_BATCH = 3;
 const PAGE_MS = process.env.BCS_PAGE_MS !== undefined ? Number(process.env.BCS_PAGE_MS) || 0 : 650;      // the ring turns this long before the next tiles show (the env is for tests only)
 const OPEN_CHECK_MS = process.env.BCS_OPEN_CHECK_MS !== undefined ? Number(process.env.BCS_OPEN_CHECK_MS) : 1500;   // the look at the sources waits for the first drawn page
