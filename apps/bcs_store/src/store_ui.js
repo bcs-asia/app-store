@@ -292,6 +292,8 @@ function wifiChip(m) {
     return [{ text: 'Wi-Fi', color: bars >= 3 ? GREEN : bars === 2 ? BLUE : AMBER, bars }];
 }
 
+const PAGE = 12;       // tiles shown at first, and added each time the list is scrolled to its end
+
 /* The Apps tab (kind 'app') and the Tools tab (kind 'tool'): the cards of one kind, the BCS Store first. */
 function storeView(m, kind) {
     const busy = busyOf(m);
@@ -302,7 +304,11 @@ function storeView(m, kind) {
     const installedOnly = m.view === 'installed';
     // All: what the Store offers (not Robert's Store). Installed: what is installed of the kind, Robert's Store too when it is
     const base = installedOnly ? rawComps(m).filter((c) => c.installed && (c.id !== 'bcs_store' || comps(m).indexOf(c) >= 0)) : comps(m);
-    const list = base.filter((c) => (kind === 'tool' ? isTool(c) : !isTool(c))).sort((a, b) => own(a) - own(b));
+    const full = base.filter((c) => (kind === 'tool' ? isTool(c) : !isTool(c))).sort((a, b) => own(a) - own(b));
+    // the All list shows its first PAGE tiles; the rest, and the sources still to load, come as the list is scrolled to its end (a ring below the last row)
+    const limit = Math.max(PAGE, (m.limit && m.limit[kind === 'tool' ? 'tool' : 'app']) | 0);
+    const list = installedOnly ? full : full.slice(0, limit);
+    const more = !installedOnly && m.connected && (full.length > list.length || !!(m.more && (m.more.pending > 0 || m.more.loading)));
     const name = sourceNames(list, sources(m));
     const noun = kind === 'tool' ? 'tools' : 'apps';
     // Restart now and Leave safe mode take the toggles' place while they show
@@ -317,18 +323,8 @@ function storeView(m, kind) {
         viewInstalled: toggle('installed', 'Installed'),
         safeModeOff: safeModeOff(m),
         restartNow: safeModeOff(m).hidden ? restartNow(m) : hidden,
-        grid: { items: list.map((c) => tile(m, c, busy, name)).concat(moreTile(m, installedOnly)), empty: m.connected ? (installedOnly ? `No ${noun} installed` : tr("Nothing here")) : '' }
+        grid: { items: list.map((c) => tile(m, c, busy, name)), more, moreAct: more ? { do: 'load-more', kind } : null, loading: more && !!(m.more && m.more.loading), spin: m.more ? m.more.spin | 0 : 0, empty: m.connected ? (installedOnly ? `No ${noun} installed` : tr("Nothing here")) : '' }
     };
-}
-
-/* The last tile of the All list while sources wait to be loaded (or load): a ring, turning while they load; a press or the list's end loads
- * the next few sources. No text. */
-function moreTile(m, installedOnly) {
-    const more = m.more;
-    if (installedOnly || !m.connected || !more || !(more.pending > 0 || more.loading)) {
-        return [];
-    }
-    return [{ id: 'more-sources', loader: true, loading: !!more.loading, spin: more.loading ? more.spin | 0 : 0, title: '', src: '', act: { do: 'load-sources' } }];
 }
 
 function installedView(m) {
@@ -946,4 +942,9 @@ function icons(v) {
     return out.filter((f, i) => out.indexOf(f) === i);
 }
 
-module.exports = { view, icons, typeKey, wifiOf, proxyOf, TABS, FILTERS, canRestart };
+/* How many tiles the All list of a kind has before paging (store.js: whether there are more to show). */
+function listLength(m, kind) {
+    return comps(m).filter((c) => (kind === 'tool' ? isTool(c) : !isTool(c))).length;
+}
+
+module.exports = { PAGE, listLength, view, icons, typeKey, wifiOf, proxyOf, TABS, FILTERS, canRestart };

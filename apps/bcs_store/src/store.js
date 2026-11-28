@@ -83,7 +83,7 @@ const LOOP_MS = 10000;
 const CHECK_LOCK_MS = 8000;       // Check for updates stays greyed at least this long after a press (the updater may take a moment to say it is checking)
 const { spell } = require('./speller.js');
 const { Drawn, DEPTHS } = require('./store_drawn.js');
-const { typeKey, wifiOf, proxyOf } = require('./store_ui.js');
+const { typeKey, wifiOf, proxyOf, PAGE, listLength } = require('./store_ui.js');
 const { PHASE, percent, rowState, rowAction, groupState, statusLine, sourceLabel, sourceState,
     sourcesState, sourceActions, sourceChannel, sourceAccount, tokenLabel, tokenState, tokenSources, accountsState,
     loginStatus, loginCode, phoneState, phoneAddress, parseSource, pickOptions, probeStatus, neededBy, sourcesMessage, tokenMessage,
@@ -139,6 +139,7 @@ const BCS_SOURCES = [
 // is one more the updater reads at each check, and a car that adds a dozen at once is slow
 const CORE_SOURCES = 14;
 const MORE_BATCH = 3;
+const PAGE_MS = process.env.BCS_PAGE_MS !== undefined ? Number(process.env.BCS_PAGE_MS) || 0 : 650;      // the ring turns this long before the next tiles show (the env is for tests only)
 const SPIN_MS = 120;            // the spinner turns this often while sources load
 const SPIN_STEP = 45;           // degrees per turn
 const MORE_SHOW_MS = 2500;      // it keeps turning this long after the last source was asked for (the updater reads it then)
@@ -337,10 +338,10 @@ class Store extends OnlineApp {
             modes: this._hostModes
         });
         this._drawn.on('mode', (mode) => this._useUi(mode || 'widgets'));
-        // the Apps or Tools list scrolled to its end: the next few sources load
+        // the Apps or Tools list scrolled to its end: the next tiles show (and, once all are shown, the next few sources load)
         this._drawn.on('scroll-end', () => {
             if (this._drawnUi() && (this._drawn.tab === 'store' || this._drawn.tab === 'tools') && this._drawn.stack.length <= 1) {
-                this._loadMore();
+                this._loadNext(this._drawn.tab === 'tools' ? 'tool' : 'app');
             }
         });
         this._drawn.on('page-focus', (page) => {
@@ -354,6 +355,9 @@ class Store extends OnlineApp {
         this._moreBudget = 0;
         this._moreUntil = 0;
         this._spin = 0;
+        this._limit = { app: PAGE, tool: PAGE };      // tiles of each list shown (store_ui.js PAGE, more at each scroll to the end)
+        this._pageLoading = false;
+        this._pageTimer = null;
         this._client = new UpdaterClient(SOCKET, { reconnectMs: RECONNECT_MS });
         this._client.on('state', (st) => {
             // each connection says which Store this is: the updater's word that its update started
@@ -902,7 +906,7 @@ class Store extends OnlineApp {
             webText: web && web.enabled ? readFile(WEB_URL_FILE) : '', accountsNote: this._accountsNote,
             pick: this._pick && { repo: this._pick.repo, probe: this._pick.probe, tokenNote: !!this._pick.tokenNote },
             setupNote: this._setupNote || null, uplinkNote: this._uplinkNote, proxyNote: this._proxyNote, removeNote: this._removeNote, language: i18n.language(), look: this._look,
-            news: this._newsModel(), checking: this._checking(), more: this._moreModel() };
+            news: this._newsModel(), checking: this._checking(), more: this._moreModel(), limit: this._limit };
     }
 
     /* A press on the drawn screens (src/store_ui.js acts). */
@@ -934,7 +938,7 @@ class Store extends OnlineApp {
         case 'back': this._back(); break;
         case 'check': this._send({ op: 'check' }); break;
         case 'check-updates': this._checkUpdates(); break;
-        case 'load-sources': this._loadMore(); break;
+        case 'load-more': this._loadNext(act.kind); break;
         case 'open':
             if (act.page.name === 'news') {
                 this._newsShow(0);
@@ -1703,7 +1707,37 @@ class Store extends OnlineApp {
     }
 
     _moreLoading() {
-        return (this._moreBudget || 0) > 0 || Date.now() < (this._moreUntil || 0);
+        return this._pageLoading || (this._moreBudget || 0) > 0 || Date.now() < (this._moreUntil || 0);
+    }
+
+    /* The list was scrolled to its end (or its footer pressed): the ring turns a moment, then the next PAGE tiles show; with all
+     * of them shown, the next sources are loaded instead. */
+    _loadNext(kind) {
+        kind = kind === 'tool' ? 'tool' : 'app';
+        if (!this._connected || this._halted || !this._stRaw || this._moreLoading()) {
+            return;
+        }
+        const hidden = listLength(this._drawnModel(), kind) > this._limit[kind];
+        if (!hidden && this._morePending(this._stRaw) === 0) {
+            return;
+        }
+        this._pageLoading = true;
+        this._spinStart();
+        this._render();
+        clearTimeout(this._pageTimer);
+        this._pageTimer = setTimeout(() => {
+            this._pageTimer = null;
+            this._pageLoading = false;
+            if (hidden) {
+                this._limit[kind] += PAGE;
+            } else {
+                this._loadMore();
+            }
+            this._render();
+        }, PAGE_MS);
+        if (this._pageTimer.unref) {
+            this._pageTimer.unref();
+        }
     }
 
     /* What the lists show for it: the spinner tile while sources wait or load (store_ui.js). */
@@ -2318,6 +2352,7 @@ class Store extends OnlineApp {
         clearTimeout(this._hideTimer);
         clearTimeout(this._checkLockTimer);
         this._spinStop();
+        clearTimeout(this._pageTimer);
         clearTimeout(this._tokenAdding && this._tokenAdding.timer);
         this._endPick();
         this._pollWebUrl(false);

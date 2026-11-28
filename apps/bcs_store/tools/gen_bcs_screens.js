@@ -100,16 +100,18 @@ theme.components.push(comp('grid', 'appGrid', 460, 292, 2380, 548, { items: [], 
 const news = clone('prefer', 'news');
 news.components = news.components.filter((c) => ['usbPhone', 'list', 'back'].indexOf(c.name) < 0);    // a tab of its own: no Back
 find(news, 'title').opts.text = '';
-news.components.filter((c) => ['title', 'status', 'subtitle', 'note'].indexOf(c.name) >= 0).forEach((c) => { c.x = 480; });
+news.components.filter((c) => ['title', 'subtitle', 'note'].indexOf(c.name) >= 0).forEach((c) => { c.x = 480; });
+// the count and the arrows sit in the bottom row (right); the text stops above them
+const nstat = find(news, 'status');
+nstat.x = 2310; nstat.y = 764; nstat.w = 190; nstat.h = 56;
 news.components.push(
     comp('newsPhoto', 'image', 480, 292, 974, 548, { src: '', radius: 0 }),
     comp('newsNew', 'text', 1498, 292, 1342, 56, { text: '', size: 42, font: 'bold', align: 'left', color: '#e4002b' }),
     comp('newsDate', 'text', 1498, 352, 1342, 48, { text: '', size: 34, font: 'label', align: 'left', color: 'dim' }),
-    comp('newsTitle', 'text', 1498, 412, 1342, 150, { text: '', size: 56, font: 'bold', align: 'left', color: 'text', wrap: true }),
-    comp('newsBody', 'text', 1498, 566, 1342, 274, { text: '', size: 34, font: 'label', align: 'left', color: 'dim', wrap: true }),
-    // the arrows sit in the header row (right), so the text can use the column down to the bottom
-    comp('prev', 'vbutton', 2616, 140, 96, 96, { text: '', vicon: 'back', style: 'round', color: '#f4f7fb' }, 'event:prev'),
-    comp('next', 'vbutton', 2728, 140, 96, 96, { text: '', vicon: 'chevron', style: 'round', color: '#f4f7fb' }, 'event:next'));
+    comp('newsTitle', 'text', 1498, 412, 1342, 120, { text: '', size: 52, font: 'bold', align: 'left', color: 'text', wrap: true }),
+    comp('newsBody', 'text', 1498, 536, 1342, 196, { text: '', size: 32, font: 'label', align: 'left', color: 'dim', wrap: true }),
+    comp('prev', 'vbutton', 2616, 744, 96, 96, { text: '', vicon: 'back', style: 'round', color: '#f4f7fb' }, 'event:prev'),
+    comp('next', 'vbutton', 2728, 744, 96, 96, { text: '', vicon: 'chevron', style: 'round', color: '#f4f7fb' }, 'event:next'));
 // Updates (Robert's installed lists) keeps its layout, with Check for updates under the lists (3.4.3)
 const updatesScreen = S.find((s) => s.name === 'installed');
 ['apps', 'services'].forEach((n) => { find(updatesScreen, n).h = 392; });

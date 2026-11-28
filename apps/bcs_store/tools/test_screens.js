@@ -97,21 +97,25 @@ eq(f.items[7].act, { do: 'open', page: { name: 'app', id: 'bcs_store', source: '
     eq(g.items.filter((i) => i.act && i.act.page && i.act.page.id === 'bcs_store').length, 1, 'USB: BCS Store from a stick is listed');
 }
 {
-    // the loading tile at the end of the Apps list: drawn (still and turning), pressable, on both iDrive generations' layouts and in each look
+    // the Apps list shows 12 tiles at first; below the last row a ring (no text, not a card), turning while more load; pressable; on both layouts
     const st = fixture.state();
+    const base = st.components.find((c) => c.kind === 'app' && c.id !== 'bcs_store');
+    for (let i = 0; i < 30; i++) st.components.push(Object.assign({}, base, { id: `bulk${i}`, title: `Bulk ${i}`, installed: null, status: 'available' }));
     [[ID7.scale, ID7.layout], [1, undefined]].forEach(([scale, layout], k) => {
-        [null, { pending: 4, loading: false, spin: 0 }, { pending: 4, loading: true, spin: 135 }].forEach((more) => {
-            const g = frame(fixture.model({ tab: 'store', more }, st), { textScale: scale, focus: -1, scroll: {}, layout });
-            const loaders = g.values.grid.items.filter((t) => t.loader);
-            eq(loaders.length, more ? 1 : 0, `loading tile ${more ? 'shown' : 'hidden'} (layout ${k})`);
-            if (more) {
-                eq([g.values.grid.items[g.values.grid.items.length - 1].loader, g.values.grid.items[g.values.grid.items.length - 1].spin], [true, more.loading ? more.spin : 0], 'it is the last tile and carries the turn');
-                eq(g.items.some((i) => i.act && i.act.do === 'load-sources'), true, 'and it can be pressed');
-            }
-            eq(!!g.rec && g.rec.n > 0, true, 'and the screen draws');
-        });
+        const f = (over) => frame(fixture.model(Object.assign({ tab: 'store' }, over), st), { textScale: scale, focus: -1, scroll: {}, layout });
+        const g = f({});
+        eq(g.values.grid.items.length, 12, `12 tiles at first (layout ${k})`);
+        eq([g.values.grid.more, g.values.grid.moreAct, g.values.grid.loading], [true, { do: 'load-more', kind: 'app' }, false], 'a ring row follows, pressable');
+        eq(g.items.some((i) => i.act && i.act.do === 'load-more'), true, 'its footer can be pressed');
+        eq(g.regions.every((r) => r.max > 0), true, 'and the list scrolls');
+        eq(!!g.rec && g.rec.n > 0, true, 'the screen draws');
+        const g2 = f({ limit: { app: 24, tool: 12 }, more: { pending: 0, loading: true, spin: 135 } });
+        eq([g2.values.grid.items.length, g2.values.grid.loading, g2.values.grid.spin], [24, true, 135], '24 tiles after a page, the ring turning');
+        eq(!!g2.rec && g2.rec.n > 0, true, 'drawn turning');
+        const g3 = f({ limit: { app: 60, tool: 12 } });
+        eq([g3.values.grid.items.length > 30, !!g3.values.grid.more], [true, false], 'all shown: no ring');
+        eq(!!f({ view: 'installed' }).values.grid.more, false, 'no ring on the Installed list');
     });
-    eq(frame(fixture.model({ tab: 'store', view: 'installed', more: { pending: 4, loading: false, spin: 0 } }, st), { textScale: 1, focus: -1, scroll: {} }).values.grid.items.some((t) => t.loader), false, 'not on the Installed list');
 }
 const subs = f.values.grid.items.concat(screen('store', { tab: 'tools' }).values.grid.items).map((t) => t.sub);
 ['Downloading 42 %', 'Update a1b2c3d', 'Waiting', 'Restart pending', 'Failed', 'Installed', '2.1.0 · 402 KB']
@@ -149,7 +153,7 @@ for (let i = 0; i < 44; i++) {
 }
 const T = 8;                    // the first card: after the side menu and the All / Installed toggles (installed ones: no button of their own)
 const scroll = {};
-f = frame(fixture.model({}, many), { textScale: 1, focus: T + 40, scroll, layout: ID7.layout });
+f = frame(fixture.model({ limit: { app: 60, tool: 12 } }, many), { textScale: 1, focus: T + 40, scroll, layout: ID7.layout });
 ok(scroll['store.grid'] > 0 && !f.items[T + 40].reveal, 'the focused tile scrolled into view');
 eq(hit(f.items, f.items[T + 40].x + 5, f.items[T + 40].y + 5), T + 40);
 ok(f.items[T].reveal, 'the first tiles out of view now');
@@ -157,7 +161,7 @@ eq(hit(f.items, f.items[T].x + 5, f.items[T].y + 5), -1, 'and not hit');
 
 // a drag scrolls by the pixel: a grid stops part way through a row, both part-shown rows draw and take a tap
 const half = { 'store.grid': 0.5 };
-f = frame(fixture.model({}, many), { textScale: 1, focus: -1, scroll: half, layout: ID7.layout });
+f = frame(fixture.model({ limit: { app: 60, tool: 12 } }, many), { textScale: 1, focus: -1, scroll: half, layout: ID7.layout });
 const g = f.regions.find((r) => r.key === 'store.grid');
 eq(f.items[T].y, g.y - g.step / 2, 'the first row half scrolled out');
 eq(hit(f.items, f.items[T].x + 5, g.y + 5), T, 'its shown half takes a tap');
