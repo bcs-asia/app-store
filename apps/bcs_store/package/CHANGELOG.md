@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.4.14
+
+- Faster Apps and Tools lists: the screen was rebuilt with a scan of every app for each app (slow with a few hundred apps from two dozen sources). It is now built in one pass: about 25 times faster here, the screens are the same.
+- Sources load as you scroll: the 14 main sources are added at once as before; the 10 newer community sources wait. When the Apps or Tools list is scrolled to its end, or the ring at its end is pressed, the next three are added while the ring turns (no text). A car that already has them all shows no ring. Each source is still added once per run, and the loop breaker still applies.
+
 ## 3.4.13
 
 - One more source, added when missing: waliworld/Beem-Net (a web browser for iDrive 7 and 8; beta; Releases).

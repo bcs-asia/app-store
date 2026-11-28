@@ -96,6 +96,23 @@ eq(f.items[7].act, { do: 'open', page: { name: 'app', id: 'bcs_store', source: '
     const g = frame(fixture.model({ tab: 'usb' }, st), { textScale: 1, focus: 0, scroll: {} });
     eq(g.items.filter((i) => i.act && i.act.page && i.act.page.id === 'bcs_store').length, 1, 'USB: BCS Store from a stick is listed');
 }
+{
+    // the loading tile at the end of the Apps list: drawn (still and turning), pressable, on both iDrive generations' layouts and in each look
+    const st = fixture.state();
+    [[ID7.scale, ID7.layout], [1, undefined]].forEach(([scale, layout], k) => {
+        [null, { pending: 4, loading: false, spin: 0 }, { pending: 4, loading: true, spin: 135 }].forEach((more) => {
+            const g = frame(fixture.model({ tab: 'store', more }, st), { textScale: scale, focus: -1, scroll: {}, layout });
+            const loaders = g.values.grid.items.filter((t) => t.loader);
+            eq(loaders.length, more ? 1 : 0, `loading tile ${more ? 'shown' : 'hidden'} (layout ${k})`);
+            if (more) {
+                eq([g.values.grid.items[g.values.grid.items.length - 1].loader, g.values.grid.items[g.values.grid.items.length - 1].spin], [true, more.loading ? more.spin : 0], 'it is the last tile and carries the turn');
+                eq(g.items.some((i) => i.act && i.act.do === 'load-sources'), true, 'and it can be pressed');
+            }
+            eq(!!g.rec && g.rec.n > 0, true, 'and the screen draws');
+        });
+    });
+    eq(frame(fixture.model({ tab: 'store', view: 'installed', more: { pending: 4, loading: false, spin: 0 } }, st), { textScale: 1, focus: -1, scroll: {} }).values.grid.items.some((t) => t.loader), false, 'not on the Installed list');
+}
 const subs = f.values.grid.items.concat(screen('store', { tab: 'tools' }).values.grid.items).map((t) => t.sub);
 ['Downloading 42 %', 'Update a1b2c3d', 'Waiting', 'Restart pending', 'Failed', 'Installed', '2.1.0 · 402 KB']
     .forEach((s) => ok(subs.indexOf(s) >= 0, `a tile says ${s}`));

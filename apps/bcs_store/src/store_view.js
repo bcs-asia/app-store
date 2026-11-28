@@ -108,15 +108,37 @@ function sourceAuthor(src) {
  * title and the same author from another source (one owner's two repos'
  * DOOM). '' for a row of no known source. */
 function sourceNames(rows, sources) {
-    const of = (r) => (r && r.source && (sources || []).find((s) => s.id === r.source)) || null;
-    const author = (r) => (of(r) ? sourceAuthor(of(r)) : '');
+    // one pass over the sources and one over the rows, so a few hundred rows from two dozen sources cost a few hundred steps
+    const byId = new Map();
+    (sources || []).forEach((s) => { if (s && !byId.has(s.id)) { byId.set(s.id, s); } });
+    const authors = new Map();
+    const of = (r) => (r && r.source && byId.get(r.source)) || null;
+    const author = (r) => {
+        const s = of(r);
+        if (!s) {
+            return '';
+        }
+        if (!authors.has(s)) {
+            authors.set(s, sourceAuthor(s));
+        }
+        return authors.get(s);
+    };
+    // titles -> the (source, author) pairs that carry them
+    const titles = new Map();
+    (rows || []).forEach((o) => {
+        if (!titles.has(o.title)) {
+            titles.set(o.title, []);
+        }
+        titles.get(o.title).push({ source: o.source, author: author(o) });
+    });
     return (r) => {
         const s = of(r);
         if (!s) {
             return '';
         }
-        const twin = (rows || []).some((o) => o !== r && o.title === r.title && o.source !== r.source && author(o) === author(r));
-        return twin && !(s.usb || s.type === 'usb') ? String(s.label || s.id).replace(/^https:\/\//, '') : author(r);
+        const mine = author(r);
+        const twin = (titles.get(r.title) || []).some((o) => o.source !== r.source && o.author === mine);
+        return twin && !(s.usb || s.type === 'usb') ? String(s.label || s.id).replace(/^https:\/\//, '') : mine;
     };
 }
 

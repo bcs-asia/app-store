@@ -787,6 +787,10 @@ class Drawn extends EventEmitter {
             this.touch = null;
             if (t.drag) {
                 this._settle(t);
+                // the list stopped at its end: the host may load more (the Apps list's spinner)
+                if (t.region && t.region.max > 0 && (this.scroll[t.region.key] || 0) >= t.region.max - 0.02) {
+                    this.emit('scroll-end', t.region.key);
+                }
             } else if (t.item >= 0 && hit(this.items, x, y) === t.item) {
                 this.host.act(this.items[t.item].act);
             }

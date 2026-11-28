@@ -135,6 +135,13 @@ const BCS_SOURCES = [
     // 3.4.13: waliworld's Beem-Net, a web browser for iDrive 7 and 8 (releases; beta)
     ['waliworld/Beem-Net', 'releases']
 ];
+// The first CORE_SOURCES are added at once; the rest wait until the list is scrolled to its end (a spinner), MORE_BATCH at a time: every source
+// is one more the updater reads at each check, and a car that adds a dozen at once is slow
+const CORE_SOURCES = 14;
+const MORE_BATCH = 3;
+const SPIN_MS = 120;            // the spinner turns this often while sources load
+const SPIN_STEP = 45;           // degrees per turn
+const MORE_SHOW_MS = 2500;      // it keeps turning this long after the last source was asked for (the updater reads it then)
 /* The updater writes the privileged secret, and while the phone page is on
  * its access URL, into this app's data folder (owner this app's uid, 0400);
  * both are read again on every use. */
@@ -330,6 +337,12 @@ class Store extends OnlineApp {
             modes: this._hostModes
         });
         this._drawn.on('mode', (mode) => this._useUi(mode || 'widgets'));
+        // the Apps or Tools list scrolled to its end: the next few sources load
+        this._drawn.on('scroll-end', () => {
+            if (this._drawnUi() && (this._drawn.tab === 'store' || this._drawn.tab === 'tools') && this._drawn.stack.length <= 1) {
+                this._loadMore();
+            }
+        });
         this._drawn.on('page-focus', (page) => {
             this._focusedPage = `drawn:${page.name}`;
             this._render();
@@ -338,6 +351,9 @@ class Store extends OnlineApp {
         this._stRaw = null;
         this._connected = false;
         this._bcsSourceAttempted = Object.create(null);
+        this._moreBudget = 0;
+        this._moreUntil = 0;
+        this._spin = 0;
         this._client = new UpdaterClient(SOCKET, { reconnectMs: RECONNECT_MS });
         this._client.on('state', (st) => {
             // each connection says which Store this is: the updater's word that its update started
@@ -886,7 +902,7 @@ class Store extends OnlineApp {
             webText: web && web.enabled ? readFile(WEB_URL_FILE) : '', accountsNote: this._accountsNote,
             pick: this._pick && { repo: this._pick.repo, probe: this._pick.probe, tokenNote: !!this._pick.tokenNote },
             setupNote: this._setupNote || null, uplinkNote: this._uplinkNote, proxyNote: this._proxyNote, removeNote: this._removeNote, language: i18n.language(), look: this._look,
-            news: this._newsModel(), checking: this._checking() };
+            news: this._newsModel(), checking: this._checking(), more: this._moreModel() };
     }
 
     /* A press on the drawn screens (src/store_ui.js acts). */
@@ -918,6 +934,7 @@ class Store extends OnlineApp {
         case 'back': this._back(); break;
         case 'check': this._send({ op: 'check' }); break;
         case 'check-updates': this._checkUpdates(); break;
+        case 'load-sources': this._loadMore(); break;
         case 'open':
             if (act.page.name === 'news') {
                 this._newsShow(0);
@@ -1675,6 +1692,62 @@ class Store extends OnlineApp {
         return false;
     }
 
+    /* The sources that wait for the list's end: not in the updater and not asked for yet in this run. */
+    _morePending(st) {
+        const sources = st && Array.isArray(st.sources) ? st.sources : null;
+        if (!sources || !this._connected) {
+            return 0;
+        }
+        const have = (repo) => sources.some((src) => String(src.label || src.repo || '').toLowerCase() === repo.toLowerCase());
+        return BCS_SOURCES.slice(CORE_SOURCES).filter(([repo]) => !have(repo) && !this._bcsSourceAttempted[repo.toLowerCase()]).length;
+    }
+
+    _moreLoading() {
+        return (this._moreBudget || 0) > 0 || Date.now() < (this._moreUntil || 0);
+    }
+
+    /* What the lists show for it: the spinner tile while sources wait or load (store_ui.js). */
+    _moreModel() {
+        const pending = this._morePending(this._stRaw);
+        const loading = this._moreLoading();
+        return pending > 0 || loading ? { pending, loading, spin: this._spin || 0 } : null;
+    }
+
+    /* The next MORE_BATCH waiting sources are asked for (once each per run), and the spinner turns while the updater reads them. */
+    _loadMore() {
+        if (!this._connected || this._halted || !this._stRaw || this._moreLoading() || this._morePending(this._stRaw) === 0) {
+            return;
+        }
+        this._moreBudget = MORE_BATCH;
+        this._moreUntil = Date.now() + MORE_SHOW_MS;
+        logger.info('loading more sources');
+        this._ensureBcsSources(this._stRaw);
+        this._spinStart();
+        this._render();
+    }
+
+    _spinStart() {
+        if (this._spinTimer) {
+            return;
+        }
+        this._spinTimer = setInterval(() => {
+            this._spin = ((this._spin || 0) + SPIN_STEP) % 360;
+            if (!this._moreLoading() || !this._connected) {
+                this._spinStop();
+            }
+            this._render();
+        }, SPIN_MS);
+        if (this._spinTimer.unref) {
+            this._spinTimer.unref();
+        }
+    }
+
+    _spinStop() {
+        clearInterval(this._spinTimer);
+        this._spinTimer = null;
+        this._moreBudget = 0;
+    }
+
     _ensureBcsSources(st) {
         if (!st || !Array.isArray(st.sources) || !this._connected || st.busy || !readSecret()) {
             return;
@@ -1683,7 +1756,12 @@ class Store extends OnlineApp {
             return;
         }
         const have = (repo) => st.sources.some((src) => String(src.label || src.repo || '').toLowerCase() === repo.toLowerCase());
-        const next = BCS_SOURCES.find(([repo]) => !have(repo) && !this._bcsSourceAttempted[repo.toLowerCase()]);
+        const next = BCS_SOURCES.find(([repo], i) => !have(repo) && !this._bcsSourceAttempted[repo.toLowerCase()] &&
+            (i < CORE_SOURCES || this._moreBudget > 0));
+        if (next && BCS_SOURCES.indexOf(next) >= CORE_SOURCES) {
+            this._moreBudget -= 1;
+            this._moreUntil = Date.now() + MORE_SHOW_MS;
+        }
         if (!next) {
             try { this._ensureFeed(st); } catch (e) { logger.warn(`BCS feed not set up: ${e.message}`); }
             return;
@@ -1981,8 +2059,9 @@ class Store extends OnlineApp {
         // an updater without the reboot request (before 0.1.4) reports no rebooting
         this._show(C.restart, connected && !busy && st.rebooting === false);
 
+        const listedRows = connected ? withSources(st.components.filter(listed), st.sources) : [];      // once, not once per kind
         KINDS.forEach((kind) => {
-            const rows = connected ? withSources(st.components.filter(listed), st.sources).filter((c) => c.kind === kind) : [];
+            const rows = listedRows.filter((c) => c.kind === kind);
             this._set(LISTS[kind].nav, 'Text2ndCol', groupState(rows, busy), 'Text');
             this._show(LISTS[kind].nav, connected);
             this._renderList(LISTS[kind].list, rows.map((r) => [r.title, rowState(r, busy)]));
@@ -2238,6 +2317,7 @@ class Store extends OnlineApp {
         logger.info(`store shutting down (${reason})`);
         clearTimeout(this._hideTimer);
         clearTimeout(this._checkLockTimer);
+        this._spinStop();
         clearTimeout(this._tokenAdding && this._tokenAdding.timer);
         this._endPick();
         this._pollWebUrl(false);

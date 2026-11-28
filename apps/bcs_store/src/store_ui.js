@@ -82,7 +82,7 @@ const target = (c) => (c.revision && c.version === c.installed ? c.revision : c.
 
 const rawComps = (m) => (m.connected && m.st && Array.isArray(m.st.components) ? m.st.components : []);
 /* The components the Store lists (store_view.js listed). */
-function comps(m) {
+function compsOf(m) {
     // BCS Store is offered only from the BCS-Asia repository, not from another source's copy of it (the retired bcs-develop), or from a USB
     // stick (a stick marked as a copy of the BCS-Asia repository is that repository's row, with the stick as its source)
     const own = (c) => {
@@ -94,13 +94,42 @@ function comps(m) {
     };
     return rawComps(m).filter(listed).filter(own);
 }
+// one model is read many times while a screen is built (a row's title, the status line, the tiles): the list is made once per model
+const compsMemo = new WeakMap();
+function comps(m) {
+    let list = m && typeof m === 'object' ? compsMemo.get(m) : null;
+    if (!list) {
+        list = compsOf(m);
+        if (m && typeof m === 'object') {
+            compsMemo.set(m, list);
+        }
+    }
+    return list;
+}
 /* Its title, with its source's name where another listed row has the same title (two sources' DOOM). */
+const namerMemo = new WeakMap();
+function namerOf(m) {
+    let f = namerMemo.get(m);
+    if (!f) {
+        const rows = comps(m);
+        const name = sourceNames(rows, sources(m));
+        const inList = new Set(rows);
+        const count = new Map();
+        rows.forEach((o) => count.set(o.title, (count.get(o.title) || 0) + 1));
+        f = (c) => {
+            const n = name(c);
+            const same = count.get(c.title) || 0;
+            return n && (inList.has(c) ? same > 1 : same > 0) ? `${c.title} (${n})` : c.title;
+        };
+        namerMemo.set(m, f);
+    }
+    return f;
+}
 function named(m, c) {
     if (c.id === 'bcs_store') {
         return 'BCS STORE';     // never with its source's name behind it
     }
-    const name = sourceNames(comps(m), sources(m))(c);
-    return name && comps(m).some((o) => o !== c && o.title === c.title) ? `${c.title} (${name})` : c.title;
+    return namerOf(m)(c);
 }
 /* A component's page: its row, else (its row's id changed with an install)
  * the row of the same source and listed id, else (its source turned to a
@@ -288,8 +317,18 @@ function storeView(m, kind) {
         viewInstalled: toggle('installed', 'Installed'),
         safeModeOff: safeModeOff(m),
         restartNow: safeModeOff(m).hidden ? restartNow(m) : hidden,
-        grid: { items: list.map((c) => tile(m, c, busy, name)), empty: m.connected ? (installedOnly ? `No ${noun} installed` : tr("Nothing here")) : '' }
+        grid: { items: list.map((c) => tile(m, c, busy, name)).concat(moreTile(m, installedOnly)), empty: m.connected ? (installedOnly ? `No ${noun} installed` : tr("Nothing here")) : '' }
     };
+}
+
+/* The last tile of the All list while sources wait to be loaded (or load): a ring, turning while they load; a press or the list's end loads
+ * the next few sources. No text. */
+function moreTile(m, installedOnly) {
+    const more = m.more;
+    if (installedOnly || !m.connected || !more || !(more.pending > 0 || more.loading)) {
+        return [];
+    }
+    return [{ id: 'more-sources', loader: true, loading: !!more.loading, spin: more.loading ? more.spin | 0 : 0, title: '', src: '', act: { do: 'load-sources' } }];
 }
 
 function installedView(m) {
