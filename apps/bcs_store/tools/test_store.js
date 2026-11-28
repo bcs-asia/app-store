@@ -1139,9 +1139,9 @@ function runWidgetsExtra() {
         eq(sent.map(secretless), [{ op: 'uninstall', id: 'doom', tools: ['mgu-renderd'] }], 'as the drawn Remove all does');
         {   // Settings > Theme: the look is kept and drawn
             const lf = path.join(DATA, 'look'), had = require('fs').existsSync(lf) ? require('fs').readFileSync(lf, 'utf8') : null;
-            eq(app._drawnModel().look, 'red', 'Performance Red by default');
-            app._act({ do: 'look', id: 'blue' });
-            eq([app._drawnModel().look, require('fs').readFileSync(lf, 'utf8')], ['blue', 'blue'], 'the look chosen is kept');
+            eq(app._drawnModel().look, 'blue', 'BCS BLUE - Christmas by default');
+            app._act({ do: 'look', id: 'red' });
+            eq([app._drawnModel().look, require('fs').readFileSync(lf, 'utf8')], ['red', 'red'], 'the look chosen is kept');
             app._act({ do: 'look', id: 'carbon' });
             eq(app._drawnModel().look, 'carbon', 'Luxury Carbon');
             app._act({ do: 'look', id: 'nope' });

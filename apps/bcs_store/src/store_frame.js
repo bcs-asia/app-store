@@ -29,7 +29,8 @@ const { Recorder } = require('./kit_record.js');
 const { withAlpha } = require('./kit_canvas.js');
 const { theme: kitTheme } = require('./kit_themes.js');
 const look = require('./bcs_look.js');
-const { BG, CARBON } = require('./bcs_bg.js');
+const { BG, CARBON, XMAS } = require('./bcs_bg.js');
+const { LOGO_XMAS } = require('./bcs_brand.js');
 const { view, icons } = require('./store_ui.js');
 const { tabCells } = require('./am_widgets.js');
 const { gridView, listView, navItems, rightBoxes, keyBoxes, shown, cardBox, cardLayout } = require('./am_store_widgets.js');
@@ -174,7 +175,8 @@ function screenOf(v, scroll, layout) {
     const def = (layout || SCREENS).screens.find((s) => s.name === v.screen);
     const components = def.components.filter((c) => c.name !== 'bgPhoto' || look.get().photo).map((c) => {
         const opts = look.paint(Object.assign(translated(c.opts), v.values[c.name] || {}));
-        if (c.name === 'bgPhoto') opts.src = look.get().photo === 'carbon' ? CARBON : BG;
+        if (c.name === 'bgPhoto') opts.src = look.get().photo === 'carbon' ? CARBON : look.get().photo === 'xmas' ? XMAS : BG;
+        if (c.name === 'headerLogo' && look.get().hat) opts.src = LOGO_XMAS;
         if (layout) {
             SIZES.filter((k) => c.opts[k] !== undefined).forEach((k) => { opts[k] = c.opts[k]; });
         }

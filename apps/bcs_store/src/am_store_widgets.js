@@ -13,7 +13,7 @@ const W = require('./am_widgets.js');
 const { t: tr } = require('./i18n.js');
 const look = require('./bcs_look.js');
 const kit = require('./kit_record.js');
-const { BG, CARBON, RATIO: BG_RATIO } = require('./bcs_bg.js');
+const { BG, CARBON, XMAS, RATIO: BG_RATIO } = require('./bcs_bg.js');
 
 const GREEN = '#35d07f', BLUE = '#e4002b', AMBER = '#ffb020';
 const C = (t, c, d) => (c ? t[c] || c : d);
@@ -113,6 +113,8 @@ function themeThumb(cv, id, x, y, w, h) {
             if (img) cv.image(img, x + nw, y + h - ih, w - nw, ih, 0);
         } else {
             cv.card(x, y, w, h, 0, [[0, '#0d3a5c'], [1, '#06182a']]);
+            const xi = W.picture(XMAS), xh = Math.min(h, (w - nw) / BG_RATIO);
+            if (xi) cv.image(xi, x + nw, y + h - xh, w - nw, xh, 0);
         }
         // side menu: the open tab (a flat red band / a round blue disc) over three more
         cv.fillRect(x, y, nw, h, red ? withAlpha('#050505', 0.94) : withAlpha('#07192b', 0.9));
@@ -389,7 +391,12 @@ function sideNav(cv, t, b, o) {
     }
     items.forEach((it, i) => {
         const on = i === (o.sel | 0), cx = b.x + (b.w - 1.5) / 2, y = b.y + i * ih;
-        const d = Math.round(Math.min(ih * 0.56, b.w * 0.5, 84)), block = d + ls * 1.3, top = y + (ih - block) / 2 + 2, cy = top + d / 2;
+        const d = Math.round(Math.min(ih * 0.56, b.w * 0.5, 84));
+        let block = d + ls * 1.3, top = y + (ih - block) / 2 + 2, cy = top + d / 2, base = 0;
+        if (sport) {         // the picture and its word as drawn (not the box they are laid out in) centred in the tab, both ways
+            const gh = Math.round(d * 0.62), gap = ls * 0.42, ink = gh + gap + ls * 0.74, t0 = y + (ih - ink) / 2;
+            cy = t0 + gh / 2; base = t0 + ink;
+        }
         if (!sport) {        // a round icon button over its word: the open tab's disc is BCS blue with a soft halo, the others a faint disc
             if (on) {
                 cv.circle(cx, cy, d / 2 + 6, withAlpha('#3d9bff', 0.22));
@@ -409,7 +416,7 @@ function sideNav(cv, t, b, o) {
         const g = Math.round(d * (sport ? 0.62 : 0.54)), mx = cx;
         vicon(cv, it.vicon, mx - g / 2, cy - g / 2, g, sport ? (on ? (lux ? AC : '#ffffff') : '#c9c9c9') : (on ? '#06121c' : t.text));
         const room = b.w - (sport ? 24 : 16), ts = W.shrink(cv, String(it.label), room, ls, 'bold', 0.6);
-        cv.text(W.fit(cv, String(it.label), room, ts, 'bold'), mx, top + d + ts * 1.05, ts, on ? (lux ? AC : '#ffffff') : sport ? '#9a9a9a' : t.dim, { align: 'center', font: 'bold' });
+        cv.text(W.fit(cv, String(it.label), room, ts, 'bold'), mx, sport ? base : top + d + ts * 1.05, ts, on ? (lux ? AC : '#ffffff') : sport ? '#9a9a9a' : t.dim, { align: 'center', font: 'bold' });
         if (it.badge && String(it.badge) !== '0') {
             const rr = Math.max(14, Math.round(d * 0.26)), bx = mx + d * 0.42, by = cy - d * 0.42;
             if (sport) {

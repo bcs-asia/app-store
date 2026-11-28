@@ -478,12 +478,12 @@ eq(f.values.accessLeft.items.length, 4, 'four rows in the first column');
 f.values.accessLeft.items.concat(f.values.accessRight.items).forEach((i) => eq(i.act.do, i.id === 'sources' ? 'tab' : 'open', `${i.id} opens its page`));
 // Theme: BCS Blue and Performance Red; the one in use is marked, the other a tap away
 f = screen('theme');
-eq([text(f, 'title'), own(f)], ['Theme', ['BCS Blue', 'Luxury Carbon', 'Back']]);
-eq(f.values.grid.items.map((i) => [i.title, i.thumb, i.state]), [['BCS Blue', 'blue', 'TAP TO USE'], ['Performance Red', 'red', 'SELECTED'], ['Luxury Carbon', 'carbon', 'TAP TO USE']], 'a tile with a miniature per look');
-eq(f.values.grid.items.map((i) => [i.selected ? 'chip:Selected' : '', i.act]), [['', { do: 'look', id: 'blue' }], ['chip:Selected', null], ['', { do: 'look', id: 'carbon' }]], 'Performance Red is the default');
+eq([text(f, 'title'), own(f)], ['Theme', ['Performance Red', 'Luxury Carbon', 'Back']]);
+eq(f.values.grid.items.map((i) => [i.title, i.thumb, i.state]), [['BCS BLUE - Christmas', 'blue', 'SELECTED'], ['Performance Red', 'red', 'TAP TO USE'], ['Luxury Carbon', 'carbon', 'TAP TO USE']], 'a tile with a miniature per look');
+eq(f.values.grid.items.map((i) => [i.selected ? 'chip:Selected' : '', i.act]), [['chip:Selected', null], ['', { do: 'look', id: 'red' }], ['', { do: 'look', id: 'carbon' }]], 'BCS BLUE - Christmas is the default');
 f = screen('theme-blue');
 eq(f.values.grid.items.map((i) => [i.selected ? 'chip:Selected' : '', i.act]), [['chip:Selected', null], ['', { do: 'look', id: 'red' }], ['', { do: 'look', id: 'carbon' }]]);
-eq(screen('settings').values.accessRight.items.concat(screen('settings').values.accessLeft.items).find((i) => i.id === 'theme').sub, 'Performance Red');
+eq(screen('settings').values.accessRight.items.concat(screen('settings').values.accessLeft.items).find((i) => i.id === 'theme').sub, 'BCS BLUE - Christmas');
 // the look in use sets the screen's theme and the accent
 {
     const look = require('../src/bcs_look.js');
@@ -813,7 +813,7 @@ eq([text(f, 'state'), text(f, 'note'), f.values.networks.empty, f.values.scan.di
 // the proxy (an updater from 0.8.27): a row in Settings' access card; its page turns it on or off and sets its address
 f = screen('settings');
 eq(f.values.access.items.map((i) => [i.title, i.sub]), [['Wi-Fi', 'Online · Mario iPhone'], ['Accounts', '2 accounts'], ['Sources', '5 sources'], ['Preferred connection', 'Wi-Fi'],
-    ['Proxy', 'Off'], ['Phone access', 'Off'], ['Theme', 'Performance Red'], ['System', 'Store 0.7.0']]);
+    ['Proxy', 'Off'], ['Phone access', 'Off'], ['Theme', 'BCS BLUE - Christmas'], ['System', 'Store 0.7.0']]);
 eq(f.items.find((i) => i.label === 'Proxy').act, { do: 'open', page: { name: 'proxy' } });
 ok(screen('settings', {}, { proxy: undefined }).labels.indexOf('Proxy') < 0, 'no Proxy row with an updater before 0.8.27');
 eq(screen('settings-proxy-on').values.access.items[4].sub, '192.168.8.1:7891');
