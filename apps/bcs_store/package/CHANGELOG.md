@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.4.17
+
+- Smaller backdrop pictures (800 px wide, fewer shades; both about 55% smaller). They are drawn stretched behind the cards, so they are a little softer.
+- Opening the Store: the Apps list is drawn first; the look at the sources starts 1.5 s later, then the sources load a few at a time as before. The QR code code is read only when a QR page is opened.
+
 ## 3.4.16
 
 - Pull a list past its end and it gives a little, then springs back; the ring shows and the next tiles load.

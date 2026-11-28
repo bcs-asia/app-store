@@ -69,7 +69,6 @@ const logging = require('oap-sdk/src/logging/logging');
 const someipBuilders = require('oap-sdk/src/someip/someipBuilders');
 const { UpdaterClient } = require('./client.js');
 const i18n = require('./i18n.js');
-const { qrPng } = require('./qr.js');
 const look = require('./bcs_look.js');
 const { News } = require('./bcs_news.js');
 const { Stats } = require('./bcs_stats.js');
@@ -139,6 +138,7 @@ const BCS_SOURCES = [
 const CORE_SOURCES = 14;
 const MORE_BATCH = 3;
 const PAGE_MS = process.env.BCS_PAGE_MS !== undefined ? Number(process.env.BCS_PAGE_MS) || 0 : 650;      // the ring turns this long before the next tiles show (the env is for tests only)
+const OPEN_CHECK_MS = process.env.BCS_OPEN_CHECK_MS !== undefined ? Number(process.env.BCS_OPEN_CHECK_MS) : 1500;   // the look at the sources waits for the first drawn page
 const SPIN_MS = 120;            // the spinner turns this often while sources load
 const SPIN_STEP = 45;           // degrees per turn
 const MORE_SHOW_MS = 2500;      // it keeps turning this long after the last source was asked for (the updater reads it then)
@@ -2289,7 +2289,7 @@ class Store extends OnlineApp {
                 fs.mkdirSync(dir);
             }
             fs.chmodSync(dir, 0o755);
-            const r = qrPng(text, { caption });
+            const r = require('./qr.js').qrPng(text, { caption });
             const file = path.join(dir, `${QR_PREFIX}${slot}_${Date.now()}.png`);
             fs.writeFileSync(file, r.png);
             fs.chmodSync(file, 0o644);
@@ -2327,9 +2327,16 @@ class Store extends OnlineApp {
         if (visible) {
             this._forgetWritten();
             this._render();
-            if (this._connected && this._st && this._st.online) {
-                // opening the Store while the car is online is the moment to look (the announcements come with the sources)
-                this._send({ op: 'check' });
+            // opening the Store while the car is online is the moment to look (the announcements come with the sources); the
+            // Apps list is drawn first, the look comes a moment after (3.4.17), then the sources, a few at a time
+            clearTimeout(this._openCheckTimer);
+            this._openCheckTimer = setTimeout(() => {
+                if (this._visible && this._connected && this._st && this._st.online) {
+                    this._send({ op: 'check' });
+                }
+            }, OPEN_CHECK_MS);
+            if (this._openCheckTimer.unref) {
+                this._openCheckTimer.unref();
             }
             this._newsRefresh(false);
         }
