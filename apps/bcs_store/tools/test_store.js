@@ -880,12 +880,12 @@ function run() {
         eq(app._news.items().length, 0, 'no feed, no announcements');
         eq(added.every((x) => x.op === 'source-add' && (x.channel === 'releases' || x.channel === 'branch:main')), true, 'the feeds are added on their release or branch channel');
         eq(added.length, 12, '3.4.14: each missing core BCS feed is added once (not the one already there); the extra ones wait');
-        eq(added.some((x) => /mlurker|dwz365365|Vizualyse|sas46|jsbaughman|Beem-Net|MGU-Styles2|ALMSTRA|eroobeeroo|robertnisipeanu\/idrive-apps/.test(x.repo)), false, 'no extra source is added by itself');
+        eq(added.some((x) => /mlurker|dwz365365|Vizualyse|sas46|jsbaughman|Beem-Net|ALMSTRA|eroobeeroo|robertnisipeanu\/idrive-apps/.test(x.repo)), false, 'no extra source is added by itself');
         {
             // the waiting sources load a batch at a time, when the list is scrolled to its end or the tile is pressed
             app._stRaw = stSources;
             const mm = app._moreModel();
-            eq([mm.pending, mm.loading], [10, false], 'ten sources wait, nothing loads');
+            eq([mm.pending, mm.loading], [9, false], 'nine sources wait, nothing loads');
             const sui = require('../src/store_ui.js');
             const vm = (more, view) => sui.view({ st: Object.assign({ components: [], catalog: { checking: false }, online: true, busy: null }, stSources), connected: true, secret: true, version: 'x', look: 'red', stack: [{ name: 'main' }], tab: 'store', filter: 'all',
                 view, held: null, more, news: { count: 0, unseen: 0, index: 0, item: null, error: '', busy: false }, checking: false, language: 'en' }).values.grid;
@@ -913,7 +913,7 @@ function run() {
                 app._spinStop(); app._moreUntil = 0;
             }
             eq(app._morePending(stSources), 0, 'a few more presses load them all, each once');
-            eq(sent.filter((x) => x.op === 'source-add' && /mlurker|dwz365365|Vizualyse|sas46|jsbaughman|Beem-Net|MGU-Styles2|ALMSTRA|eroobeeroo|robertnisipeanu\/idrive-apps/.test(x.repo || '')).length, 10, 'ten extra sources, each asked for once');
+            eq(sent.filter((x) => x.op === 'source-add' && /mlurker|dwz365365|Vizualyse|sas46|jsbaughman|Beem-Net|ALMSTRA|eroobeeroo|robertnisipeanu\/idrive-apps/.test(x.repo || '')).length, 9, 'nine extra sources, each asked for once');
             app._spinStop();
         }
         eq(['waliworld/iDrive8-RideTube', 'cauliflowermossgrape/idrive7-apps', 'IterioDev/car-apps', 'noth4m4d/mgu-hamadstools'].every((r) => added.some((x) => x.repo === r)), true, '3.2.2: the new feeds are added');

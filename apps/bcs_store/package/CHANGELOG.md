@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.4.16
+
+- Pull a list past its end and it gives a little, then springs back; the ring shows and the next tiles load.
+- Sources and System pages (iDrive 7): the title and the back button no longer sit over the BCS logo.
+- Removed waliworld/MGU-Styles2 (HTTP 404 on the car). Cars that have it get it removed automatically.
+
 ## 3.4.15
 
 - The Apps and Tools lists show 12 tiles at first. Scroll to the bottom and a turning ring shows below the last row (not in a card, no text); a moment later the next 12 tiles appear, and so on. Once every tile is shown, the same scroll loads the next sources (three at a time). The ring row can also be pressed. This replaces 3.4.14's ring tile at the end of the list.

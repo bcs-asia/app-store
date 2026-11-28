@@ -100,9 +100,9 @@ function compact(W, H) {
     const SET_H = 72;
     const sources = screen('sources', 5, [
         back(),
-        title('Sources', M + 84),
-        after('subtitle', M + 84 + 220, CW - 220 - 360 - 84),
-        after('note', M + 84 + 220, CW - 220 - 84, AMBER),
+        title('Sources', X + 84),
+        after('subtitle', X + 84 + 220, CW - 220 - 360 - 84),
+        after('note', X + 84 + 220, CW - 220 - 84, AMBER),
         list('repos', X, LIST_Y - 6, CW, B - SET_H - 16 - LIST_Y + 6),
         button('addRepo', X, B - SET_H, Math.min(CW, 620), SET_H, 'Add source', 'tinted', 25, { vicon: 'plus', color: BLUE }),
         button('refresh', X + Math.min(CW, 620) + 16, B - SET_H, Math.min(CW - 636, 460), SET_H, '', 'tinted', 25, { vicon: 'refresh', color: BLUE })
@@ -114,7 +114,7 @@ function compact(W, H) {
         list('accessLeft', X, LIST_Y - 6, colW, B - LIST_Y + 6, { rowH: 110, fit: true }),
         list('accessRight', X + colW + 24, LIST_Y - 6, colW, B - LIST_Y + 6, { rowH: 110, fit: true })
     ]);
-    const SYS_BACK = M + 84;
+    const SYS_BACK = X + 84;
     const system = screen('system', 5, [
         back(),
         title('', SYS_BACK),
