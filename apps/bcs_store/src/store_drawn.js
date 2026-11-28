@@ -44,6 +44,9 @@ const FPS = 60;                         // frames a second at most (mgu-render's
 const KEEPALIVE_MS = 1000;              // the renderer hides an app silent for 3 s
 const CLOSED_RESHOW_MS = 700;           // a touch outside that left the page where it was
 const DRAG_PX = 14;
+const OVER_ROWS = 0.45;                 // how far a drag may pull the list past its end (rows) before it springs back
+const BOUNCE_MS = 36;                   // one step of the spring back
+const BOUNCE = [0.62, 0.3, 0.1, -0.06, 0.02, 0];   // the share of the pull left after each step (a small give past the end)
 const DRAG_ROWS_PX = 2048;                // a drag's cached rows: at most this high on the device (mgu-render takes 4096)
 const PREBUILD_MS = 300;                  // a drag's layers made ahead once the page has stayed this long
 const PICTURES_MS = 100;                  // a new page's first frame waits at most this long for its pictures
@@ -690,6 +693,7 @@ class Drawn extends EventEmitter {
 
     /* Hidden: the drag's layers and those retired dropped now (the next frame, once shown, is built whole). */
     _dropKept() {
+        this._bounceStop();
         this._dragEnd();
         this.retired.forEach((L) => {
             kit.dropLayer(L);
@@ -732,6 +736,41 @@ class Drawn extends EventEmitter {
         }
     }
 
+    /* Released past the end: springs back to the end in a few frames, with a little give, then settles. */
+    _bounce(t, over) {
+        this._bounceStop();
+        const key = t.region.key, max = t.region.max, gen = t.gen;
+        let i = 0;
+        const step = () => {
+            this.bounceTimer = null;
+            if (!this.on_ || !this.drag || this.drag.gen !== this.gen || this.drag.key !== key) {
+                this.scroll[key] = max;
+                this._settle(t);
+                return;
+            }
+            const last = i >= BOUNCE.length - 1;
+            this.scroll[key] = last ? max : Math.max(0, max + over * BOUNCE[i]);
+            i++;
+            if (!(this.gpu.waiting && Date.now() - this.sentAt < KEEPALIVE_MS) || last) {
+                this._dragFrame(key, gen);
+            }
+            if (last) {
+                this.scroll[key] = max;
+                this._settle(t);
+            } else {
+                this.bounceTimer = setTimeout(step, BOUNCE_MS);
+            }
+        };
+        this.bounceTimer = setTimeout(step, BOUNCE_MS);
+    }
+
+    _bounceStop() {
+        if (this.bounceTimer) {
+            clearTimeout(this.bounceTimer);
+            this.bounceTimer = null;
+        }
+    }
+
     _proxies() {
         const depth = this.stack.length;
         const n = this.host.proxies[depth - 1] || 0;
@@ -754,6 +793,10 @@ class Drawn extends EventEmitter {
 
     _touchEvent(phase, x, y) {
         if (phase === 'down') {
+            if (this.bounceTimer) {
+                this._bounceStop();
+                this.regions.forEach((g) => { if (g.max > 0 && (this.scroll[g.key] || 0) > g.max) this.scroll[g.key] = g.max; });
+            }
             this.touch = { x, y, item: hit(this.items, x, y), drag: false, region: this.regions.find((g) =>
                 x >= g.x && x < g.x + g.w && y >= g.y && y < g.y + g.h) || null };
             this.touch.gen = this.gen;
@@ -767,7 +810,11 @@ class Drawn extends EventEmitter {
             }
             if (t.drag) {
                 const step = t.region.step;     // whole pixels: the rows' layer lands where the frame built whole draws them
-                const top = Math.max(0, Math.min(t.region.max, Math.round(t.from * step + t.y - y) / step));
+                let top = Math.max(0, Math.round(t.from * step + t.y - y) / step);
+                if (top > t.region.max) {       // pulled past the end: it follows the finger less and less
+                    const pull = top - t.region.max;
+                    top = t.region.max + Math.round(OVER_ROWS * step * pull / (pull + OVER_ROWS)) / step;
+                }
                 if (top === (this.scroll[t.region.key] || 0) && this.focus === -1) {
                     return;
                 }
@@ -786,10 +833,17 @@ class Drawn extends EventEmitter {
             const t = this.touch;
             this.touch = null;
             if (t.drag) {
-                this._settle(t);
-                // the list stopped at its end: the host may load more (the Apps list's spinner)
-                if (t.region && t.region.max > 0 && (this.scroll[t.region.key] || 0) >= t.region.max - 0.02) {
-                    this.emit('scroll-end', t.region.key);
+                const key = t.region.key, max = t.region.max;
+                const atEnd = max > 0 && (this.scroll[key] || 0) >= max - 0.02;
+                const over = (this.scroll[key] || 0) - max;
+                if (atEnd && over > 0.01) {
+                    this._bounce(t, over);
+                } else {
+                    this._settle(t);
+                }
+                // the list stopped at its end: the host may load more (the Apps list's ring)
+                if (atEnd) {
+                    this.emit('scroll-end', key);
                 }
             } else if (t.item >= 0 && hit(this.items, x, y) === t.item) {
                 this.host.act(this.items[t.item].act);

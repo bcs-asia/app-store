@@ -97,7 +97,7 @@ const SOCKET = '/dev/shm/mgu-updater/updater.sock';
 const APP_ID = 'bcs_store';
 // retired: bcs-develop's feeds, and community feeds that proved not to work on the cars (error or sign-in needed); removed from the updater when found
 const RETIRED_SOURCE = new RegExp('^(bcs-develop/|' + ['eroobeeroo/idrive7-apps', 'arefahmad/idrive7-apps', 'pinguinooo/idrive7-apps', 'nickgcode/idrive7-apps',
-    'aurelmarius/bmw-games', 'hexlay/idrive7-custom-apps', 'NamelsMissing/mgu-apps', 'isaakbruno2/carplay-map-cluster', 'istt1899/x3'].map((r) => r.replace(/[/-]/g, '\\$&') + '$').join('|') + ')', 'i');
+    'aurelmarius/bmw-games', 'hexlay/idrive7-custom-apps', 'NamelsMissing/mgu-apps', 'isaakbruno2/carplay-map-cluster', 'istt1899/x3', 'waliworld/MGU-Styles2'].map((r) => r.replace(/[/-]/g, '\\$&') + '$').join('|') + ')', 'i');
 // [repo, channel]: BCS's own source first, then the community feeds BCS Store adds when they are missing
 const BCS_SOURCES = [
     ['bcs-asia/app-store', 'releases'],
@@ -130,8 +130,7 @@ const BCS_SOURCES = [
     ['sas46/idrive7_dpf_app', 'branch:main'],
     // 3.4.11: jsbaughman's copy of the bimmer-lab apps (cluster themes and HUD widgets, iDrive 7; built from the main branch, same app ids as bimmer-lab/apps)
     ['jsbaughman/apps', 'branch:main'],
-    // 3.4.12: waliworld's MGU-Styles2 (a source that was not reachable from our build machine when added; the updater shows it as unavailable until it can be read)
-    ['waliworld/MGU-Styles2', 'releases'],
+    // (3.4.16: waliworld/MGU-Styles2 dropped: HTTP 404 on the car)
     // 3.4.13: waliworld's Beem-Net, a web browser for iDrive 7 and 8 (releases; beta)
     ['waliworld/Beem-Net', 'releases']
 ];
