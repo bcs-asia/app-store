@@ -129,7 +129,11 @@ const BCS_SOURCES = [
     // 3.4.10: sas46's DPF regeneration monitor (iDrive 7; built from the main branch, no release catalog)
     ['sas46/idrive7_dpf_app', 'branch:main'],
     // 3.4.11: jsbaughman's copy of the bimmer-lab apps (cluster themes and HUD widgets, iDrive 7; built from the main branch, same app ids as bimmer-lab/apps)
-    ['jsbaughman/apps', 'branch:main']
+    ['jsbaughman/apps', 'branch:main'],
+    // 3.4.12: waliworld's MGU-Styles2 (a source that was not reachable from our build machine when added; the updater shows it as unavailable until it can be read)
+    ['waliworld/MGU-Styles2', 'releases'],
+    // 3.4.13: waliworld's Beem-Net, a web browser for iDrive 7 and 8 (releases; beta)
+    ['waliworld/Beem-Net', 'releases']
 ];
 /* The updater writes the privileged secret, and while the phone page is on
  * its access URL, into this app's data folder (owner this app's uid, 0400);

@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.4.13
+
+- One more source, added when missing: waliworld/Beem-Net (a web browser for iDrive 7 and 8; beta; Releases).
+
+## 3.4.12
+
+- One more source, added when missing: waliworld/MGU-Styles2 (Releases). The repository could not be read when this was added, so it shows as unavailable until it is public with a catalog.
+
 ## 3.4.11
 
 - One more source, added when missing: jsbaughman/apps (a copy of the bimmer-lab apps: Cluster Themes and HUD Widgets; iDrive 7; built from the main branch). It uses the same app ids as bimmer-lab/apps, so an app installed from one of the two is updated only from that one.
