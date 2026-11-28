@@ -1981,8 +1981,9 @@ class Store extends OnlineApp {
         // an updater without the reboot request (before 0.1.4) reports no rebooting
         this._show(C.restart, connected && !busy && st.rebooting === false);
 
+        const listedRows = connected ? withSources(st.components.filter(listed), st.sources) : [];      // once, not once per kind
         KINDS.forEach((kind) => {
-            const rows = connected ? withSources(st.components.filter(listed), st.sources).filter((c) => c.kind === kind) : [];
+            const rows = listedRows.filter((c) => c.kind === kind);
             this._set(LISTS[kind].nav, 'Text2ndCol', groupState(rows, busy), 'Text');
             this._show(LISTS[kind].nav, connected);
             this._renderList(LISTS[kind].list, rows.map((r) => [r.title, rowState(r, busy)]));
