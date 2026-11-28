@@ -1,5 +1,5 @@
-# BCS Store 3.4.18
+# BCS Store 3.4.19
 
-- **BCS BLUE - Christmas.** BCS Blue is now "BCS BLUE - Christmas": a snowy chalet backdrop behind the Apps, Tools and USB cards and a Santa hat on the BCS logo. It is the default look on cars that have not picked one; a look already chosen stays (Settings > Theme to change). Performance Red and Luxury Carbon are unchanged.
-- **Menu:** the picture and word are centred in the open tab (Performance Red and Luxury Carbon).
-- Includes 3.4.14 to 3.4.17.
+- **BCS BLUE - Christmas:** the backdrop is now the BCS Christmas photo (the M8 in the snow, the chalet lights), behind the Apps, Tools and USB cards.
+- **Icon:** the Store's icon on the home screen wears a Santa hat. (The car may keep showing the old icon until the head unit restarts.)
+- Includes 3.4.14 to 3.4.18.
