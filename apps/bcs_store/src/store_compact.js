@@ -272,17 +272,18 @@ function compact(W, H) {
     const NH = Math.floor(NW * 9 / 16);
     const nx = X + NW + 28;
     const nw = R - nx;
-    const NB = 64;                    // the arrows sit in the header row (right), so the text can use the whole column down to the bottom
+    const NB = 64;                    // the arrows sit in the bottom row (right), the count beside them; the text stops above them
+    const BY = B - NB;
     const news = screen('news', 4, [
         title('', X),
-        status('status', R - 520, 520 - 2 * NB - 32),
         el('newsPhoto', 'image', X, GRID_Y, NW, NH, { src: '', radius: 0 }),
         text('newsNew', nx, GRID_Y, nw, 40, '', 28, 'bold', BLUE),
         text('newsDate', nx, GRID_Y + 36, nw, 34, '', 24, 'label', DIM),
         text('newsTitle', nx, GRID_Y + 74, nw, 104, '', 36, 'bold', TEXT, { wrap: true }),
-        text('newsBody', nx, GRID_Y + 184, nw, B - GRID_Y - 184, '', 25, 'label', DIM, { wrap: true }),
-        el('prev', 'vbutton', R - 2 * NB - 16, M, NB, NB, { text: '', vicon: 'back', style: 'round', color: '#f4f7fb' }, 'event:prev'),
-        el('next', 'vbutton', R - NB, M, NB, NB, { text: '', vicon: 'chevron', style: 'round', color: '#f4f7fb' }, 'event:next')
+        text('newsBody', nx, GRID_Y + 184, nw, BY - 12 - (GRID_Y + 184), '', 25, 'label', DIM, { wrap: true }),
+        text('status', R - 2 * NB - 16 - 24 - 130, BY + 17, 130, 30, '', 25, 'label', DIM),
+        el('prev', 'vbutton', R - 2 * NB - 16, BY, NB, NB, { text: '', vicon: 'back', style: 'round', color: '#f4f7fb' }, 'event:prev'),
+        el('next', 'vbutton', R - NB, BY, NB, NB, { text: '', vicon: 'chevron', style: 'round', color: '#f4f7fb' }, 'event:next')
     ]);
 
     const proxyW = Math.min(1100, CW);

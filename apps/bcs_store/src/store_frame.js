@@ -119,6 +119,15 @@ function itemsOf(st, page) {
                         reveal: item.reveal });
                 }
             });
+            // the footer row (o.more): pressing it, or the controller on it, loads the next tiles like a scroll to the end
+            if (o.more && o.moreAct) {
+                const fr = Math.ceil(g.all.length / g.cols);
+                const item = { x: b.x + 8, y: b.y + (fr - g.top) * g.th, w: b.w - 16, h: g.th - 8, r: 24, label: '', act: o.moreAct, box: b };
+                if (fr < g.top || fr + 1 > g.top + g.shown + EPS) {
+                    item.reveal = { key, top: fr < g.top ? fr : fr + 1 - g.shown };
+                }
+                items.push(item);
+            }
         } else if (c.gpu === 'appList') {
             const v = listView(b, o);
             const key = `${st.name}.${c.name}`;

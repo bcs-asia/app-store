@@ -163,11 +163,20 @@ function spinner(cv, cx, cy, size, a, color, loading) {
     cv.arc(cx, cy, r0, r1, a, a + (loading ? 110 : 70), color, { round: true });
 }
 
+/** The footer row of a grid with o.more: the ring at its middle, turning while o.loading (o.spin degrees). */
+function gridFooter(cv, b, g, o) {
+    if (!o.more) return;
+    const fr = Math.ceil(g.all.length / g.cols);
+    if (fr < g.first || fr >= g.end) return;
+    const y = b.y + (fr - g.top) * g.th;
+    spinner(cv, b.x + b.w / 2, y + g.th / 2, Math.min(g.th * 0.34, 96), o.spin || 0, o.ringColor || look.get().accent, !!o.loading);
+}
 // ---- app grid: tiles in rows, scrolled by the pixel (o.top: rows scrolled, fractional) -------------------------
 const gridItems = (o) => (Array.isArray(o.items) ? o.items
     : lines(o.items).map((l, i) => ({ id: `item${i}`, title: l[0], sub: l[1] || '', vicon: l[2] || '', colors: l[3] ? `${l[3]},${l[4] || l[3]}` : '' })));
 function gridView(b, o) {
-    const cols = Math.max(1, o.cols | 0 || 5), th = o.tileH || 274, all = gridItems(o), rows = Math.ceil(all.length / cols);
+    // o.more: one empty row after the last tile, where the turning ring shows (more tiles are coming as the list is scrolled to its end)
+    const cols = Math.max(1, o.cols | 0 || 5), th = o.tileH || 274, all = gridItems(o), rows = Math.ceil(all.length / cols) + (o.more ? 1 : 0);
     const shown = b.h / th, max = Math.max(0, rows - shown), top = Math.max(0, Math.min(max, +o.top || 0));
     return { cols, th, tw: b.w / cols, all, rows, shown, max, top, first: Math.floor(top), end: Math.min(rows, Math.ceil(top + shown)) };
 }
@@ -237,10 +246,6 @@ function appGrid(cv, t, b, o) {
                 cv.card(x, y, cw, ch * 0.5, 24, [[0, withAlpha('#ffffff', 0.08)], [1, withAlpha('#ffffff', 0)]]);
                 cv.strokeRoundRect(x + 1, y + 1, cw - 2, ch - 2, 24, 2, withAlpha('#5fb8ee', 0.4));
             }
-            if (a.loader) {      // the loading tile: only the turning ring
-                spinner(cv, x + cw / 2, y + ch / 2, Math.min(ch * 0.42, cw * 0.3, 120), a.spin || 0, sport ? '#e4002b' : lux ? AC : '#5de0ff', a.loading);
-                return;
-            }
             if (a.thumb) {       // Settings > Theme: the look's miniature, its name and what a tap does
                 const pad = Math.round(Math.min(18, cw * 0.02)), th = Math.round(ch * 0.64), acc = look.LOOKS[a.thumb] ? look.LOOKS[a.thumb].accent : '#00bfff';
                 themeThumb(cv, a.thumb, x + pad, y + pad, cw - 2 * pad, th);
@@ -277,6 +282,7 @@ function appGrid(cv, t, b, o) {
                 cv.text(W.fit(cv, String(a.btn), q.w - 24, bs, 'bold'), q.x + q.w / 2, q.y + q.h / 2 + bs * 0.36, bs, lux ? '#14110a' : '#ffffff', { align: 'center', font: 'bold' });
             }
         });
+        gridFooter(cv, b, g, o);
         cv.noclip();
         if (!g.all.length && o.empty) mid(cv, o.empty, b.x + b.w / 2, b.y + b.h / 2, 36, t.dim, { align: 'center' });
         if (g.max > 0 && o.bar !== false) {
@@ -287,16 +293,13 @@ function appGrid(cv, t, b, o) {
     }
     g.all.slice(g.first * g.cols, g.end * g.cols).forEach((a, i) => {
         const x = b.x + (i % g.cols) * g.tw, y = b.y + (g.first + Math.floor(i / g.cols) - g.top) * g.th;
-        if (a.loader) {
-            spinner(cv, x + g.tw / 2, y + g.th / 2 - 4, Math.min(g.th * 0.42, g.tw * 0.3, 120), a.spin || 0, look.get().accent, a.loading);
-            return;
-        }
         appIcon(cv, t, a, x + (g.tw - s) / 2, y + top, s);
         const ny = y + top + s + gap[0], sy = ny + gap[1];
         cv.text(W.fit(cv, String(a.title || ''), g.tw - 16, ts, 'bold'), x + g.tw / 2, ny, ts, t.text, { align: 'center', font: 'bold' });
         if (a.src) cv.text(fitSource(cv, String(a.src), g.tw - 16, rs), x + g.tw / 2, sy, rs, t.dim, { align: 'center' });
         if (a.sub) cv.text(W.fit(cv, String(a.sub), g.tw - 16, ss), x + g.tw / 2, sy + gap[2], ss, C(t, a.subColor, t.dim), { align: 'center' });
     });
+    gridFooter(cv, b, g, o);
     cv.noclip();
     if (!g.all.length && o.empty) mid(cv, o.empty, b.x + b.w / 2, b.y + b.h / 2, 36, t.dim, { align: 'center' });
     if (g.max > 0 && o.bar !== false) { // scroll bar (o.bar false: none, store_frame.js's drag rows)

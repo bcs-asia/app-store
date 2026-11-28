@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.4.15
+
+- The Apps and Tools lists show 12 tiles at first. Scroll to the bottom and a turning ring shows below the last row (not in a card, no text); a moment later the next 12 tiles appear, and so on. Once every tile is shown, the same scroll loads the next sources (three at a time). The ring row can also be pressed. This replaces 3.4.14's ring tile at the end of the list.
+- News: the arrows and the "1 of 4" count moved to the bottom row (right); the text stops above them (iDrive 8: the text is a little smaller to leave room).
+
 ## 3.4.14
 
 - Faster Apps and Tools lists: the screen was rebuilt with a scan of every app for each app (slow with a few hundred apps from two dozen sources). It is now built in one pass: about 25 times faster here, the screens are the same.

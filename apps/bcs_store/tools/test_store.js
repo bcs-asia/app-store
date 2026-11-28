@@ -25,6 +25,7 @@ const path = require('path');
 const { ID7, ID8 } = require('./gen_rhmi.js');
 process.env.BCS_FEED_TEST = '1';
 process.env.BCS_LOOP_MAX = '1000000';       // the loop breaker has its own test
+process.env.BCS_PAGE_MS = '0';
 process.env.BCS_OFFLINE = '1';           // BCS's own feeds (Announcements, statistics) never reach the internet from a test
 const HMI = process.env.STORE_HMI === 'ID8' ? 'ID8' : 'ID7';
 
@@ -887,11 +888,10 @@ function run() {
             eq([mm.pending, mm.loading], [10, false], 'ten sources wait, nothing loads');
             const sui = require('../src/store_ui.js');
             const vm = (more, view) => sui.view({ st: Object.assign({ components: [], catalog: { checking: false }, online: true, busy: null }, stSources), connected: true, secret: true, version: 'x', look: 'red', stack: [{ name: 'main' }], tab: 'store', filter: 'all',
-                view, held: null, more, news: { count: 0, unseen: 0, index: 0, item: null, error: '', busy: false }, checking: false, language: 'en' }).values.grid.items;
-            const tiles = vm(mm, 'all');
-            eq([tiles[tiles.length - 1].loader, tiles[tiles.length - 1].act], [true, { do: 'load-sources' }], 'the last tile of the list is the spinner');
-            eq(vm(mm, 'installed').some((x) => x.loader), false, 'not on the Installed list');
-            eq(vm(null, 'all').some((x) => x.loader), false, 'and not when nothing waits');
+                view, held: null, more, news: { count: 0, unseen: 0, index: 0, item: null, error: '', busy: false }, checking: false, language: 'en' }).values.grid;
+            eq([vm(mm, 'all').more, vm(mm, 'all').moreAct], [true, { do: 'load-more', kind: 'app' }], 'a ring row follows the list while sources wait');
+            eq(vm(mm, 'installed').more, false, 'not on the Installed list');
+            eq(vm(null, 'all').more, false, 'and not when nothing waits');
             const s0 = sent.length;
             app._loadMore();
             for (let i = 0; i < 40; i++) { app._ensureBcsSources(stSources); }
@@ -1339,6 +1339,7 @@ function runDrawn() {
         // the rows); the release keeps them, and the next drag draws from them
         const many = Object.assign({}, st, { components: st.components.concat(Array.from({ length: 30 }, (_, i) =>
             comp({ id: `x${i}`, title: `Extra ${i}`, version: '1.0.0', installed: null, status: 'available' }))) });
+        app._limit = { app: 200, tool: 200 };      // all the tiles shown: the drag moves the whole list
         app._client.emit('state', many);
         const g = drawn.regions.find((r) => r.max > 0);
         eq(!!g, true, 'a grid that scrolls');
@@ -2279,7 +2280,33 @@ function runEntryPoint() {
     });
 }
 
-run().then(runWidgetsExtra).then(runLanguage).then(runAbsentContext).then(runClusterClock).then(runEntryPoint).then(runDrawn).then(runTiming).then(() => {
+/* The lists show PAGE tiles, and PAGE more each time the end is reached (the ring turns a moment first). */
+function runPaging() {
+    const PAGE = require('../src/store_ui.js').PAGE;
+    const apps = [];
+    for (let i = 0; i < 30; i++) apps.push(comp({ id: `pg${i}`, title: `Page ${i}`, installed: null, status: 'available' }));
+    const stP = Object.assign({}, base, { components: apps, sources: ST.sources, tokens: [], web: { enabled: false, urls: [], error: null } });
+    app._connected = true;
+    app._halted = false;
+    app._stRaw = stP;
+    app._st = app._shown(stP);
+    app._limit = { app: PAGE, tool: PAGE };
+    eq(app._drawnModel().limit, { app: PAGE, tool: PAGE }, 'the model carries how many tiles show');
+    app._loadNext('app');
+    eq([app._pageLoading, app._limit.app], [true, PAGE], 'the ring turns first');
+    app._loadNext('app');
+    return tick(40).then(() => {
+        eq([app._pageLoading, app._limit.app], [false, 2 * PAGE], 'then the next page shows (a second press meanwhile did nothing)');
+        app._loadNext('app');
+        return tick(40);
+    }).then(() => {
+        eq(app._limit.app, 3 * PAGE, 'and the next');
+        eq(app._limit.tool, PAGE, 'the Tools list has its own');
+        app._spinStop();
+    });
+}
+
+run().then(runWidgetsExtra).then(runLanguage).then(runAbsentContext).then(runClusterClock).then(runEntryPoint).then(runDrawn).then(runTiming).then(runPaging).then(() => {
     cleanUp();
     console.log(`store: ${checks} checks pass`);
     process.exit(0);
