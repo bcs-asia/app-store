@@ -1180,8 +1180,13 @@ function runWidgetsExtra() {
             eq(nChecks() - c0, 0, 'opened while the car is offline: no check');
             app._setVisible(false);
             app._st = Object.assign({}, wasSt, { online: true });
+            const realTO = global.setTimeout, later = [];
+            global.setTimeout = (fn, ms) => { later.push([fn, ms]); return { unref() {} }; };
             app._setVisible(true);
-            eq(nChecks() - c0, 1, 'opened while the car is online: one check');
+            global.setTimeout = realTO;
+            eq(nChecks() - c0, 0, 'opened while the car is online: the look waits for the first page');
+            later.filter((x) => x[1] === 1500).forEach((x) => x[0]());
+            eq(nChecks() - c0, 1, 'opened while the car is online: one check, a moment after');
             app._st = wasSt; app._visible = wasV;
             app._connected = wasC;
             app._act({ do: 'tab', tab: 'store' });
