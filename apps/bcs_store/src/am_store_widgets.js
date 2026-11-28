@@ -156,6 +156,13 @@ function themeThumb(cv, id, x, y, w, h) {
     }
 }
 
+// a ring with a bright arc that turns with a (degrees): the loading tile at the end of the Apps list
+function spinner(cv, cx, cy, size, a, color, loading) {
+    const r1 = size / 2, r0 = r1 * 0.78;
+    cv.arc(cx, cy, r0, r1, 0, 360, withAlpha('#ffffff', 0.14));
+    cv.arc(cx, cy, r0, r1, a, a + (loading ? 110 : 70), color, { round: true });
+}
+
 // ---- app grid: tiles in rows, scrolled by the pixel (o.top: rows scrolled, fractional) -------------------------
 const gridItems = (o) => (Array.isArray(o.items) ? o.items
     : lines(o.items).map((l, i) => ({ id: `item${i}`, title: l[0], sub: l[1] || '', vicon: l[2] || '', colors: l[3] ? `${l[3]},${l[4] || l[3]}` : '' })));
@@ -230,6 +237,10 @@ function appGrid(cv, t, b, o) {
                 cv.card(x, y, cw, ch * 0.5, 24, [[0, withAlpha('#ffffff', 0.08)], [1, withAlpha('#ffffff', 0)]]);
                 cv.strokeRoundRect(x + 1, y + 1, cw - 2, ch - 2, 24, 2, withAlpha('#5fb8ee', 0.4));
             }
+            if (a.loader) {      // the loading tile: only the turning ring
+                spinner(cv, x + cw / 2, y + ch / 2, Math.min(ch * 0.42, cw * 0.3, 120), a.spin || 0, sport ? '#e4002b' : lux ? AC : '#5de0ff', a.loading);
+                return;
+            }
             if (a.thumb) {       // Settings > Theme: the look's miniature, its name and what a tap does
                 const pad = Math.round(Math.min(18, cw * 0.02)), th = Math.round(ch * 0.64), acc = look.LOOKS[a.thumb] ? look.LOOKS[a.thumb].accent : '#00bfff';
                 themeThumb(cv, a.thumb, x + pad, y + pad, cw - 2 * pad, th);
@@ -276,6 +287,10 @@ function appGrid(cv, t, b, o) {
     }
     g.all.slice(g.first * g.cols, g.end * g.cols).forEach((a, i) => {
         const x = b.x + (i % g.cols) * g.tw, y = b.y + (g.first + Math.floor(i / g.cols) - g.top) * g.th;
+        if (a.loader) {
+            spinner(cv, x + g.tw / 2, y + g.th / 2 - 4, Math.min(g.th * 0.42, g.tw * 0.3, 120), a.spin || 0, look.get().accent, a.loading);
+            return;
+        }
         appIcon(cv, t, a, x + (g.tw - s) / 2, y + top, s);
         const ny = y + top + s + gap[0], sy = ny + gap[1];
         cv.text(W.fit(cv, String(a.title || ''), g.tw - 16, ts, 'bold'), x + g.tw / 2, ny, ts, t.text, { align: 'center', font: 'bold' });

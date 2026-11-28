@@ -317,8 +317,18 @@ function storeView(m, kind) {
         viewInstalled: toggle('installed', 'Installed'),
         safeModeOff: safeModeOff(m),
         restartNow: safeModeOff(m).hidden ? restartNow(m) : hidden,
-        grid: { items: list.map((c) => tile(m, c, busy, name)), empty: m.connected ? (installedOnly ? `No ${noun} installed` : tr("Nothing here")) : '' }
+        grid: { items: list.map((c) => tile(m, c, busy, name)).concat(moreTile(m, installedOnly)), empty: m.connected ? (installedOnly ? `No ${noun} installed` : tr("Nothing here")) : '' }
     };
+}
+
+/* The last tile of the All list while sources wait to be loaded (or load): a ring, turning while they load; a press or the list's end loads
+ * the next few sources. No text. */
+function moreTile(m, installedOnly) {
+    const more = m.more;
+    if (installedOnly || !m.connected || !more || !(more.pending > 0 || more.loading)) {
+        return [];
+    }
+    return [{ id: 'more-sources', loader: true, loading: !!more.loading, spin: more.loading ? more.spin | 0 : 0, title: '', src: '', act: { do: 'load-sources' } }];
 }
 
 function installedView(m) {

@@ -878,7 +878,44 @@ function run() {
         app._shown(ST);
         eq(app._news.items().length, 0, 'no feed, no announcements');
         eq(added.every((x) => x.op === 'source-add' && (x.channel === 'releases' || x.channel === 'branch:main')), true, 'the feeds are added on their release or branch channel');
-        eq(added.length, 22, 'each missing BCS feed is added once (not the one already there)');
+        eq(added.length, 12, '3.4.14: each missing core BCS feed is added once (not the one already there); the extra ones wait');
+        eq(added.some((x) => /mlurker|dwz365365|Vizualyse|sas46|jsbaughman|Beem-Net|MGU-Styles2|ALMSTRA|eroobeeroo|robertnisipeanu\/idrive-apps/.test(x.repo)), false, 'no extra source is added by itself');
+        {
+            // the waiting sources load a batch at a time, when the list is scrolled to its end or the tile is pressed
+            app._stRaw = stSources;
+            const mm = app._moreModel();
+            eq([mm.pending, mm.loading], [10, false], 'ten sources wait, nothing loads');
+            const sui = require('../src/store_ui.js');
+            const vm = (more, view) => sui.view({ st: Object.assign({ components: [], catalog: { checking: false }, online: true, busy: null }, stSources), connected: true, secret: true, version: 'x', look: 'red', stack: [{ name: 'main' }], tab: 'store', filter: 'all',
+                view, held: null, more, news: { count: 0, unseen: 0, index: 0, item: null, error: '', busy: false }, checking: false, language: 'en' }).values.grid.items;
+            const tiles = vm(mm, 'all');
+            eq([tiles[tiles.length - 1].loader, tiles[tiles.length - 1].act], [true, { do: 'load-sources' }], 'the last tile of the list is the spinner');
+            eq(vm(mm, 'installed').some((x) => x.loader), false, 'not on the Installed list');
+            eq(vm(null, 'all').some((x) => x.loader), false, 'and not when nothing waits');
+            const s0 = sent.length;
+            app._loadMore();
+            for (let i = 0; i < 40; i++) { app._ensureBcsSources(stSources); }
+            const batch = sent.slice(s0).map(secretless).filter((x) => x.op === 'source-add' && x.type === 'github');
+            eq(batch.length, 3, 'a press loads three sources');
+            eq(app._moreModel().loading, true, 'and the spinner turns');
+            const s1 = sent.length;
+            app._loadMore();
+            for (let i = 0; i < 40; i++) { app._ensureBcsSources(stSources); }
+            eq(sent.slice(s1).filter((x) => x.op === 'source-add' && x.type === 'github').length, 0, 'another press while it loads adds nothing');
+            app._spinStop();
+            app._moreUntil = 0;
+            const s2 = sent.length;
+            for (let i = 0; i < 40; i++) { app._ensureBcsSources(stSources); }
+            eq(sent.slice(s2).filter((x) => x.op === 'source-add' && x.type === 'github').length, 0, 'sources are never added without a press');
+            for (let n = 0; n < 5; n++) {
+                app._loadMore();
+                for (let i = 0; i < 40; i++) { app._ensureBcsSources(stSources); }
+                app._spinStop(); app._moreUntil = 0;
+            }
+            eq(app._morePending(stSources), 0, 'a few more presses load them all, each once');
+            eq(sent.filter((x) => x.op === 'source-add' && /mlurker|dwz365365|Vizualyse|sas46|jsbaughman|Beem-Net|MGU-Styles2|ALMSTRA|eroobeeroo|robertnisipeanu\/idrive-apps/.test(x.repo || '')).length, 10, 'ten extra sources, each asked for once');
+            app._spinStop();
+        }
         eq(['waliworld/iDrive8-RideTube', 'cauliflowermossgrape/idrive7-apps', 'IterioDev/car-apps', 'noth4m4d/mgu-hamadstools'].every((r) => added.some((x) => x.repo === r)), true, '3.2.2: the new feeds are added');
         eq(added.some((x) => /bmw-games|nickgcode|eroobeeroo\/idrive7-apps|hexlay|NamelsMissing/.test(x.repo)), false, 'a retired feed is never added');
         app._connected = wasConnected;
